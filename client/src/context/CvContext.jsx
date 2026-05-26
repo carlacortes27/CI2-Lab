@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 import { exampleCv } from '../data/example-cv.js';
 import {
@@ -12,6 +13,19 @@ function now() {
 
 function withUpdated(cv) {
   return { ...cv, meta: { ...cv.meta, updatedAt: now() } };
+}
+
+function normalizeCv(cv) {
+  const mergedSections = { ...exampleCv.sections, ...(cv.sections || {}) };
+  const order = exampleCv.layout.order.filter(key => mergedSections[key]);
+  return {
+    ...exampleCv,
+    ...cv,
+    personal: { ...exampleCv.personal, ...(cv.personal || {}) },
+    style: { ...exampleCv.style, ...(cv.style || {}) },
+    sections: mergedSections,
+    layout: { ...exampleCv.layout, ...(cv.layout || {}), order },
+  };
 }
 
 function cvReducer(cv, action) {
@@ -174,6 +188,18 @@ function cvReducer(cv, action) {
     case 'UPDATE_STYLE':
       return withUpdated({ ...cv, style: { ...cv.style, ...action.payload } });
 
+    case 'UPDATE_SECTION':
+      return withUpdated({
+        ...cv,
+        sections: {
+          ...cv.sections,
+          [action.payload.section]: {
+            ...(cv.sections[action.payload.section] || { visible: true }),
+            ...action.payload.data,
+          },
+        },
+      });
+
     // interests usa strings; SET_INTERESTS reemplaza el array completo
     case 'SET_INTERESTS':
       return withUpdated({
@@ -195,13 +221,13 @@ export function CvProvider({ children }) {
     const activeId = getActiveCvId();
     if (activeId) {
       const saved = loadCv(activeId);
-      if (saved) return saved;
+      if (saved) return normalizeCv(saved);
     }
     if (index.length > 0) {
       const saved = loadCv(index[0]);
-      if (saved) return saved;
+      if (saved) return normalizeCv(saved);
     }
-    return exampleCv;
+    return normalizeCv(exampleCv);
   })();
 
   const [cv, dispatch] = useReducer(cvReducer, initialCv);
