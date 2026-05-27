@@ -4,123 +4,68 @@ import OfferListItem from './OfferListItem.jsx';
 import OfferDetail from './OfferDetail.jsx';
 
 // ═══════════════════════════════════════════════════════
-//  MOCK DATA
+//  DATOS SINTÉTICOS
 // ═══════════════════════════════════════════════════════
 
 const MOCK_CANDIDATURAS = [
-  {
-    id: 1,
-    title: 'Prácticas en Operación de Activos',
-    company: 'Iberdrola',
-    location: 'Madrid',
-    modality: 'Híbrido',
-    status: 'revision',
-    date: '12/06/2025',
-    initials: 'IB',
-    avatarBg: '#00A650',
-  },
-  {
-    id: 2,
-    title: 'Prácticas en Gestión de Proyectos',
-    company: 'Naturgy',
-    location: 'Madrid',
-    modality: 'Presencial',
-    status: 'entrevista',
-    date: '08/06/2025',
-    initials: 'N',
-    avatarBg: '#FF6B00',
-  },
-  {
-    id: 3,
-    title: 'Prácticas en Advisory – Energía',
-    company: 'EY',
-    location: 'Madrid',
-    modality: 'Híbrido',
-    status: 'enviada',
-    date: '02/06/2025',
-    initials: 'EY',
-    avatarBg: '#2E2E2E',
-  },
-  {
-    id: 4,
-    title: 'Prácticas en Análisis de Datos',
-    company: 'ACCIONA Energía',
-    location: 'Madrid',
-    modality: 'Híbrido',
-    status: 'aceptada',
-    date: '20/05/2025',
-    initials: 'AC',
-    avatarBg: '#E30613',
-  },
+  { id: 1, title: 'Prácticas en Operación de Activos',  company: 'Iberdrola',       location: 'Madrid', modality: 'Híbrido',    status: 'revision',   date: '12/06/2025', initials: 'IB', avatarBg: '#00A650' },
+  { id: 2, title: 'Prácticas en Gestión de Proyectos',  company: 'Naturgy',          location: 'Madrid', modality: 'Presencial', status: 'entrevista', date: '08/06/2025', initials: 'N',  avatarBg: '#FF6B00' },
+  { id: 3, title: 'Prácticas en Advisory – Energía',    company: 'EY',               location: 'Madrid', modality: 'Híbrido',    status: 'enviada',    date: '02/06/2025', initials: 'EY', avatarBg: '#2E2E2E' },
+  { id: 4, title: 'Prácticas en Análisis de Datos',     company: 'ACCIONA Energía',  location: 'Madrid', modality: 'Híbrido',    status: 'aceptada',   date: '20/05/2025', initials: 'AC', avatarBg: '#E30613' },
 ];
 
 const MOCK_EVENTOS = [
-  {
-    id: 1,
-    day: '17',
-    month: 'JUN',
-    title: 'Jornada de Empleo Comillas',
-    time: '10:00 - 14:00',
-    place: 'Campus Cantoblanco',
-  },
-  {
-    id: 2,
-    day: '24',
-    month: 'JUN',
-    title: 'Workshop: Prepara tu CV con IA',
-    time: '16:00 - 18:00',
-    place: 'Sala Magna, ICAI',
-  },
+  { id: 1, day: '17', month: 'JUN', title: 'Jornada de Empleo Comillas',      time: '10:00 - 14:00', place: 'Campus Cantoblanco' },
+  { id: 2, day: '24', month: 'JUN', title: 'Workshop: Prepara tu CV con IA',  time: '16:00 - 18:00', place: 'Sala Magna, ICAI'   },
 ];
 
 const MOCK_RECURSOS = [
-  {
-    id: 1,
-    title: 'Guía para entrevistas de prácticas',
-    desc: 'Consejos y mejores prácticas',
-    bg: '#DBEAFE',
-    iconColor: '#1D4ED8',
-  },
-  {
-    id: 2,
-    title: 'Cómo redactar tu carta de presentación',
-    desc: 'Plantillas y ejemplos reales',
-    bg: '#EDE9FE',
-    iconColor: '#6D28D9',
-  },
+  { id: 1, title: 'Guía para entrevistas de prácticas',          desc: 'Consejos y mejores prácticas', bg: '#DBEAFE', iconColor: '#1D4ED8' },
+  { id: 2, title: 'Cómo redactar tu carta de presentación',      desc: 'Plantillas y ejemplos reales', bg: '#EDE9FE', iconColor: '#6D28D9' },
 ];
 
 const STATUS_CONFIG = {
-  enviada:    { label: 'Aplicada',      cls: 'text-gray-500  bg-gray-100' },
-  revision:   { label: 'En revisión',   cls: 'text-orange-600 bg-orange-50' },
-  entrevista: { label: 'Entrevista',    cls: 'text-blue-600  bg-blue-50' },
-  aceptada:   { label: 'Aceptada',      cls: 'text-green-600 bg-green-50' },
+  enviada:    { label: 'Aplicada',     cls: 'text-gray-500  bg-gray-100'  },
+  revision:   { label: 'En revisión',  cls: 'text-orange-600 bg-orange-50' },
+  entrevista: { label: 'Entrevista',   cls: 'text-blue-600  bg-blue-50'   },
+  aceptada:   { label: 'Aceptada',     cls: 'text-green-600 bg-green-50'  },
 };
 
-const SECTORES  = ['Consultoría', 'Energía', 'Finanzas', 'Tecnología', 'Legal', 'Industrial'];
-const MODALIDADES = [
-  { value: 'presencial', label: 'Presencial' },
-  { value: 'hibrido',    label: 'Híbrido' },
-  { value: 'remoto',     label: 'Remoto' },
-];
+const SECTORES   = ['Consultoría', 'Energía', 'Finanzas', 'Tecnología', 'Legal', 'Industrial'];
+const MODALIDADES = [{ value: 'presencial', label: 'Presencial' }, { value: 'hibrido', label: 'Híbrido' }, { value: 'remoto', label: 'Remoto' }];
 const UBICACIONES = ['Madrid', 'Barcelona', 'Bilbao', 'Sevilla', 'Remoto'];
 const DURACIONES  = ['3 meses', '6 meses', '12 meses'];
 
 // ═══════════════════════════════════════════════════════
-//  ICONS  (SVG inline, sin dependencias externas)
+//  TOKENS TIPOGRÁFICOS  (per guía Inter)
+// ═══════════════════════════════════════════════════════
+// h1 greeting      → 28 px / 700  / #111827
+// section title    → 17 px / 600  / #111827
+// card title       → 15 px / 600  / #111827
+// body / meta      → 13 px / 400  / #6B7280
+// small meta/date  → 12 px / 400  / #9CA3AF
+// tag pill         → 12 px / 400  / #374151
+// MATCH num        → 22 px / 700  / accent
+// MATCH label      → 10 px / 600  / accent  uppercase tracking-widest
+// DESTACADA badge  → 10 px / 700  / orange  uppercase tracking-wider
+// nav item         → 14 px / 500  / #374151
+// status label     → 12 px / 600  / semantic color
+// sidebar CTA      → 13 px / 700  / #1F2937
+
+// ═══════════════════════════════════════════════════════
+//  ÍCONOS  (SVG inline, sin dependencias externas)
 // ═══════════════════════════════════════════════════════
 
-function Ico({ children, size = 18, className = '', style }) {
+function Ico({ d, children, size = 18, className = '', style }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
       stroke="currentColor" strokeWidth="2" strokeLinecap="round"
       strokeLinejoin="round" className={className} style={style}>
-      {children}
+      {d ? <path d={d} /> : children}
     </svg>
   );
 }
 
-/* Navegación */
 const HomeIco      = () => <Ico><path d="M3 9L12 2l9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Ico>;
 const BriefcaseIco = () => <Ico><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></Ico>;
 const ClipboardIco = () => <Ico><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></Ico>;
@@ -130,8 +75,6 @@ const BookIco      = ({ size = 18, style }) => <Ico size={size} style={style}><p
 const CompassIco   = () => <Ico><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></Ico>;
 const UserIco      = () => <Ico><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Ico>;
 const SettingsIco  = () => <Ico><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></Ico>;
-
-/* UI general */
 const SearchIco    = () => <Ico><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></Ico>;
 const BellIco      = () => <Ico><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></Ico>;
 const MailIco      = () => <Ico><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></Ico>;
@@ -145,14 +88,14 @@ const MonitorIco   = ({ size = 11 }) => <Ico size={size}><rect x="2" y="3" width
 const ClockIco     = ({ size = 11 }) => <Ico size={size}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></Ico>;
 
 // ═══════════════════════════════════════════════════════
-//  UTILITY COMPONENTS
+//  UTILIDADES
 // ═══════════════════════════════════════════════════════
 
 function CompanyAvatar({ initials, bg, size = 38 }) {
   return (
     <div
-      style={{ backgroundColor: bg, width: size, height: size, minWidth: size }}
-      className="rounded-full flex items-center justify-center text-white font-extrabold text-xs select-none shadow-sm"
+      style={{ backgroundColor: bg, width: size, height: size, minWidth: size, fontWeight: 700, fontSize: 11 }}
+      className="rounded-full flex items-center justify-center text-white select-none shadow-sm shrink-0"
     >
       {initials}
     </div>
@@ -161,20 +104,21 @@ function CompanyAvatar({ initials, bg, size = 38 }) {
 
 function FilterDropdown({ label, options, value, onChange }) {
   const [open, setOpen] = useState(false);
-  const selected = options.find(o => (o.value ?? o) === value);
+  const selected     = options.find(o => (o.value ?? o) === value);
   const displayLabel = selected ? (selected.label ?? selected) : label;
-  const isActive = Boolean(value);
+  const isActive     = Boolean(value);
 
   return (
     <div className="relative">
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-1.5 text-sm border rounded-full px-3.5 py-1.5 transition-all select-none ${
+        className={`flex items-center gap-1.5 border rounded-full px-4 py-2 transition-all select-none ${
           isActive
-            ? 'border-[#F0B400] bg-[#FFF8E0] text-[#8B6800] font-semibold'
-            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-400'
+            ? 'border-[#F1B816] bg-[#FFFBEB] text-[#92700A]'
+            : 'border-gray-200 bg-white text-[#374151] hover:border-gray-400'
         }`}
+        style={{ fontSize: 13, fontWeight: isActive ? 500 : 400 }}
       >
         {displayLabel}
         <ChevDownIco />
@@ -182,28 +126,21 @@ function FilterDropdown({ label, options, value, onChange }) {
 
       {open && (
         <>
-          {/* backdrop */}
           <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
-          <div className="absolute top-full left-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-lg z-30 py-1 min-w-[180px]">
-            <button
-              type="button"
-              onClick={() => { onChange(''); setOpen(false); }}
-              className="w-full text-left px-4 py-2 text-sm text-gray-400 hover:bg-gray-50"
-            >
+          <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-30 py-1.5 min-w-[180px]">
+            <button type="button" onClick={() => { onChange(''); setOpen(false); }}
+              className="w-full text-left px-4 py-2.5 text-gray-400 hover:bg-gray-50 transition-colors"
+              style={{ fontSize: 13 }}>
               Todos
             </button>
             {options.map(opt => {
               const val = opt.value ?? opt;
               const lbl = opt.label ?? opt;
               return (
-                <button
-                  key={val}
-                  type="button"
+                <button key={val} type="button"
                   onClick={() => { onChange(val); setOpen(false); }}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${
-                    value === val ? 'font-semibold text-[#C89600]' : 'text-gray-700'
-                  }`}
-                >
+                  className={`w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors ${value === val ? 'text-[#C89600]' : 'text-[#374151]'}`}
+                  style={{ fontSize: 13, fontWeight: value === val ? 600 : 400 }}>
                   {lbl}
                 </button>
               );
@@ -233,25 +170,28 @@ const NAV_ITEMS = [
 
 function Sidebar({ active, onSection, onNavigate }) {
   return (
-    <aside className="w-[220px] bg-white border-r border-gray-100 flex flex-col shrink-0 overflow-y-auto">
+    <aside className="w-[232px] bg-white border-r border-gray-100 flex flex-col shrink-0 overflow-y-auto">
       {/* Logo */}
-      <div className="px-5 pt-5 pb-4 flex items-center gap-2.5">
+      <div className="px-6 pt-6 pb-5 flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: 'linear-gradient(135deg,#F1B816 0%,#C89600 100%)' }}>
-          {/* Escudo estilizado */}
           <svg viewBox="0 0 28 28" width="22" height="22" fill="none">
-            <path d="M14 3 L25 7 L25 16 C25 21 14 25 14 25 C14 25 3 21 3 16 L3 7 Z" fill="white" fillOpacity="0.9"/>
-            <path d="M10 13 L13 16 L18 10" stroke="#C89600" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M14 3 L25 7 L25 16 C25 21 14 25 14 25 C14 25 3 21 3 16 L3 7 Z" fill="white" fillOpacity="0.95"/>
+            <path d="M10 13 L13 16 L18 10" stroke="#C89600" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
-        <div className="leading-tight">
-          <p className="font-extrabold text-sm text-[#1F2937] tracking-wide uppercase">Comillas</p>
-          <p className="text-[10px] text-gray-400 leading-none mt-0.5">Universidad Pontificia</p>
+        <div>
+          <p style={{ fontSize: 14, fontWeight: 800, color: '#111827', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            Comillas
+          </p>
+          <p style={{ fontSize: 10, fontWeight: 400, color: '#9CA3AF', lineHeight: 1.4 }}>
+            Universidad Pontificia
+          </p>
         </div>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-2 space-y-0.5">
+      {/* Navegación */}
+      <nav className="flex-1 px-3 space-y-0.5">
         {NAV_ITEMS.map(({ key, label, Icon }) => {
           const isActive = active === key;
           return (
@@ -259,13 +199,14 @@ function Sidebar({ active, onSection, onNavigate }) {
               key={key}
               type="button"
               onClick={() => key === 'inicio' ? onNavigate?.('home') : onSection(key)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
+              className={`w-full flex items-center gap-3 px-4 py-[11px] rounded-xl text-left transition-all ${
                 isActive
-                  ? 'bg-[#F1B816] text-[#1F2937] font-semibold shadow-sm'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-[#1F2937]'
+                  ? 'bg-[#F1B816] text-[#111827] shadow-sm'
+                  : 'text-[#374151] hover:bg-gray-50 hover:text-[#111827]'
               }`}
+              style={{ fontSize: 14, fontWeight: 500 }}
             >
-              <span className={isActive ? 'text-[#1F2937]' : 'text-gray-400'}>
+              <span style={{ color: isActive ? '#111827' : '#9CA3AF' }}>
                 <Icon />
               </span>
               {label}
@@ -274,28 +215,35 @@ function Sidebar({ active, onSection, onNavigate }) {
         })}
       </nav>
 
-      {/* Widget perfil */}
-      <div className="mx-3 mb-4 mt-2 rounded-2xl bg-[#F1B816] p-4">
-        <div className="flex items-start gap-2 mb-3">
-          <div className="w-8 h-8 bg-white/30 rounded-xl flex items-center justify-center shrink-0">
+      {/* Widget "Completa tu perfil" */}
+      <div className="mx-4 mb-5 mt-4 rounded-2xl p-4" style={{ backgroundColor: '#F1B816' }}>
+        <div className="flex items-start gap-2.5 mb-3">
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+            style={{ backgroundColor: 'rgba(255,255,255,0.3)' }}>
             <TrophyIco />
           </div>
           <div>
-            <p className="text-sm font-extrabold text-[#1F2937] leading-tight">Completa tu perfil</p>
-            <p className="text-[11px] text-[#1F2937]/70 leading-tight mt-0.5">y mejora tus recomendaciones</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#1F2937', lineHeight: 1.3 }}>
+              Completa tu perfil
+            </p>
+            <p style={{ fontSize: 11, fontWeight: 400, color: 'rgba(31,41,55,0.65)', marginTop: 2, lineHeight: 1.4 }}>
+              y mejora tus recomendaciones
+            </p>
           </div>
         </div>
         {/* Barra de progreso */}
         <div className="flex items-center gap-2 mb-3">
-          <div className="flex-1 h-2 bg-white/40 rounded-full overflow-hidden">
-            <div className="h-full bg-white rounded-full" style={{ width: '80%' }} />
+          <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.4)' }}>
+            <div className="h-full rounded-full" style={{ width: '80%', backgroundColor: '#fff' }} />
           </div>
-          <span className="text-[11px] font-bold text-[#1F2937]">80%</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#1F2937' }}>80%</span>
         </div>
-        <button type="button"
-          className="text-xs font-bold text-[#1F2937] hover:text-[#1F2937]/70 transition-colors underline underline-offset-2">
-          Ver perfil →
-        </button>
+        <div className="flex items-center justify-between">
+          <span style={{ fontSize: 11, fontWeight: 400, color: 'rgba(31,41,55,0.6)' }}>80%</span>
+          <button type="button" style={{ fontSize: 12, fontWeight: 700, color: '#1F2937', textDecoration: 'underline', textUnderlineOffset: 2 }}>
+            Ver perfil →
+          </button>
+        </div>
       </div>
     </aside>
   );
@@ -306,19 +254,26 @@ function Sidebar({ active, onSection, onNavigate }) {
 // ═══════════════════════════════════════════════════════
 
 function TopBar({ userName, userDegree }) {
-  const initials = (userName ?? '')
-    .split(' ').slice(0, 2).map(n => n[0] ?? '').join('');
+  const initials = (userName ?? '').split(' ').slice(0, 2).map(n => n[0] ?? '').join('');
   return (
-    <header className="bg-white border-b border-gray-100 px-6 py-3 flex items-center gap-4 shrink-0">
+    <header className="bg-white border-b border-gray-100 px-8 py-3 flex items-center gap-5 shrink-0">
       {/* Buscador */}
       <div className="flex-1 relative">
-        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
           <SearchIco />
         </span>
         <input
           type="text"
           placeholder="Buscar empresas, posiciones o palabras clave"
-          className="w-full pl-11 pr-4 py-2.5 bg-gray-100 rounded-full text-sm text-gray-700 placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#F1B816]/50 focus:bg-white transition-colors"
+          className="w-full pl-11 pr-5 py-2.5 rounded-full outline-none transition-colors"
+          style={{
+            backgroundColor: '#F3F4F6',
+            fontSize: 14,
+            fontWeight: 400,
+            color: '#111827',
+          }}
+          onFocus={e => { e.target.style.backgroundColor = '#fff'; e.target.style.boxShadow = '0 0 0 2px #F1B81640'; }}
+          onBlur={e =>  { e.target.style.backgroundColor = '#F3F4F6'; e.target.style.boxShadow = 'none'; }}
         />
       </div>
 
@@ -326,30 +281,37 @@ function TopBar({ userName, userDegree }) {
       <div className="flex items-center gap-3 shrink-0">
         {/* Campana */}
         <div className="relative">
-          <button type="button" className="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
+          <button type="button"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
             <BellIco />
           </button>
-          <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-orange-500 text-white text-[9px] font-extrabold flex items-center justify-center leading-none pointer-events-none">2</span>
+          <span className="absolute top-0.5 right-0.5 w-[18px] h-[18px] rounded-full flex items-center justify-center pointer-events-none"
+            style={{ backgroundColor: '#F97316', fontSize: 10, fontWeight: 700, color: '#fff' }}>
+            2
+          </span>
         </div>
 
         {/* Correo */}
-        <button type="button" className="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
+        <button type="button"
+          className="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
           <MailIco />
         </button>
 
         {/* Divisor */}
-        <div className="w-px h-6 bg-gray-200" />
+        <div className="w-px h-6 bg-gray-200 mx-1" />
 
-        {/* Perfil */}
-        <button type="button" className="flex items-center gap-2.5 hover:bg-gray-50 rounded-xl px-2 py-1 transition-colors">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-extrabold select-none shadow-sm">
+        {/* Perfil usuario */}
+        <button type="button"
+          className="flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 hover:bg-gray-50 transition-colors">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center text-white select-none shadow-sm shrink-0"
+            style={{ background: 'linear-gradient(135deg,#FBBF24,#F97316)', fontSize: 11, fontWeight: 700 }}>
             {initials}
           </div>
-          <div className="leading-tight text-left">
-            <p className="text-xs font-bold text-[#1F2937]">{userName}</p>
-            <p className="text-[10px] text-gray-400">{userDegree}</p>
+          <div className="text-left leading-tight">
+            <p style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{userName}</p>
+            <p style={{ fontSize: 11, fontWeight: 400, color: '#9CA3AF' }}>{userDegree}</p>
           </div>
-          <span className="text-gray-400"><ChevDownIco /></span>
+          <span className="text-gray-400 ml-0.5"><ChevDownIco /></span>
         </button>
       </div>
     </header>
@@ -357,7 +319,7 @@ function TopBar({ userName, userDegree }) {
 }
 
 // ═══════════════════════════════════════════════════════
-//  MIS CANDIDATURAS (panel derecho)
+//  PANEL MIS CANDIDATURAS (columna derecha)
 // ═══════════════════════════════════════════════════════
 
 function CandidaturasPanel() {
@@ -371,50 +333,53 @@ function CandidaturasPanel() {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       {/* Cabecera */}
-      <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-        <h2 className="text-sm font-extrabold text-[#1F2937]">Mis candidaturas</h2>
-        <button type="button" className="text-xs text-[#C89600] font-semibold hover:underline">
+      <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+        <span style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>Mis candidaturas</span>
+        <button type="button" style={{ fontSize: 13, fontWeight: 500, color: '#C89600' }}
+          className="hover:underline">
           Ver todas →
         </button>
       </div>
 
-      {/* Stats */}
+      {/* Estadísticas */}
       <div className="grid grid-cols-4 border-y border-gray-100">
-        <StatCell n={counts.enviadas}   label="Enviadas"     color="text-gray-600" />
-        <StatCell n={counts.revision}   label="En revisión"  color="text-orange-500" />
-        <StatCell n={counts.entrevista} label="Entrevista"   color="text-blue-500" />
-        <StatCell n={counts.aceptada}   label="Aceptadas"    color="text-green-500" />
+        <StatCell n={counts.enviadas}   label="Enviadas"     textColor="#4B5563" />
+        <StatCell n={counts.revision}   label="En revisión"  textColor="#EA580C" />
+        <StatCell n={counts.entrevista} label="Entrevista"   textColor="#2563EB" />
+        <StatCell n={counts.aceptada}   label="Aceptadas"    textColor="#16A34A" />
       </div>
 
-      {/* Lista */}
+      {/* Lista candidaturas */}
       <div className="divide-y divide-gray-50">
         {MOCK_CANDIDATURAS.map(c => {
           const st = STATUS_CONFIG[c.status];
           return (
-            <button
-              key={c.id}
-              type="button"
-              className="w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
-            >
+            <button key={c.id} type="button"
+              className="w-full flex items-start gap-3 px-5 py-4 hover:bg-gray-50 transition-colors text-left">
               <CompanyAvatar initials={c.initials} bg={c.avatarBg} size={36} />
               <div className="flex-1 min-w-0">
-                {/* Fila 1: título + badge */}
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-xs font-bold text-[#1F2937] leading-snug truncate pr-1">{c.title}</p>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 ${st.cls}`}>
+                {/* Fila 1: título + badge en el mismo nivel */}
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <span className="truncate pr-1" style={{ fontSize: 13, fontWeight: 600, color: '#111827', lineHeight: 1.4 }}>
+                    {c.title}
+                  </span>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 ${st.cls}`}
+                    style={{ fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap' }}>
                     {st.label}
                   </span>
                 </div>
                 {/* Fila 2: empresa */}
-                <p className="text-[11px] font-semibold text-gray-500 mt-0.5">{c.company}</p>
-                {/* Fila 3: meta */}
-                <p className="text-[10px] text-gray-400 flex items-center gap-2 mt-0.5">
-                  <span className="flex items-center gap-0.5"><PinIco />{c.location}</span>
-                  <span className="flex items-center gap-0.5"><MonitorIco />{c.modality}</span>
-                </p>
+                <p style={{ fontSize: 12, fontWeight: 400, color: '#6B7280' }}>{c.company}</p>
+                {/* Fila 3: ubicación + modalidad */}
+                <div className="flex items-center gap-3 mt-0.5" style={{ fontSize: 12, color: '#9CA3AF' }}>
+                  <span className="flex items-center gap-1"><PinIco />{c.location}</span>
+                  <span className="flex items-center gap-1"><MonitorIco />{c.modality}</span>
+                </div>
                 {/* Fila 4: fecha + chevron */}
-                <div className="flex items-center justify-between mt-0.5">
-                  <p className="text-[10px] text-gray-400">Aplicada el {c.date}</p>
+                <div className="flex items-center justify-between mt-1">
+                  <span style={{ fontSize: 12, fontWeight: 400, color: '#9CA3AF' }}>
+                    Aplicada el {c.date}
+                  </span>
                   <span className="text-gray-300"><ChevRightIco /></span>
                 </div>
               </div>
@@ -424,16 +389,19 @@ function CandidaturasPanel() {
       </div>
 
       {/* Consejo */}
-      <div className="mx-4 mb-4 mt-1 rounded-xl bg-[#FFFBEB] border border-[#F1B816]/30 p-3 flex gap-3 items-start">
-        <div className="w-9 h-9 rounded-xl bg-[#F1B816] flex items-center justify-center shrink-0">
+      <div className="mx-5 mb-5 mt-1 rounded-xl p-4 flex gap-3 items-start"
+        style={{ backgroundColor: '#FFFBEB', border: '1px solid #FEF3C7' }}>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+          style={{ backgroundColor: '#F1B816' }}>
           <TrophyIco />
         </div>
         <div>
-          <p className="text-xs font-extrabold text-[#1F2937]">Consejo para destacar</p>
-          <p className="text-[11px] text-gray-500 leading-relaxed mt-0.5">
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>Consejo para destacar</p>
+          <p style={{ fontSize: 12, fontWeight: 400, color: '#6B7280', lineHeight: 1.5, marginTop: 3 }}>
             Completa tu perfil al 100% y añade tus proyectos para mejorar tus opciones.
           </p>
-          <button type="button" className="text-[11px] font-bold text-[#C89600] hover:underline mt-1 block">
+          <button type="button" style={{ fontSize: 12, fontWeight: 600, color: '#C89600', marginTop: 6, display: 'block' }}
+            className="hover:underline">
             Ir a mi perfil →
           </button>
         </div>
@@ -442,50 +410,51 @@ function CandidaturasPanel() {
   );
 }
 
-function StatCell({ n, label, color }) {
+function StatCell({ n, label, textColor }) {
   return (
-    <div className="flex flex-col items-center py-3">
-      <span className={`text-xl font-extrabold leading-none ${color}`}>{n}</span>
-      <span className="text-[10px] text-gray-400 text-center mt-0.5 leading-tight">{label}</span>
+    <div className="flex flex-col items-center py-4">
+      <span style={{ fontSize: 22, fontWeight: 700, color: textColor, lineHeight: 1 }}>{n}</span>
+      <span style={{ fontSize: 11, fontWeight: 400, color: '#9CA3AF', marginTop: 4, textAlign: 'center', lineHeight: 1.3 }}>{label}</span>
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════
-//  SECCIONES INFERIORES
+//  PRÓXIMOS EVENTOS
 // ═══════════════════════════════════════════════════════
 
 function ProximosEventos() {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-4 pt-4 pb-3 flex items-center justify-between border-b border-gray-50">
-        <h3 className="text-sm font-extrabold text-[#1F2937] flex items-center gap-2">
-          <span className="text-[#C89600]"><CalendarIco size={15} /></span>
+      <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+        <span className="flex items-center gap-2" style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>
+          <span style={{ color: '#C89600' }}><CalendarIco size={16} /></span>
           Próximos eventos
-        </h3>
-        <button type="button" className="text-xs text-[#C89600] font-semibold hover:underline">
-          Ver todos →
-        </button>
+        </span>
+        <button type="button" style={{ fontSize: 13, fontWeight: 500, color: '#C89600' }}
+          className="hover:underline">Ver todos →</button>
       </div>
-      <div className="p-4 space-y-4">
+      <div className="px-5 pb-5 space-y-4">
         {MOCK_EVENTOS.map(ev => (
-          <div key={ev.id} className="flex items-start gap-3 cursor-pointer group">
-            {/* Fecha */}
-            <div className="flex flex-col items-center justify-center w-11 h-12 bg-gray-50 rounded-xl border border-gray-200 shrink-0 group-hover:border-[#F1B816] transition-colors">
-              <span className="text-base font-extrabold text-[#1F2937] leading-none">{ev.day}</span>
-              <span className="text-[9px] font-extrabold text-orange-500 uppercase tracking-widest leading-none mt-0.5">
+          <div key={ev.id} className="flex items-start gap-4 cursor-pointer group">
+            {/* Cuadro de fecha */}
+            <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 shrink-0 group-hover:border-[#F1B816] transition-colors"
+              style={{ width: 48, height: 52, backgroundColor: '#F9FAFB' }}>
+              <span style={{ fontSize: 18, fontWeight: 700, color: '#111827', lineHeight: 1 }}>{ev.day}</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#F97316', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 2 }}>
                 {ev.month}
               </span>
             </div>
             {/* Info */}
             <div>
-              <p className="text-sm font-semibold text-[#1F2937] leading-snug group-hover:text-[#C89600] transition-colors">
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', lineHeight: 1.4 }}
+                className="group-hover:text-[#C89600] transition-colors">
                 {ev.title}
               </p>
-              <p className="text-[11px] text-gray-400 flex items-center gap-1.5 mt-1">
+              <p className="flex items-center gap-1.5 mt-1.5" style={{ fontSize: 12, fontWeight: 400, color: '#9CA3AF' }}>
                 <ClockIco />
                 {ev.time}
-                <span className="mx-0.5 text-gray-300">·</span>
+                <span style={{ color: '#D1D5DB', margin: '0 2px' }}>·</span>
                 <PinIco />
                 {ev.place}
               </p>
@@ -497,32 +466,34 @@ function ProximosEventos() {
   );
 }
 
+// ═══════════════════════════════════════════════════════
+//  RECURSOS PARA TI
+// ═══════════════════════════════════════════════════════
+
 function RecursosParaTi() {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-4 pt-4 pb-3 flex items-center justify-between border-b border-gray-50">
-        <h3 className="text-sm font-extrabold text-[#1F2937] flex items-center gap-2">
-          <span className="text-[#C89600]"><BookIco size={15} /></span>
+      <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+        <span className="flex items-center gap-2" style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>
+          <span style={{ color: '#C89600' }}><BookIco size={16} /></span>
           Recursos para ti
-        </h3>
-        <button type="button" className="text-xs text-[#C89600] font-semibold hover:underline">
-          Ver todos →
-        </button>
+        </span>
+        <button type="button" style={{ fontSize: 13, fontWeight: 500, color: '#C89600' }}
+          className="hover:underline">Ver todos →</button>
       </div>
-      <div className="p-4 space-y-4">
+      <div className="px-5 pb-5 space-y-4">
         {MOCK_RECURSOS.map(r => (
-          <div key={r.id} className="flex items-start gap-3 cursor-pointer group">
-            <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-opacity group-hover:opacity-80"
-              style={{ backgroundColor: r.bg }}
-            >
-              <BookIco size={18} style={{ color: r.iconColor, stroke: r.iconColor }} />
+          <div key={r.id} className="flex items-start gap-4 cursor-pointer group">
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+              style={{ backgroundColor: r.bg }}>
+              <BookIco size={18} style={{ stroke: r.iconColor }} />
             </div>
             <div>
-              <p className="text-sm font-semibold text-[#1F2937] leading-snug group-hover:text-[#C89600] transition-colors">
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', lineHeight: 1.4 }}
+                className="group-hover:text-[#C89600] transition-colors">
                 {r.title}
               </p>
-              <p className="text-[11px] text-gray-400 mt-0.5">{r.desc}</p>
+              <p style={{ fontSize: 12, fontWeight: 400, color: '#9CA3AF', marginTop: 3 }}>{r.desc}</p>
             </div>
           </div>
         ))}
@@ -532,28 +503,29 @@ function RecursosParaTi() {
 }
 
 // ═══════════════════════════════════════════════════════
-//  SKELETON DE CARGA
+//  SKELETON
 // ═══════════════════════════════════════════════════════
 
 function LoadingSkeleton() {
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {[1, 2, 3].map(i => (
-        <div key={i} className="rounded-xl bg-gray-50 border border-gray-100 p-4 animate-pulse">
-          <div className="flex gap-3 items-start">
-            <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0" />
-            <div className="flex-1 space-y-2">
-              <div className="h-3 bg-gray-200 rounded w-20" />
+        <div key={i} className="rounded-xl border border-gray-100 p-5 animate-pulse" style={{ backgroundColor: '#F9FAFB' }}>
+          <div className="flex gap-4 items-start">
+            <div className="w-11 h-11 rounded-xl bg-gray-200 shrink-0" />
+            <div className="flex-1 space-y-2.5">
+              <div className="h-3 bg-gray-200 rounded w-24" />
               <div className="h-4 bg-gray-200 rounded w-3/4" />
               <div className="h-3 bg-gray-200 rounded w-1/2" />
-              <div className="flex gap-2">
+              <div className="flex gap-2 pt-0.5">
                 <div className="h-5 bg-gray-200 rounded-full w-20" />
                 <div className="h-5 bg-gray-200 rounded-full w-24" />
+                <div className="h-5 bg-gray-200 rounded-full w-16" />
               </div>
             </div>
-            <div className="w-12 space-y-1 shrink-0">
+            <div className="w-14 space-y-2 shrink-0">
               <div className="h-3 bg-gray-200 rounded" />
-              <div className="h-6 bg-gray-200 rounded" />
+              <div className="h-7 bg-gray-200 rounded" />
             </div>
           </div>
         </div>
@@ -574,6 +546,17 @@ export default function OpePortalPage({
 }) {
   const firstName = userName.split(' ')[0];
 
+  // Inyección de Inter desde Google Fonts (solo la primera vez)
+  useEffect(() => {
+    if (!document.getElementById('ope-inter-font')) {
+      const link = document.createElement('link');
+      link.id   = 'ope-inter-font';
+      link.rel  = 'stylesheet';
+      link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap';
+      document.head.appendChild(link);
+    }
+  }, []);
+
   const [activeSection, setActiveSection] = useState('inicio');
   const [offers,        setOffers]        = useState([]);
   const [loading,       setLoading]       = useState(true);
@@ -581,7 +564,6 @@ export default function OpePortalPage({
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [showAll,       setShowAll]       = useState(false);
 
-  /* Filtros */
   const [filterSector,   setFilterSector]   = useState('');
   const [filterLocation, setFilterLocation] = useState('');
   const [filterModality, setFilterModality] = useState('');
@@ -597,19 +579,19 @@ export default function OpePortalPage({
       ...(filterModality && { modality: filterModality }),
     })
       .then(data => setOffers(data))
-      .catch(() =>
-        setError('No se pudo conectar con el servidor. Asegúrate de que está activo en el puerto 3001.')
-      )
+      .catch(() => setError('No se pudo conectar con el servidor. Asegúrate de que está activo en el puerto 3001.'))
       .finally(() => setLoading(false));
   }, [filterSector, filterLocation, filterModality]);
 
   const visibleOffers = showAll ? offers : offers.slice(0, 3);
   const hasMore       = !showAll && offers.length > 3;
 
-  /* ── Vista de detalle ──────────────────────────────── */
+  const FONT_STACK = "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+
+  /* ── Vista de detalle ─────────────────────────── */
   if (selectedOffer) {
     return (
-      <div className="fixed inset-0 z-50 flex bg-[#F4F5F7]">
+      <div className="fixed inset-0 z-50 flex" style={{ backgroundColor: '#F4F5F7', fontFamily: FONT_STACK }}>
         <Sidebar active="ofertas" onSection={setActiveSection} onNavigate={onNavigate} />
         <div className="flex-1 flex flex-col overflow-hidden">
           <TopBar userName={userName} userDegree={userDegree} />
@@ -621,134 +603,130 @@ export default function OpePortalPage({
     );
   }
 
-  /* ── Vista principal ───────────────────────────────── */
+  /* ── Vista principal ──────────────────────────── */
   return (
-    <div className="fixed inset-0 z-50 flex bg-[#F4F5F7]">
+    <div className="fixed inset-0 z-50 flex" style={{ backgroundColor: '#F4F5F7', fontFamily: FONT_STACK }}>
       <Sidebar active={activeSection} onSection={setActiveSection} onNavigate={onNavigate} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar userName={userName} userDegree={userDegree} />
 
         <main className="flex-1 overflow-y-auto">
-          {/* Saludo */}
-          <div className="px-8 pt-7 pb-5">
-            <h1 className="text-2xl font-extrabold text-[#1F2937]">¡Hola, {firstName}! 👋</h1>
-            <p className="text-sm text-gray-500 mt-1">
+
+          {/* ── Saludo ── */}
+          <div className="px-10 pt-8 pb-7">
+            <h1 style={{ fontSize: 28, fontWeight: 700, color: '#111827', lineHeight: 1.2 }}>
+              ¡Hola, {firstName}! 👋
+            </h1>
+            <p style={{ fontSize: 14, fontWeight: 400, color: '#6B7280', marginTop: 6, lineHeight: 1.5 }}>
               Descubre prácticas recomendadas para ti y sigue el estado de tus candidaturas.
             </p>
           </div>
 
-          {/* Grid: columna izquierda + columna derecha */}
-          <div className="px-8 pb-8 flex gap-6 items-start">
+          {/*
+            ── Grid principal ──
+            items-stretch: ambas columnas tienen la misma altura
+            → la columna izquierda usa flex-col + mt-auto para
+              empujar Eventos/Recursos al fondo del contenido
+          */}
+          <div
+            className="px-10 pb-10 grid items-stretch gap-8"
+            style={{ gridTemplateColumns: '1fr 330px' }}
+          >
 
-            {/* ── COLUMNA IZQUIERDA ─────────────────────── */}
-            <div className="flex-1 min-w-0 space-y-5">
+            {/* ── Columna izquierda: flex-col, eventos al fondo ── */}
+            <div className="flex flex-col gap-6">
 
               {/* Tarjeta de ofertas */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                {/* Cabecera sección */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-1.5">
-                    <h2 className="text-base font-extrabold text-[#1F2937]">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                {/* Cabecera */}
+                <div className="px-6 pt-6 pb-5 flex items-center justify-between border-b border-gray-50">
+                  <div className="flex items-center gap-2">
+                    <span style={{ fontSize: 17, fontWeight: 600, color: '#111827' }}>
                       Ofertas recomendadas para ti
-                    </h2>
-                    <span className="text-gray-400"><InfoIco /></span>
+                    </span>
+                    <span style={{ color: '#9CA3AF', display: 'flex' }}><InfoIco /></span>
                   </div>
-                  <button type="button" className="text-sm text-[#C89600] font-semibold hover:underline">
+                  <button type="button" style={{ fontSize: 13, fontWeight: 500, color: '#C89600' }}
+                    className="hover:underline whitespace-nowrap">
                     Ver todas las ofertas →
                   </button>
                 </div>
 
                 {/* Filtros */}
-                <div className="flex items-center gap-2 flex-wrap mb-5">
-                  <FilterDropdown
-                    label="Área profesional"
-                    options={SECTORES}
-                    value={filterSector}
-                    onChange={setFilterSector}
-                  />
-                  <FilterDropdown
-                    label="Ubicación"
-                    options={UBICACIONES}
-                    value={filterLocation}
-                    onChange={setFilterLocation}
-                  />
-                  <FilterDropdown
-                    label="Modalidad"
-                    options={MODALIDADES}
-                    value={filterModality}
-                    onChange={setFilterModality}
-                  />
-                  <FilterDropdown
-                    label="Duración"
-                    options={DURACIONES}
-                    value=""
-                    onChange={() => {}}
-                  />
-                  <button
-                    type="button"
-                    className="flex items-center gap-1.5 text-sm text-gray-600 border border-gray-200 bg-white rounded-full px-3.5 py-1.5 hover:border-gray-400 transition-colors"
-                  >
+                <div className="px-6 py-4 flex items-center gap-2.5 flex-wrap border-b border-gray-50">
+                  <FilterDropdown label="Área profesional" options={SECTORES}    value={filterSector}   onChange={setFilterSector} />
+                  <FilterDropdown label="Ubicación"        options={UBICACIONES}  value={filterLocation} onChange={setFilterLocation} />
+                  <FilterDropdown label="Modalidad"        options={MODALIDADES}  value={filterModality} onChange={setFilterModality} />
+                  <FilterDropdown label="Duración"         options={DURACIONES}   value=""               onChange={() => {}} />
+                  <button type="button"
+                    className="flex items-center gap-1.5 border border-gray-200 bg-white rounded-full px-4 py-2 hover:border-gray-400 transition-colors"
+                    style={{ fontSize: 13, fontWeight: 400, color: '#374151' }}>
                     <FilterIco />
                     Más filtros
                   </button>
                 </div>
 
-                {/* Contenido según estado */}
-                {loading && <LoadingSkeleton />}
+                {/* Lista */}
+                <div className="px-6 py-5">
+                  {loading && <LoadingSkeleton />}
 
-                {error && (
-                  <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
-                    {error}
-                  </div>
-                )}
-
-                {!loading && !error && offers.length === 0 && (
-                  <p className="text-center text-gray-400 text-sm py-10">
-                    No hay ofertas disponibles con los filtros seleccionados.
-                  </p>
-                )}
-
-                {!loading && !error && offers.length > 0 && (
-                  <>
-                    <div className="space-y-3">
-                      {visibleOffers.map((offer, idx) => (
-                        <OfferListItem
-                          key={offer.id}
-                          offer={offer}
-                          rank={idx}
-                          onClick={() => setSelectedOffer(offer)}
-                        />
-                      ))}
+                  {error && (
+                    <div className="rounded-xl p-4" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA' }}>
+                      <p style={{ fontSize: 13, fontWeight: 400, color: '#B91C1C', lineHeight: 1.5 }}>{error}</p>
                     </div>
+                  )}
 
-                    {hasMore && (
-                      <div className="mt-5 text-center">
-                        <button
-                          type="button"
-                          onClick={() => setShowAll(true)}
-                          className="text-sm font-semibold text-[#C89600] hover:underline"
-                        >
-                          Ver más ofertas →
-                        </button>
+                  {!loading && !error && offers.length === 0 && (
+                    <p className="text-center py-10" style={{ fontSize: 14, color: '#9CA3AF' }}>
+                      No hay ofertas disponibles con los filtros seleccionados.
+                    </p>
+                  )}
+
+                  {!loading && !error && offers.length > 0 && (
+                    <>
+                      <div className="space-y-3">
+                        {visibleOffers.map((offer, idx) => (
+                          <OfferListItem
+                            key={offer.id}
+                            offer={offer}
+                            rank={idx}
+                            onClick={() => setSelectedOffer(offer)}
+                          />
+                        ))}
                       </div>
-                    )}
-                  </>
-                )}
+
+                      {hasMore && (
+                        <div className="mt-6 text-center">
+                          <button type="button" onClick={() => setShowAll(true)}
+                            style={{ fontSize: 14, fontWeight: 500, color: '#C89600' }}
+                            className="hover:underline">
+                            Ver más ofertas →
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
 
-              {/* Próximos eventos + Recursos */}
-              <div className="grid grid-cols-2 gap-5">
+              {/*
+                Eventos + Recursos empujados al fondo de la columna.
+                mt-auto funciona porque la columna es flex-col
+                y el padre tiene items-stretch (misma altura que la columna derecha).
+              */}
+              <div className="mt-auto grid grid-cols-2 gap-5">
                 <ProximosEventos />
                 <RecursosParaTi />
               </div>
             </div>
 
-            {/* ── COLUMNA DERECHA ───────────────────────── */}
-            <div className="w-[320px] shrink-0 sticky top-4">
+            {/* ── Columna derecha: sticky ── */}
+            <div className="sticky top-5 self-start">
               <CandidaturasPanel />
             </div>
           </div>
+
         </main>
       </div>
     </div>
