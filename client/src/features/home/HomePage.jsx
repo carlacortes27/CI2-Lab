@@ -1,4 +1,7 @@
+import { useAuth } from '../../context/useAuth.js';
+
 export default function HomePage({ onNavigate }) {
+  const { user, logout } = useAuth();
   const cards = [
     {
       icon: 'ID',
@@ -41,12 +44,26 @@ export default function HomePage({ onNavigate }) {
             trayectoria desde un mismo espacio.
           </p>
           <div className="hero-actions">
-            <button type="button" className="dark-button" onClick={() => onNavigate('create')}>
-              Crear mi CV
-            </button>
-            <button type="button" className="outline-button" onClick={() => onNavigate('ope')}>
-              Ver practicas
-            </button>
+            {user ? (
+              <>
+                <span className="hero-user">Hola, {user.name}</span>
+                <button type="button" className="dark-button" onClick={() => onNavigate('create')}>
+                  Crear mi CV
+                </button>
+                <button type="button" className="outline-button" onClick={logout}>
+                  Cerrar sesion
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" className="dark-button" onClick={() => onNavigate('login')}>
+                  Iniciar sesion
+                </button>
+                <button type="button" className="outline-button" onClick={() => onNavigate('register')}>
+                  Registrarse
+                </button>
+              </>
+            )}
           </div>
           <p className="hero-note">
             Una plataforma para estudiantes de Comillas que preparan su futuro profesional.
