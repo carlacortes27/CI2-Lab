@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import CVPreview from '../components/cv/CVPreview.jsx';
-import TemplateSelector from '../components/cv/TemplateSelector.jsx';
-import { exportToPDF, savePreviewToCloud } from '../services/cvService.js';
-import { useCv } from '../context/CvContext.jsx';
+import CVPreview from './forms/CVPreview.jsx';
+import TemplateSelector from './forms/TemplateSelector.jsx';
+import { exportToPDF, savePreviewToCloud } from '../../services/cvService.js';
+import { useCv } from '../../context/CvContext.jsx';
 
 export default function CVPreviewPage({ onNavigate }) {
   const { cv } = useCv();

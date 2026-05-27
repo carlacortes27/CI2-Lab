@@ -1,5 +1,5 @@
-import { useCv } from '../../context/CvContext.jsx';
-import { isValidEmail, isValidPhone } from '../../utils/validators.js';
+import { useCv } from '../../../context/CvContext.jsx';
+import { isValidEmail, isValidPhone } from '../../../utils/validators.js';
 import { Field, Select, SectionCard } from './FormControls.jsx';
 
 const countries = ['+34', '+44', '+1', '+49', '+33', '+39', '+351'];

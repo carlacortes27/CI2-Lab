@@ -1,4 +1,4 @@
-import { useCv } from '../../context/CvContext.jsx';
+import { useCv } from '../../../context/CvContext.jsx';
 import { Field, Select, SectionCard } from './FormControls.jsx';
 
 const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Nativo'];

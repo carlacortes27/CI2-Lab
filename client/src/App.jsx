@@ -1,26 +1,35 @@
+/**
+ * App.jsx — Shell principal de la aplicación
+ *
+ * ARCHIVO CONGELADO. No añadir rutas aquí.
+ * Para añadir una ruta nueva, edita routes.config.js.
+ */
 import { useState } from 'react';
 import { CvProvider } from './context/CvContext.jsx';
 import Navbar from './components/Navbar.jsx';
-import HomePage from './pages/HomePage.jsx';
-import CreateCVPage from './pages/CreateCVPage.jsx';
-import UploadCVPage from './pages/UploadCVPage.jsx';
-import CVPreviewPage from './pages/CVPreviewPage.jsx';
-import OpePortalPage from './pages/OpePortalPage.jsx';
+import { ROUTES } from './routes.config.js';
 import './App.css';
 
+// Props adicionales fijas por ruta (relaciones permanentes entre páginas).
+// Para rutas nuevas, añadir la entrada aquí SOLO si la página necesita
+// comunicarse con otra página específica.
+const EXTRA_PROPS = {
+  ope: (navigate) => ({ onNavigateToEditor: () => navigate('create') }),
+};
+
 export default function App() {
-  const [page, setPage] = useState('home');
-  const [, setHistory] = useState([]);
+  const [page, setPage]       = useState('home');
+  const [history, setHistory] = useState([]);
 
   function navigate(nextPage) {
     if (nextPage === page) return;
-    setHistory(previous => [...previous, page]);
+    setHistory(prev => [...prev, page]);
     setPage(nextPage);
   }
 
   function goBack() {
-    setHistory(previous => {
-      const copy = [...previous];
+    setHistory(prev => {
+      const copy = [...prev];
       const last = copy.pop();
       setPage(last || 'home');
       return copy;
@@ -36,11 +45,15 @@ export default function App() {
             Volver
           </button>
         )}
-        {page === 'home' && <HomePage onNavigate={navigate} />}
-        {page === 'create' && <CreateCVPage onNavigate={navigate} />}
-        {page === 'upload' && <UploadCVPage onNavigate={navigate} />}
-        {page === 'preview' && <CVPreviewPage onNavigate={navigate} />}
-        {page === 'ope' && <OpePortalPage onNavigateToEditor={() => navigate('create')} />}
+        {ROUTES.map(({ key, Page }) =>
+          page === key && (
+            <Page
+              key={key}
+              onNavigate={navigate}
+              {...(EXTRA_PROPS[key]?.(navigate) ?? {})}
+            />
+          )
+        )}
       </div>
     </CvProvider>
   );

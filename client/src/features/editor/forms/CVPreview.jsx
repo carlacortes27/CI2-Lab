@@ -1,4 +1,4 @@
-import { useCv } from '../../context/CvContext.jsx';
+import { useCv } from '../../../context/CvContext.jsx';
 
 const labels = {
   summary: 'Sobre mí',

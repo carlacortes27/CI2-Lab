@@ -1,12 +1,14 @@
-export default function Navbar({ currentPage, onNavigate }) {
-  const links = [
-    ['home', 'Inicio'],
-    ['create', 'Crear CV'],
-    ['upload', 'Subir CV'],
-    ['preview', 'Vista previa'],
-    ['ope', 'Portal OPE'],
-  ];
+/**
+ * Navbar.jsx — Barra de navegación principal
+ *
+ * ARCHIVO CONGELADO. No añadir enlaces aquí.
+ * Para añadir una nueva sección al menú, pon nav:true en routes.config.js.
+ */
+import { ROUTES } from '../routes.config.js';
 
+const NAV_LINKS = ROUTES.filter(r => r.nav);
+
+export default function Navbar({ currentPage, onNavigate }) {
   return (
     <header className="topbar">
       <button className="brand" type="button" onClick={() => onNavigate('home')}>
@@ -17,12 +19,12 @@ export default function Navbar({ currentPage, onNavigate }) {
         </span>
       </button>
       <nav className="nav-links" aria-label="Navegación principal">
-        {links.map(([page, label]) => (
+        {NAV_LINKS.map(({ key, label }) => (
           <button
-            key={page}
+            key={key}
             type="button"
-            className={currentPage === page ? 'active' : ''}
-            onClick={() => onNavigate(page)}
+            className={currentPage === key ? 'active' : ''}
+            onClick={() => onNavigate(key)}
           >
             {label}
           </button>

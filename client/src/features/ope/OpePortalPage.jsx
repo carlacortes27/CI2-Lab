@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { getOffers } from '../lib/api.js';
-import OfferListItem from '../features/offers/OfferListItem.jsx';
-import OfferDetail from '../features/offers/OfferDetail.jsx';
+import { getOffers } from '../../lib/api.js';
+import OfferListItem from './OfferListItem.jsx';
+import OfferDetail from './OfferDetail.jsx';
 
 const MOCK_COMUNICACIONES = [
   {

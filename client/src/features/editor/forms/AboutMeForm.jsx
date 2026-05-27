@@ -1,5 +1,5 @@
-import { useCv } from '../../context/CvContext.jsx';
-import { aboutMeStatus } from '../../utils/validators.js';
+import { useCv } from '../../../context/CvContext.jsx';
+import { aboutMeStatus } from '../../../utils/validators.js';
 import { SectionCard, TextArea } from './FormControls.jsx';
 
 export default function AboutMeForm() {

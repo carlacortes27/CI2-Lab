@@ -1,4 +1,4 @@
-import { useCv } from '../../context/CvContext.jsx';
+import { useCv } from '../../../context/CvContext.jsx';
 
 const templates = [
   { id: 'clasica', name: 'Clásica', accent: '#111827', layout: 'split' },

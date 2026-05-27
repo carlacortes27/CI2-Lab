@@ -1,4 +1,4 @@
-import { useCv } from '../../context/CvContext.jsx';
+import { useCv } from '../../../context/CvContext.jsx';
 import { Field, SectionCard } from './FormControls.jsx';
 
 const technicalGroups = [

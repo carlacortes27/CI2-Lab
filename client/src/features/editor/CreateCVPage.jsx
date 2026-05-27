@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import CVForm from '../components/cv/CVForm.jsx';
-import CVPreview from '../components/cv/CVPreview.jsx';
-import TemplateSelector from '../components/cv/TemplateSelector.jsx';
-import { correctSpelling, exportToPDF, savePreviewToCloud, translateCV } from '../services/cvService.js';
-import { useCv } from '../context/CvContext.jsx';
+import CVForm from './forms/CVForm.jsx';
+import CVPreview from './forms/CVPreview.jsx';
+import TemplateSelector from './forms/TemplateSelector.jsx';
+import { correctSpelling, exportToPDF, savePreviewToCloud, translateCV } from '../../services/cvService.js';
+import { useCv } from '../../context/CvContext.jsx';
 
 export default function CreateCVPage({ onNavigate }) {
   const { cv, dispatch } = useCv();
