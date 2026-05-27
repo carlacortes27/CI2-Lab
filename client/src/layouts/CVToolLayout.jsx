@@ -21,30 +21,6 @@ import {
   UploadIcon,
 } from '../components/ui/Icons.jsx';
 
-// ── Escudo Comillas (mismo que PortalLayout) ──────────────────────────────────
-function ComillasShield({ size = 32 }) {
-  return (
-    <svg viewBox="0 0 40 44" width={size} height={Math.round(size * 1.1)} fill="none" aria-hidden="true">
-      <path
-        d="M20 2L36 8V24C36 33 20 42 20 42C20 42 4 33 4 24V8Z"
-        fill="#D4A017"
-      />
-      <path
-        d="M20 14V30M13 22H27"
-        stroke="white"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-      <path
-        d="M20 2L36 8V24C36 33 20 42 20 42C20 42 4 33 4 24V8Z"
-        stroke="#B8860B"
-        strokeWidth="1.5"
-        fill="none"
-      />
-    </svg>
-  );
-}
-
 // ── Ítems del flujo en el sidebar ─────────────────────────────────────────────
 const STEPS = [
   { key: 'create',  label: 'Crear desde cero',   Icon: FileTextIcon  },
@@ -66,28 +42,31 @@ function CVSidebar({ activeStep, onNavigate, onStep }) {
       overflowY:       'auto',
       gap:             8,
     }}>
-      {/* Botón ← Volver */}
+      {/* Botón Volver */}
       <button
         type="button"
         onClick={() => onNavigate?.('home')}
         style={{
-          display:    'flex',
-          alignItems: 'center',
-          gap:        6,
-          padding:    '8px 4px',
-          background: 'none',
-          border:     'none',
-          cursor:     'pointer',
-          color:      T.t2,
-          fontSize:   13,
-          fontWeight: 500,
-          fontFamily: T.font,
-          marginBottom: 8,
+          display:         'flex',
+          alignItems:      'center',
+          gap:             8,
+          width:           '100%',
+          padding:         '9px 14px',
+          borderRadius:    T.radiusInput,
+          border:          `1px solid ${T.border}`,
+          backgroundColor: T.white,
+          color:           T.t2,
+          fontSize:        13,
+          fontWeight:      500,
+          cursor:          'pointer',
+          fontFamily:      T.font,
+          transition:      'background-color 0.15s',
+          marginBottom:    8,
         }}
-        onMouseEnter={e => e.currentTarget.style.color = T.t1}
-        onMouseLeave={e => e.currentTarget.style.color = T.t2}
+        onMouseEnter={e => e.currentTarget.style.backgroundColor = T.hoverBg}
+        onMouseLeave={e => e.currentTarget.style.backgroundColor = T.white}
       >
-        <ArrowLeftIcon size={14} />
+        <ArrowLeftIcon size={15} color={T.t3} />
         Volver
       </button>
 
@@ -170,7 +149,7 @@ function CVSidebar({ activeStep, onNavigate, onStep }) {
 }
 
 // ── Header del Shell CV (64px, ancho completo) ────────────────────────────────
-function CVHeader({ toolbarActions, onNavigate }) {
+function CVHeader({ toolbarActions }) {
   return (
     <header style={{
       height:          64,
@@ -183,22 +162,8 @@ function CVHeader({ toolbarActions, onNavigate }) {
       flexShrink:      0,
       gap:             24,
     }}>
-      {/* Logo Comillas + label CV COMILLAS */}
-      <button
-        type="button"
-        onClick={() => onNavigate?.('home')}
-        style={{
-          display:    'flex',
-          alignItems: 'center',
-          gap:        12,
-          background: 'none',
-          border:     'none',
-          cursor:     'pointer',
-          padding:    0,
-          flexShrink: 0,
-        }}
-      >
-        <ComillasShield size={32} />
+      {/* Label CV COMILLAS — solo branding, sin navegación */}
+      <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
         <div style={{ textAlign: 'left' }}>
           <p style={{
             fontSize:      13,
@@ -222,7 +187,7 @@ function CVHeader({ toolbarActions, onNavigate }) {
             Comillas Career
           </p>
         </div>
-      </button>
+      </div>
 
       {/* Botones de toolbar action */}
       {toolbarActions && toolbarActions.length > 0 && (
@@ -290,7 +255,7 @@ export default function CVToolLayout({
       }}
     >
       {/* HEADER — 64px, ancho completo */}
-      <CVHeader toolbarActions={toolbarActions} onNavigate={onNavigate} />
+      <CVHeader toolbarActions={toolbarActions} />
 
       {/* GRID: Sidebar | Workspace */}
       <div style={{

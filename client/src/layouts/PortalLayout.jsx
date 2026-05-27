@@ -18,6 +18,7 @@ import {
   HomeIcon, BriefcaseIcon, ClipboardIcon, BuildingIcon,
   CalendarIcon, BookIcon, CompassIcon, UserIcon, SettingsIcon,
   SearchIcon, BellIcon, MailIcon, ChevronDownIcon, TrophyIcon,
+  ArrowLeftIcon,
 } from '../components/ui/Icons.jsx';
 import Avatar from '../components/ui/Avatar.jsx';
 
@@ -34,47 +35,6 @@ const NAV_ITEMS = [
   { key: 'ajustes',      label: 'Ajustes',          Icon: SettingsIcon  },
 ];
 
-// ── Componente Escudo Comillas ────────────────────────────────────────────────
-function ComillasShield({ size = 40 }) {
-  return (
-    <div style={{
-      width:           size,
-      height:          size,
-      flexShrink:      0,
-      display:         'flex',
-      alignItems:      'center',
-      justifyContent:  'center',
-    }}>
-      {/*
-        Escudo dorado estilizado de la Universidad Pontificia Comillas.
-        Se usa el SVG importado desde assets cuando está disponible;
-        aquí se representa con un escudo SVG en dorado (#D4A017).
-      */}
-      <svg viewBox="0 0 40 44" width={size} height={Math.round(size * 1.1)} fill="none">
-        {/* Forma del escudo */}
-        <path
-          d="M20 2L36 8V24C36 33 20 42 20 42C20 42 4 33 4 24V8Z"
-          fill="#D4A017"
-        />
-        {/* Cruz interior */}
-        <path
-          d="M20 14V30M13 22H27"
-          stroke="white"
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
-        {/* Bordura */}
-        <path
-          d="M20 2L36 8V24C36 33 20 42 20 42C20 42 4 33 4 24V8Z"
-          stroke="#B8860B"
-          strokeWidth="1.5"
-          fill="none"
-        />
-      </svg>
-    </div>
-  );
-}
-
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 function Sidebar({ active, onSection, onNavigate }) {
   return (
@@ -88,45 +48,32 @@ function Sidebar({ active, onSection, onNavigate }) {
       width:           260,
       flexShrink:      0,
     }}>
-      {/* Logo Comillas — escudo dorado completo + texto */}
-      <div style={{ padding: '28px 24px 20px', flexShrink: 0 }}>
+      {/* Botón Volver al homepage */}
+      <div style={{ padding: '20px 16px 12px', flexShrink: 0 }}>
         <button
           type="button"
           onClick={() => onNavigate?.('home')}
           style={{
-            display:    'flex',
-            alignItems: 'center',
-            gap:        12,
-            background: 'none',
-            border:     'none',
-            cursor:     'pointer',
-            padding:    0,
+            display:         'flex',
+            alignItems:      'center',
+            gap:             8,
+            width:           '100%',
+            padding:         '9px 14px',
+            borderRadius:    T.radiusInput,
+            border:          `1px solid ${T.border}`,
+            backgroundColor: T.white,
+            color:           T.t2,
+            fontSize:        13,
+            fontWeight:      500,
+            cursor:          'pointer',
+            fontFamily:      T.font,
+            transition:      'background-color 0.15s',
           }}
+          onMouseEnter={e => e.currentTarget.style.backgroundColor = T.hoverBg}
+          onMouseLeave={e => e.currentTarget.style.backgroundColor = T.white}
         >
-          <ComillasShield size={40} />
-          <div style={{ textAlign: 'left' }}>
-            <p style={{
-              fontSize:      14,
-              fontWeight:    800,
-              color:         T.t1,
-              letterSpacing: '0.04em',
-              textTransform: 'uppercase',
-              lineHeight:    1,
-              fontFamily:    T.font,
-            }}>
-              Comillas
-            </p>
-            <p style={{
-              fontSize:   10,
-              fontWeight: 400,
-              color:      T.t3,
-              marginTop:  3,
-              lineHeight: 1,
-              fontFamily: T.font,
-            }}>
-              Universidad Pontificia
-            </p>
-          </div>
+          <ArrowLeftIcon size={15} color={T.t3} />
+          Volver
         </button>
       </div>
 
@@ -138,7 +85,7 @@ function Sidebar({ active, onSection, onNavigate }) {
             <button
               key={key}
               type="button"
-              onClick={() => key === 'inicio' ? onNavigate?.('home') : onSection(key)}
+              onClick={() => onSection(key)}
               style={{
                 display:         'flex',
                 alignItems:      'center',

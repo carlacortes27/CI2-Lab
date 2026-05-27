@@ -40,6 +40,11 @@ button {
   box-shadow: 0 10px 22px rgba(31, 41, 55, 0.08);
 }
 
+/* Ocultar el botón Volver global cuando hay un shell de pantalla completa activo */
+body:has([data-shell]) .back-button {
+  display: none;
+}
+
 .topbar {
   position: sticky;
   top: 0;
