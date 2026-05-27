@@ -1,0 +1,578 @@
+[
+  {
+    "id": "evt_001",
+    "title": "Feria de Empleo Comillas",
+    "organizer": "Comillas Careers",
+    "company": "Universidad Pontificia Comillas",
+    "date": "2025-06-04",
+    "startTime": "10:00",
+    "endTime": "16:00",
+    "location": "Campus Alberto Aguilera",
+    "modality": "Presencial",
+    "description": "Encuentro con empresas colaboradoras para conocer oportunidades de prácticas, empleo junior y programas de talento.",
+    "tags": [
+      "Networking",
+      "Empleo",
+      "Prácticas"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_002",
+    "title": "Workshop de CV y carta de motivación",
+    "organizer": "Oficina de Prácticas y Empleo",
+    "company": null,
+    "date": "2025-06-06",
+    "startTime": "12:00",
+    "endTime": "13:30",
+    "location": "Campus Cantoblanco",
+    "modality": "Presencial",
+    "description": "Sesión práctica para mejorar el CV, adaptar la carta de motivación y preparar candidaturas para procesos de selección.",
+    "tags": [
+      "Orientación",
+      "CV",
+      "Candidaturas"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_003",
+    "title": "Sesión informativa: prácticas internacionales",
+    "organizer": "Universidad Pontificia Comillas",
+    "company": null,
+    "date": "2025-06-10",
+    "startTime": "17:00",
+    "endTime": "18:00",
+    "location": "Online",
+    "modality": "Online",
+    "description": "Presentación de opciones de prácticas internacionales, requisitos académicos, documentación necesaria y plazos de solicitud.",
+    "tags": [
+      "Internacional",
+      "Prácticas",
+      "Información"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_004",
+    "title": "Deloitte: oportunidades en consultoría",
+    "organizer": "Deloitte",
+    "company": "Deloitte",
+    "date": "2025-06-12",
+    "startTime": "18:00",
+    "endTime": "19:30",
+    "location": "Campus Alberto Aguilera",
+    "modality": "Presencial",
+    "description": "Charla con profesionales de Deloitte sobre perfiles junior, proyectos de consultoría y consejos para superar el proceso de selección.",
+    "tags": [
+      "Consultoría",
+      "Empresa",
+      "Recruitment"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_005",
+    "title": "BBVA Graduate Program: sesión de presentación",
+    "organizer": "BBVA",
+    "company": "BBVA",
+    "date": "2025-06-16",
+    "startTime": "13:00",
+    "endTime": "14:00",
+    "location": "Online",
+    "modality": "Online",
+    "description": "Presentación del programa graduate de BBVA, áreas disponibles, requisitos de acceso y recomendaciones para aplicar.",
+    "tags": [
+      "Banca",
+      "Graduate Program",
+      "Empresa"
+    ],
+    "registrationStatus": "Próximamente"
+  },
+  {
+    "id": "evt_006",
+    "title": "Simulación de entrevistas individuales",
+    "organizer": "Oficina de Prácticas y Empleo",
+    "company": null,
+    "date": "2025-06-18",
+    "startTime": "09:30",
+    "endTime": "14:00",
+    "location": "Campus Alberto Aguilera",
+    "modality": "Presencial",
+    "description": "Sesiones breves de entrevista simulada con feedback personalizado para mejorar la comunicación y preparación del candidato.",
+    "tags": [
+      "Entrevistas",
+      "Orientación",
+      "Feedback"
+    ],
+    "registrationStatus": "Completo"
+  },
+  {
+    "id": "evt_007",
+    "title": "Iberdrola: talento joven en energía",
+    "organizer": "Iberdrola",
+    "company": "Iberdrola",
+    "date": "2025-06-20",
+    "startTime": "16:00",
+    "endTime": "17:30",
+    "location": "Campus ICAI",
+    "modality": "Presencial",
+    "description": "Encuentro con el equipo de talento de Iberdrola para conocer proyectos de energía, sostenibilidad e incorporación de perfiles junior.",
+    "tags": [
+      "Energía",
+      "Sostenibilidad",
+      "Empresa"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_008",
+    "title": "Deadline candidaturas: programa de prácticas OPE",
+    "organizer": "Oficina de Prácticas y Empleo",
+    "company": null,
+    "date": "2025-06-23",
+    "startTime": "23:59",
+    "endTime": null,
+    "location": "Online",
+    "modality": "Online",
+    "description": "Último día para enviar candidaturas al programa interno de prácticas gestionado por la Oficina de Prácticas y Empleo.",
+    "tags": [
+      "Deadline",
+      "Prácticas",
+      "Candidaturas"
+    ],
+    "registrationStatus": "Cerrada"
+  },
+  {
+    "id": "evt_009",
+    "title": "EY: cómo preparar un assessment center",
+    "organizer": "EY",
+    "company": "EY",
+    "date": "2025-06-25",
+    "startTime": "18:00",
+    "endTime": "19:15",
+    "location": "Online",
+    "modality": "Online",
+    "description": "Sesión práctica para entender las dinámicas de un assessment center y preparar casos, role plays y entrevistas grupales.",
+    "tags": [
+      "Consultoría",
+      "Assessment",
+      "Empresa"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_010",
+    "title": "Networking con alumni en banca y finanzas",
+    "organizer": "Comillas Alumni",
+    "company": "Universidad Pontificia Comillas",
+    "date": "2025-06-27",
+    "startTime": "19:00",
+    "endTime": "20:30",
+    "location": "Campus Alberto Aguilera",
+    "modality": "Presencial",
+    "description": "Encuentro informal con antiguos alumnos que trabajan en banca, inversión, auditoría y corporate finance.",
+    "tags": [
+      "Alumni",
+      "Finanzas",
+      "Networking"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_011",
+    "title": "Acciona: carreras en infraestructuras y sostenibilidad",
+    "organizer": "Acciona",
+    "company": "Acciona",
+    "date": "2025-07-01",
+    "startTime": "17:30",
+    "endTime": "19:00",
+    "location": "Campus ICAI",
+    "modality": "Presencial",
+    "description": "Presentación de proyectos de Acciona y oportunidades para estudiantes interesados en ingeniería, sostenibilidad e infraestructuras.",
+    "tags": [
+      "Ingeniería",
+      "Sostenibilidad",
+      "Empresa"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_012",
+    "title": "Cómo optimizar tu perfil de LinkedIn",
+    "organizer": "Oficina de Prácticas y Empleo",
+    "company": null,
+    "date": "2025-07-03",
+    "startTime": "11:00",
+    "endTime": "12:00",
+    "location": "Online",
+    "modality": "Online",
+    "description": "Taller para mejorar el titular, extracto, experiencia y palabras clave del perfil de LinkedIn de cara a procesos de selección.",
+    "tags": [
+      "LinkedIn",
+      "Orientación",
+      "Marca personal"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_013",
+    "title": "PwC: perfiles junior en auditoría y consulting",
+    "organizer": "PwC",
+    "company": "PwC",
+    "date": "2025-07-07",
+    "startTime": "18:00",
+    "endTime": "19:30",
+    "location": "Campus Alberto Aguilera",
+    "modality": "Presencial",
+    "description": "Sesión con profesionales de PwC para explicar áreas de entrada, procesos de selección y evolución profesional dentro de la firma.",
+    "tags": [
+      "Auditoría",
+      "Consultoría",
+      "Empresa"
+    ],
+    "registrationStatus": "Próximamente"
+  },
+  {
+    "id": "evt_014",
+    "title": "Santander: banca, tecnología y talento joven",
+    "organizer": "Banco Santander",
+    "company": "Banco Santander",
+    "date": "2025-07-09",
+    "startTime": "13:30",
+    "endTime": "14:30",
+    "location": "Online",
+    "modality": "Online",
+    "description": "Presentación de oportunidades para estudiantes interesados en banca, transformación digital, datos y tecnología financiera.",
+    "tags": [
+      "Banca",
+      "Tecnología",
+      "Empresa"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_015",
+    "title": "Open Day en Telefónica",
+    "organizer": "Telefónica",
+    "company": "Telefónica",
+    "date": "2025-07-11",
+    "startTime": "10:00",
+    "endTime": "13:00",
+    "location": "Distrito Telefónica, Madrid",
+    "modality": "Presencial",
+    "description": "Visita a las oficinas de Telefónica para conocer equipos, proyectos digitales y programas de prácticas para estudiantes universitarios.",
+    "tags": [
+      "Open Day",
+      "Tecnología",
+      "Empresa"
+    ],
+    "registrationStatus": "Completo"
+  },
+  {
+    "id": "evt_016",
+    "title": "Mesa redonda: primer empleo después de la universidad",
+    "organizer": "Universidad Pontificia Comillas",
+    "company": null,
+    "date": "2025-07-15",
+    "startTime": "18:00",
+    "endTime": "19:30",
+    "location": "Campus Alberto Aguilera",
+    "modality": "Híbrido",
+    "description": "Conversación con alumni y orientadores sobre búsqueda de primer empleo, expectativas salariales, entrevistas y adaptación profesional.",
+    "tags": [
+      "Primer empleo",
+      "Alumni",
+      "Orientación"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_017",
+    "title": "Repsol: transición energética y oportunidades profesionales",
+    "organizer": "Repsol",
+    "company": "Repsol",
+    "date": "2025-07-17",
+    "startTime": "16:30",
+    "endTime": "18:00",
+    "location": "Campus ICAI",
+    "modality": "Presencial",
+    "description": "Sesión sobre transformación energética, perfiles demandados y oportunidades de prácticas en áreas técnicas y de negocio.",
+    "tags": [
+      "Energía",
+      "Transición energética",
+      "Empresa"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_018",
+    "title": "KPMG: claves para superar una entrevista por competencias",
+    "organizer": "KPMG",
+    "company": "KPMG",
+    "date": "2025-07-21",
+    "startTime": "17:00",
+    "endTime": "18:15",
+    "location": "Online",
+    "modality": "Online",
+    "description": "Taller orientado a preparar entrevistas por competencias, estructurar respuestas y defender experiencias académicas y profesionales.",
+    "tags": [
+      "Entrevistas",
+      "Consultoría",
+      "Empresa"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_019",
+    "title": "Indra: tecnología, defensa y consultoría digital",
+    "organizer": "Indra",
+    "company": "Indra",
+    "date": "2025-07-24",
+    "startTime": "12:30",
+    "endTime": "13:45",
+    "location": "Campus Alberto Aguilera",
+    "modality": "Presencial",
+    "description": "Presentación de áreas de trabajo en Indra, perfiles tecnológicos demandados y programas de incorporación para recién graduados.",
+    "tags": [
+      "Tecnología",
+      "Ingeniería",
+      "Empresa"
+    ],
+    "registrationStatus": "Próximamente"
+  },
+  {
+    "id": "evt_020",
+    "title": "Sesión de dudas sobre convenios de prácticas",
+    "organizer": "Oficina de Prácticas y Empleo",
+    "company": null,
+    "date": "2025-07-29",
+    "startTime": "10:00",
+    "endTime": "11:00",
+    "location": "Online",
+    "modality": "Online",
+    "description": "Sesión para resolver dudas sobre documentación, firmas, duración, reconocimiento académico y gestión de convenios de prácticas.",
+    "tags": [
+      "Prácticas",
+      "Convenios",
+      "Información"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_021",
+    "title": "Endesa: perfiles STEM y negocio energético",
+    "organizer": "Endesa",
+    "company": "Endesa",
+    "date": "2025-08-04",
+    "startTime": "17:00",
+    "endTime": "18:30",
+    "location": "Online",
+    "modality": "Online",
+    "description": "Encuentro con responsables de talento de Endesa para conocer posiciones de prácticas en ingeniería, datos, sostenibilidad y negocio.",
+    "tags": [
+      "Energía",
+      "STEM",
+      "Empresa"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_022",
+    "title": "Preparación para ferias de empleo",
+    "organizer": "Comillas Careers",
+    "company": "Universidad Pontificia Comillas",
+    "date": "2025-08-07",
+    "startTime": "12:00",
+    "endTime": "13:00",
+    "location": "Online",
+    "modality": "Online",
+    "description": "Consejos para preparar el elevator pitch, priorizar empresas, hacer seguimiento tras una feria y aprovechar contactos profesionales.",
+    "tags": [
+      "Networking",
+      "Orientación",
+      "Feria"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_023",
+    "title": "Amazon: operaciones, datos y programas para graduados",
+    "organizer": "Amazon",
+    "company": "Amazon",
+    "date": "2025-08-12",
+    "startTime": "18:00",
+    "endTime": "19:00",
+    "location": "Online",
+    "modality": "Online",
+    "description": "Sesión sobre oportunidades en operaciones, analytics, tecnología y programas de entrada para estudiantes y recién graduados.",
+    "tags": [
+      "Operaciones",
+      "Datos",
+      "Empresa"
+    ],
+    "registrationStatus": "Próximamente"
+  },
+  {
+    "id": "evt_024",
+    "title": "Claves para buscar prácticas en septiembre",
+    "organizer": "Oficina de Prácticas y Empleo",
+    "company": null,
+    "date": "2025-08-20",
+    "startTime": "11:30",
+    "endTime": "12:30",
+    "location": "Online",
+    "modality": "Online",
+    "description": "Sesión orientativa para planificar candidaturas, actualizar documentación y organizar la búsqueda de prácticas antes del inicio de curso.",
+    "tags": [
+      "Prácticas",
+      "Planificación",
+      "Orientación"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_025",
+    "title": "L'Oréal: marketing, ventas y desarrollo de marca",
+    "organizer": "L'Oréal",
+    "company": "L'Oréal",
+    "date": "2025-09-03",
+    "startTime": "17:30",
+    "endTime": "19:00",
+    "location": "Campus Alberto Aguilera",
+    "modality": "Presencial",
+    "description": "Presentación de oportunidades en marketing, ventas y desarrollo de marca para estudiantes interesados en gran consumo y retail.",
+    "tags": [
+      "Marketing",
+      "Ventas",
+      "Empresa"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_026",
+    "title": "Ferrovial: ingeniería, construcción y movilidad",
+    "organizer": "Ferrovial",
+    "company": "Ferrovial",
+    "date": "2025-09-05",
+    "startTime": "13:00",
+    "endTime": "14:15",
+    "location": "Campus ICAI",
+    "modality": "Presencial",
+    "description": "Encuentro con profesionales de Ferrovial para conocer proyectos, perfiles demandados y oportunidades de prácticas en España e internacional.",
+    "tags": [
+      "Ingeniería",
+      "Infraestructuras",
+      "Empresa"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_027",
+    "title": "Cierre de inscripción: Feria de Empleo Comillas",
+    "organizer": "Comillas Careers",
+    "company": "Universidad Pontificia Comillas",
+    "date": "2025-09-08",
+    "startTime": "23:59",
+    "endTime": null,
+    "location": "Online",
+    "modality": "Online",
+    "description": "Fecha límite para completar la inscripción a la próxima Feria de Empleo Comillas y confirmar asistencia.",
+    "tags": [
+      "Deadline",
+      "Feria",
+      "Inscripción"
+    ],
+    "registrationStatus": "Cerrada"
+  },
+  {
+    "id": "evt_028",
+    "title": "Microsoft: cloud, inteligencia artificial y talento universitario",
+    "organizer": "Microsoft",
+    "company": "Microsoft",
+    "date": "2025-09-10",
+    "startTime": "18:00",
+    "endTime": "19:15",
+    "location": "Online",
+    "modality": "Online",
+    "description": "Sesión sobre oportunidades para estudiantes en tecnología, cloud, inteligencia artificial, consultoría técnica y programas de prácticas.",
+    "tags": [
+      "Tecnología",
+      "IA",
+      "Empresa"
+    ],
+    "registrationStatus": "Próximamente"
+  },
+  {
+    "id": "evt_029",
+    "title": "Café con alumni: trayectorias en consultoría estratégica",
+    "organizer": "Comillas Alumni",
+    "company": "Universidad Pontificia Comillas",
+    "date": "2025-09-12",
+    "startTime": "09:30",
+    "endTime": "11:00",
+    "location": "Campus Alberto Aguilera",
+    "modality": "Presencial",
+    "description": "Encuentro reducido con alumni que trabajan en consultoría estratégica para compartir experiencias, aprendizajes y consejos de carrera.",
+    "tags": [
+      "Alumni",
+      "Consultoría",
+      "Networking"
+    ],
+    "registrationStatus": "Completo"
+  },
+  {
+    "id": "evt_030",
+    "title": "Nestlé: oportunidades en marketing, supply chain y finanzas",
+    "organizer": "Nestlé",
+    "company": "Nestlé",
+    "date": "2025-09-17",
+    "startTime": "16:00",
+    "endTime": "17:30",
+    "location": "Campus Alberto Aguilera",
+    "modality": "Híbrido",
+    "description": "Presentación de áreas de entrada para estudiantes interesados en consumo, operaciones, marketing, finanzas y desarrollo comercial.",
+    "tags": [
+      "Gran consumo",
+      "Marketing",
+      "Empresa"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_031",
+    "title": "Mesa de orientación: cómo elegir entre prácticas y empleo junior",
+    "organizer": "Oficina de Prácticas y Empleo",
+    "company": null,
+    "date": "2025-09-22",
+    "startTime": "12:30",
+    "endTime": "13:30",
+    "location": "Campus Cantoblanco",
+    "modality": "Presencial",
+    "description": "Sesión para ayudar a estudiantes de últimos cursos a decidir entre prácticas, graduate programs y posiciones junior.",
+    "tags": [
+      "Orientación",
+      "Primer empleo",
+      "Prácticas"
+    ],
+    "registrationStatus": "Abierta"
+  },
+  {
+    "id": "evt_032",
+    "title": "Google: carreras en tecnología y producto",
+    "organizer": "Google",
+    "company": "Google",
+    "date": "2025-09-25",
+    "startTime": "18:30",
+    "endTime": "19:30",
+    "location": "Online",
+    "modality": "Online",
+    "description": "Sesión informativa sobre perfiles en tecnología, producto, ventas digitales y procesos de selección para estudiantes universitarios.",
+    "tags": [
+      "Tecnología",
+      "Producto",
+      "Empresa"
+    ],
+    "registrationStatus": "Próximamente"
+  }
+]
