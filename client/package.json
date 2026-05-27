@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently --names \"API,APP\" --prefix-colors \"blue,green\" \"npm run dev --prefix ../server\" \"vite\"",
+    "dev:solo": "vite",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -14,6 +15,7 @@
     "react-dom": "^19.2.6"
   },
   "devDependencies": {
+    "concurrently": "^9.1.2",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.0",
     "@types/react": "^19.2.14",
