@@ -1,20 +1,54 @@
-function CalendarIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-      <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-    </svg>
-  );
+// ── Tokens de diseño (idénticos a OpePortalPage) ─────────────────────────────
+const T = {
+  white:      '#FFFFFF',
+  bg:         '#F6F7F9',
+  orange:     '#F5A623',
+  orangeBg:   '#FEF3E2',
+  t1:         '#1A1A1A',
+  t2:         '#6B7280',
+  t3:         '#9CA3AF',
+  border:     '#E5E7EB',
+  cardShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
+  cardRadius: 16,
+  pillRadius: 9999,
+  green:      '#16A34A',
+  greenBg:    '#F0FDF4',
+};
+
+const card = {
+  backgroundColor: T.white,
+  borderRadius:    T.cardRadius,
+  boxShadow:       T.cardShadow,
+};
+
+// ── Colores de marca (igual que OfferListItem) ────────────────────────────────
+const BRAND_TEXT = {
+  mckinsey:  '#1A1A2E', iberdrola: '#00A650', deloitte:  '#86BC25',
+  kpmg:      '#00338D', pwc:       '#E0301E', ey:        '#2E2E2E',
+  accenture: '#A100FF', santander: '#EC0000', bbva:      '#004481',
+  telefonica:'#019DF4', acciona:   '#E30613', repsol:    '#B8960A',
+  naturgy:   '#FF6B00', endesa:    '#00A3E0', cepsa:     '#00A86B',
+  redexis:   '#0099A8', amazon:    '#FF9900', google:    '#4285F4',
+  microsoft: '#00A4EF', indra:     '#003DA5', capgemini: '#0070AD',
+  ferrovial: '#0085CA',
+};
+
+function getBrandColor(company) {
+  if (!company) return '#374151';
+  const words = company.toLowerCase().split(/\s+/);
+  for (const w of words) if (BRAND_TEXT[w]) return BRAND_TEXT[w];
+  let h = 0;
+  for (let i = 0; i < company.length; i++) h = company.charCodeAt(i) + ((h << 5) - h);
+  return `hsl(${Math.abs(h) % 360},55%,35%)`;
 }
 
-function PinIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-      <circle cx="12" cy="10" r="3"/>
-    </svg>
-  );
+function getInitials(company) {
+  return (company ?? '').split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('');
 }
+
+// ── Etiquetas ─────────────────────────────────────────────────────────────────
+const MODALITY_LABEL = { presencial: 'Presencial', hibrido: 'Híbrido', remoto: 'Remoto' };
+const TYPE_LABEL     = { practicas: 'Prácticas',   empleo: 'Empleo' };
 
 function formatDate(dateStr) {
   if (!dateStr) return '—';
@@ -22,124 +56,468 @@ function formatDate(dateStr) {
   return d ? `${d}/${m}/${y}` : `${m}/${y}`;
 }
 
-const MODALITY_LABEL = { presencial: 'Presencial', hibrido: 'Híbrido', remoto: 'Remoto' };
-const TYPE_LABEL = { practicas: 'Prácticas', empleo: 'Empleo' };
+// ── Generadores de contenido de respaldo ──────────────────────────────────────
+/**
+ * Si la oferta no trae `responsibilities[]`, intenta construirlas desde la
+ * descripción (frases separadas por ". ") y los keywords de los requisitos.
+ */
+function deriveResponsibilities(offer) {
+  if (offer.responsibilities?.length) return offer.responsibilities;
+  const sentences = (offer.description ?? '')
+    .split(/\.\s+/)
+    .map(s => s.trim().replace(/\.$/, ''))
+    .filter(s => s.length > 20);
+  const kwItems = (offer.requirements?.keywords ?? [])
+    .slice(0, 3)
+    .map(k => `Trabajo con ${k}`);
+  return [...sentences, ...kwItems].slice(0, 5);
+}
 
-export default function OfferDetail({ offer, onBack }) {
-  const typeLabel = TYPE_LABEL[offer.type] || offer.type;
+/**
+ * Si la oferta no trae `whatWeOffer[]`, genera beneficios genéricos razonables
+ * en función del tipo y la modalidad.
+ */
+function deriveWhatWeOffer(offer) {
+  if (offer.whatWeOffer?.length) return offer.whatWeOffer;
+  const items = ['Aprendizaje en proyectos reales con impacto'];
+  if (offer.type === 'practicas') items.push('Posibilidad de incorporación posterior');
+  if (offer.modality !== 'remoto') items.push('Contacto con clientes nacionales e internacionales');
+  items.push('Plan de desarrollo profesional');
+  if (offer.duration && parseInt(offer.duration) >= 6) items.push('Formación interna y mentoring');
+  return items.slice(0, 4);
+}
 
+// ── Iconos SVG ────────────────────────────────────────────────────────────────
+function Ico({ children, size = 16, color, style }) {
   return (
-    <div>
-      {/* Breadcrumb + volver */}
-      <div className="bg-[#F0B400] px-8 py-3">
-        <p className="text-sm text-black/70">
-          Inicio &gt; Listado de ofertas de {typeLabel.toLowerCase()} &gt;{' '}
-          <span className="font-medium text-black">{offer.title}</span>
-        </p>
-      </div>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke={color || 'currentColor'} strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round" style={style}>
+      {children}
+    </svg>
+  );
+}
 
-      <div className="bg-white px-8 py-6 max-w-5xl">
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-sm text-gray-500 hover:text-gray-800 mb-4 flex items-center gap-1"
-        >
-          &lt; Volver
-        </button>
+const ArrowLeft  = () => <Ico size={14} color={T.t3}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></Ico>;
+const PinIco     = ({ size = 14 }) => <Ico size={size} color={T.t3}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></Ico>;
+const MonIco     = ({ size = 14 }) => <Ico size={size} color={T.t3}><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></Ico>;
+const BriefIco   = ({ size = 14 }) => <Ico size={size} color={T.t3}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></Ico>;
+const ClockIco   = ({ size = 14 }) => <Ico size={size} color={T.t3}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></Ico>;
+const CalIco     = ({ size = 14, color }) => <Ico size={size} color={color ?? T.t3}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></Ico>;
+const CheckCircle = ({ size = 16, color }) => <Ico size={size} color={color ?? T.orange}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></Ico>;
+const UserIco    = ({ size = 16 }) => <Ico size={size} color={T.t3}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Ico>;
+const GlobeIco   = ({ size = 16 }) => <Ico size={size} color={T.t3}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></Ico>;
+const ListIco    = ({ size = 16 }) => <Ico size={size} color={T.t3}><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></Ico>;
+const GiftIco    = ({ size = 16 }) => <Ico size={size} color={T.orange}><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></Ico>;
+const BookmarkIco = () => <Ico size={18} color={T.t2}><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></Ico>;
+const ShareIco   = () => <Ico size={18} color={T.t2}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></Ico>;
 
-        <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold mb-1">
-          {offer.company}
-        </p>
-        <h1 className="text-3xl font-bold text-gray-900 mb-3">{offer.title}</h1>
-        <div className="flex items-center gap-5 text-gray-500 text-sm mb-8">
-          <span className="flex items-center gap-1.5"><CalendarIcon />{formatDate(offer.publishedAt)}</span>
-          <span className="flex items-center gap-1.5"><PinIcon />{offer.location}</span>
-        </div>
-      </div>
+// ── Subcomponentes ────────────────────────────────────────────────────────────
 
-      {/* Grid de metadatos */}
-      <div className="bg-gray-100 px-8 py-8">
-        <div className="max-w-5xl grid grid-cols-3 gap-x-8 gap-y-6">
-          <InfoCell label="SECTOR" value={offer.sector} />
-          <InfoCell label="MODALIDAD" value={MODALITY_LABEL[offer.modality] || offer.modality} />
-          <InfoCell label="TIPO" value={typeLabel} />
-          <InfoCell label="DURACIÓN" value={offer.duration || '—'} />
-          <InfoCell label="UBICACIÓN" value={offer.location} />
-          <InfoCell label="TITULACIONES" value={offer.targetDegrees?.join(', ') || '—'} />
-        </div>
-      </div>
-
-      {/* Descripción y requisitos */}
-      <div className="bg-white px-8 py-8 max-w-5xl space-y-8">
-        <section>
-          <h2 className="text-base font-bold text-gray-900 mb-3">Descripción del puesto</h2>
-          <p className="text-gray-700 leading-relaxed">{offer.description}</p>
-        </section>
-
-        {offer.requirements && (
-          <section>
-            <h2 className="text-base font-bold text-gray-900 mb-4">Requisitos</h2>
-            <div className="grid grid-cols-2 gap-6">
-              {offer.requirements.hardSkills?.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Habilidades técnicas</p>
-                  <div className="flex flex-wrap gap-2">
-                    {offer.requirements.hardSkills.map(s => (
-                      <span key={s} className="bg-gray-100 text-gray-700 text-xs px-2.5 py-1 rounded-full">{s}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {offer.requirements.softSkills?.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Habilidades personales</p>
-                  <div className="flex flex-wrap gap-2">
-                    {offer.requirements.softSkills.map(s => (
-                      <span key={s} className="bg-[#F0B400]/15 text-yellow-900 text-xs px-2.5 py-1 rounded-full">{s}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {offer.requirements.languages?.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Idiomas</p>
-                  <div className="flex flex-wrap gap-2">
-                    {offer.requirements.languages.map(l => (
-                      <span key={l.name} className="bg-gray-100 text-gray-700 text-xs px-2.5 py-1 rounded-full">
-                        {l.name} — nivel {l.level}/5
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {offer.requirements.minExperience && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Experiencia mínima</p>
-                  <p className="text-gray-700 text-sm">{offer.requirements.minExperience}</p>
-                </div>
-              )}
-            </div>
-          </section>
-        )}
-
-        <div className="pt-2">
-          <button
-            type="button"
-            className="bg-[#F0B400] hover:bg-[#D9A200] text-black font-semibold px-8 py-3 rounded transition-colors"
-          >
-            Inscribirse en la oferta
-          </button>
-        </div>
-      </div>
+/** Píldora de metadato: icono + texto */
+function MetaPill({ icon, text }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 5,
+      color: T.t2, fontSize: 13,
+    }}>
+      {icon}
+      <span>{text}</span>
     </div>
   );
 }
 
-function InfoCell({ label, value }) {
+/** Separador vertical entre meta-pills */
+function MetaSep() {
+  return <span style={{ color: T.border, fontSize: 16, userSelect: 'none' }}>|</span>;
+}
+
+/** Tag de habilidad / etiqueta */
+function Tag({ label, variant = 'default' }) {
+  const styles = {
+    default:  { bg: '#F3F4F6', color: T.t2 },
+    orange:   { bg: T.orangeBg, color: '#92700A' },
+    green:    { bg: T.greenBg,  color: T.green },
+    blue:     { bg: '#EFF6FF',  color: '#2563EB' },
+  };
+  const s = styles[variant] ?? styles.default;
+  return (
+    <span style={{
+      display: 'inline-block',
+      padding: '4px 12px',
+      borderRadius: T.pillRadius,
+      backgroundColor: s.bg,
+      color: s.color,
+      fontSize: 13,
+      fontWeight: 500,
+    }}>
+      {label}
+    </span>
+  );
+}
+
+/** Elemento de lista con checkmark naranja */
+function CheckItem({ text }) {
+  return (
+    <li style={{
+      display: 'flex', alignItems: 'flex-start', gap: 10,
+      fontSize: 14, color: T.t2, lineHeight: 1.6,
+      listStyle: 'none',
+    }}>
+      <span style={{ flexShrink: 0, marginTop: 3 }}>
+        <CheckCircle size={15} color={T.orange} />
+      </span>
+      {text}
+    </li>
+  );
+}
+
+/** Bloque de subsección de Requisitos */
+function ReqBlock({ icon, label, children }) {
   return (
     <div>
-      <p className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-1">{label}</p>
-      <p className="text-sm text-gray-600">{value || '—'}</p>
+      <p style={{
+        display: 'flex', alignItems: 'center', gap: 6,
+        fontSize: 12, fontWeight: 700, color: T.t1,
+        textTransform: 'uppercase', letterSpacing: '0.06em',
+        marginBottom: 8,
+      }}>
+        {icon}
+        {label}
+      </p>
+      {children}
+    </div>
+  );
+}
+
+/** Cabecera de sección con icono */
+function SectionHeader({ icon, title }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 10,
+      paddingBottom: 16,
+      borderBottom: `1px solid ${T.border}`,
+      marginBottom: 16,
+    }}>
+      <div style={{
+        width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+        backgroundColor: T.orangeBg,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {icon}
+      </div>
+      <h2 style={{ fontSize: 15, fontWeight: 700, color: T.t1, margin: 0 }}>
+        {title}
+      </h2>
+    </div>
+  );
+}
+
+// ── Componente principal ──────────────────────────────────────────────────────
+export default function OfferDetail({ offer, onBack }) {
+  const brandColor      = getBrandColor(offer.company);
+  const initials        = getInitials(offer.company);
+  const typeLabel       = TYPE_LABEL[offer.type]     ?? offer.type;
+  const modalityLabel   = MODALITY_LABEL[offer.modality] ?? offer.modality;
+  const allTags         = [
+    ...(offer.requirements?.hardSkills ?? []),
+    ...(offer.requirements?.keywords   ?? []).slice(0, 2),
+  ].slice(0, 6);
+  const responsibilities = deriveResponsibilities(offer);
+  const whatWeOffer      = deriveWhatWeOffer(offer);
+  const languages        = offer.requirements?.languages ?? [];
+
+  return (
+    <div style={{ padding: '28px 40px', backgroundColor: T.bg, minHeight: '100%' }}>
+
+      {/* ── Breadcrumb + volver ─────────────────────────────────────────── */}
+      <nav style={{ marginBottom: 20 }}>
+        <p style={{ fontSize: 13, color: T.t3, margin: 0 }}>
+          <span style={{ cursor: 'pointer' }}
+            onClick={onBack}
+            onMouseEnter={e => { e.target.style.color = T.orange; }}
+            onMouseLeave={e => { e.target.style.color = T.t3; }}>
+            Inicio
+          </span>
+          <span style={{ margin: '0 6px' }}>›</span>
+          <span style={{ cursor: 'pointer' }}
+            onClick={onBack}
+            onMouseEnter={e => { e.target.style.color = T.orange; }}
+            onMouseLeave={e => { e.target.style.color = T.t3; }}>
+            Ofertas
+          </span>
+          <span style={{ margin: '0 6px' }}>›</span>
+          <span style={{ color: T.t1, fontWeight: 500 }}>{offer.title}</span>
+        </p>
+      </nav>
+
+      <button
+        type="button"
+        onClick={onBack}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          fontSize: 13, fontWeight: 500, color: T.t2,
+          background: 'none', border: 'none', cursor: 'pointer',
+          padding: '6px 0', marginBottom: 20,
+        }}
+        onMouseEnter={e => { e.currentTarget.style.color = T.t1; }}
+        onMouseLeave={e => { e.currentTarget.style.color = T.t2; }}
+      >
+        <ArrowLeft />
+        Volver a ofertas
+      </button>
+
+      {/* ── Cabecera de la oferta ───────────────────────────────────────── */}
+      <div style={{ ...card, padding: '28px 32px', marginBottom: 24 }}>
+
+        {/* Fila superior: logo + título + acciones */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24 }}>
+
+          {/* Logo empresa */}
+          <div style={{
+            width: 80, height: 80, minWidth: 80,
+            backgroundColor: T.white,
+            border: `1px solid ${T.border}`,
+            borderRadius: 16,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <span style={{ fontSize: 18, fontWeight: 800, color: brandColor, userSelect: 'none', letterSpacing: '-0.5px' }}>
+              {initials}
+            </span>
+          </div>
+
+          {/* Título y metadatos */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: T.t2, margin: '0 0 4px 0' }}>
+              {offer.company}
+            </p>
+            <h1 style={{ fontSize: 26, fontWeight: 800, color: T.t1, margin: '0 0 16px 0', lineHeight: 1.25 }}>
+              {offer.title}
+            </h1>
+
+            {/* Meta-pills */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <MetaPill icon={<PinIco />}   text={offer.location} />
+              <MetaSep />
+              <MetaPill icon={<MonIco />}   text={modalityLabel} />
+              <MetaSep />
+              <MetaPill icon={<BriefIco />} text={typeLabel} />
+              {offer.duration && (
+                <>
+                  <MetaSep />
+                  <MetaPill icon={<ClockIco />} text={offer.duration} />
+                </>
+              )}
+              {offer.publishedAt && (
+                <>
+                  <MetaSep />
+                  <MetaPill icon={<CalIco />} text={`Publicada: ${formatDate(offer.publishedAt)}`} />
+                </>
+              )}
+              {offer.deadlineAt && (
+                <>
+                  <MetaSep />
+                  <MetaPill icon={<CalIco color="#DC2626" />} text={`Fecha límite: ${formatDate(offer.deadlineAt)}`} />
+                </>
+              )}
+            </div>
+
+            {/* Tags de habilidades */}
+            {allTags.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {allTags.map(tag => (
+                  <Tag key={tag} label={tag} />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Acciones: guardar + compartir */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, marginTop: 4 }}>
+            <button type="button" title="Guardar oferta"
+              style={{ width: 38, height: 38, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: `1px solid ${T.border}`, cursor: 'pointer' }}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#F9FAFB'; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
+              <BookmarkIco />
+            </button>
+            <button type="button" title="Compartir oferta"
+              style={{ width: 38, height: 38, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: `1px solid ${T.border}`, cursor: 'pointer' }}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#F9FAFB'; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
+              <ShareIco />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Grid: Descripción + Qué ofrece ─────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
+
+        {/* Descripción del puesto */}
+        <div style={{ ...card, padding: '24px 28px' }}>
+          <SectionHeader
+            icon={<ListIco size={16} />}
+            title="Descripción del puesto"
+          />
+          <p style={{ fontSize: 14, color: T.t2, lineHeight: 1.75, margin: 0 }}>
+            {offer.description}
+          </p>
+          {offer.sector && (
+            <p style={{ fontSize: 12, color: T.t3, marginTop: 14, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{
+                display: 'inline-block', padding: '2px 10px', borderRadius: T.pillRadius,
+                backgroundColor: '#EFF6FF', color: '#2563EB', fontWeight: 600, fontSize: 11,
+              }}>
+                {offer.sector}
+              </span>
+            </p>
+          )}
+        </div>
+
+        {/* Qué ofrece la empresa */}
+        <div style={{ ...card, padding: '24px 28px' }}>
+          <SectionHeader
+            icon={<GiftIco size={16} />}
+            title="Qué ofrece la empresa"
+          />
+          <ul style={{ margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {whatWeOffer.map((item, i) => (
+              <CheckItem key={i} text={item} />
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* ── Grid: Responsabilidades + Requisitos ────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 32 }}>
+
+        {/* Responsabilidades principales */}
+        <div style={{ ...card, padding: '24px 28px' }}>
+          <SectionHeader
+            icon={<ListIco size={16} />}
+            title="Responsabilidades principales"
+          />
+          <ul style={{ margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {responsibilities.map((item, i) => (
+              <CheckItem key={i} text={item} />
+            ))}
+          </ul>
+        </div>
+
+        {/* Requisitos */}
+        <div style={{ ...card, padding: '24px 28px' }}>
+          <SectionHeader
+            icon={<BriefIco size={16} />}
+            title="Requisitos"
+          />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+            {/* Habilidades técnicas */}
+            {offer.requirements?.hardSkills?.length > 0 && (
+              <ReqBlock icon={<ListIco />} label="Habilidades técnicas">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {offer.requirements.hardSkills.map(s => (
+                    <Tag key={s} label={s} variant="default" />
+                  ))}
+                </div>
+              </ReqBlock>
+            )}
+
+            {/* Habilidades personales */}
+            {offer.requirements?.softSkills?.length > 0 && (
+              <ReqBlock icon={<UserIco />} label="Habilidades personales">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {offer.requirements.softSkills.map(s => (
+                    <Tag key={s} label={s} variant="orange" />
+                  ))}
+                </div>
+              </ReqBlock>
+            )}
+
+            {/* Idiomas */}
+            {languages.length > 0 && (
+              <ReqBlock icon={<GlobeIco />} label="Idiomas">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {languages.map(l => (
+                    <Tag
+                      key={l.name}
+                      label={`${l.name} nivel ${l.level}/5`}
+                      variant="blue"
+                    />
+                  ))}
+                </div>
+              </ReqBlock>
+            )}
+
+            {/* Experiencia mínima */}
+            {offer.requirements?.minExperience && (
+              <ReqBlock icon={<ClockIco />} label="Experiencia mínima">
+                <p style={{ fontSize: 14, color: T.t2, margin: 0 }}>
+                  {offer.requirements.minExperience}
+                </p>
+              </ReqBlock>
+            )}
+
+            {/* Titulaciones */}
+            {offer.targetDegrees?.length > 0 && (
+              <ReqBlock icon={<UserIco />} label="Titulaciones">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {offer.targetDegrees.map(d => (
+                    <Tag key={d} label={d} variant="green" />
+                  ))}
+                </div>
+              </ReqBlock>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Botón de inscripción ────────────────────────────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <button
+          type="button"
+          style={{
+            padding: '14px 36px',
+            borderRadius: T.pillRadius,
+            backgroundColor: T.orange,
+            color: T.white,
+            fontSize: 15,
+            fontWeight: 700,
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'background-color 0.15s, transform 0.1s',
+            boxShadow: `0 2px 8px rgba(245,166,35,0.35)`,
+          }}
+          onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#D4880A'; }}
+          onMouseLeave={e => { e.currentTarget.style.backgroundColor = T.orange; }}
+          onMouseDown={e =>  { e.currentTarget.style.transform = 'scale(0.98)'; }}
+          onMouseUp={e =>    { e.currentTarget.style.transform = 'scale(1)'; }}
+        >
+          Inscribirse en la oferta
+        </button>
+
+        <button
+          type="button"
+          style={{
+            padding: '14px 28px',
+            borderRadius: T.pillRadius,
+            backgroundColor: 'transparent',
+            color: T.t2,
+            fontSize: 15,
+            fontWeight: 500,
+            border: `1px solid ${T.border}`,
+            cursor: 'pointer',
+            transition: 'border-color 0.15s, color 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = T.t2; e.currentTarget.style.color = T.t1; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.t2; }}
+        >
+          Guardar oferta
+        </button>
+      </div>
+
     </div>
   );
 }
