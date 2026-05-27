@@ -13,7 +13,6 @@ function emptyItem() {
     startDate: '',
     endDate: '',
     current: false,
-    duration: '',
     bullets: [{ id: crypto.randomUUID(), text: '' }],
   };
 }
@@ -47,7 +46,6 @@ export default function EducationForm() {
               <Field label="Universidad / centro" value={item.institution} onChange={institution => update(item.id, { institution })} />
               <Field label="Ciudad / país" value={item.location} onChange={location => update(item.id, { location })} />
               <Field label="Titulación" value={item.degree} onChange={degree => update(item.id, { degree })} />
-              <Field label="Duración" value={item.duration} onChange={duration => update(item.id, { duration })} placeholder="2022 - Actualidad" />
               <Field label="Fecha inicio" value={item.startDate} onChange={startDate => update(item.id, { startDate })} type="month" />
               <Field label="Fecha fin" value={item.endDate} onChange={endDate => update(item.id, { endDate })} type="month" disabled={item.current} error={dateError ? 'La fecha fin debe ser posterior' : ''} />
             </div>

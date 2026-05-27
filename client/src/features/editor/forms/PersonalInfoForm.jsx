@@ -3,12 +3,14 @@ import { isValidEmail, isValidPhone } from '../../../utils/validators.js';
 import { Field, Select, SectionCard } from './FormControls.jsx';
 
 const countries = ['+34', '+44', '+1', '+49', '+33', '+39', '+351'];
+const photoTemplates = new Set(['moderna', 'profesional']);
 
 export default function PersonalInfoForm() {
   const { cv, dispatch } = useCv();
   const p = cv.personal;
-  const emailError = p.email && !isValidEmail(p.email) ? 'Email no valido' : '';
-  const phoneError = p.phoneNumber && !isValidPhone(p.phoneNumber) ? 'Telefono no valido' : '';
+  const showPhoto = photoTemplates.has(cv.style?.template);
+  const emailError = p.email && !isValidEmail(p.email) ? 'Email no válido' : '';
+  const phoneError = p.phoneNumber && !isValidPhone(p.phoneNumber) ? 'Teléfono no válido' : '';
 
   function update(data) {
     const next = { ...p, ...data };
@@ -39,25 +41,22 @@ export default function PersonalInfoForm() {
         <Field label="Ubicación" value={p.location} onChange={location => update({ location })} />
         <Field label="Email personal" value={p.email} onChange={email => update({ email })} type="email" error={emailError} />
         <div className="phone-row">
-          <Select label="Pais" value={p.phoneCountry || '+34'} onChange={phoneCountry => update({ phoneCountry })}>
+          <Select label="País" value={p.phoneCountry || '+34'} onChange={phoneCountry => update({ phoneCountry })}>
             {countries.map(country => <option key={country}>{country}</option>)}
           </Select>
-          <Field label="Telefono" value={p.phoneNumber || p.phone?.replace(/^\+\d+\s*/, '')} onChange={phoneNumber => update({ phoneNumber })} error={phoneError} />
+          <Field label="Teléfono" value={p.phoneNumber || p.phone?.replace(/^\+\d+\s*/, '')} onChange={phoneNumber => update({ phoneNumber })} error={phoneError} />
         </div>
         <Field
           label="LinkedIn"
           value={p.links.find(link => link.label === 'LinkedIn')?.url}
           onChange={url => updateLink('LinkedIn', url)}
         />
-        <Field
-          label="Portfolio"
-          value={p.links.find(link => link.label === 'Portfolio')?.url}
-          onChange={url => updateLink('Portfolio', url)}
-        />
-        <label className="form-field">
-          <span>Foto JPG para plantillas con imagen</span>
-          <input type="file" accept="image/jpeg,.jpg" onChange={event => updatePhoto(event.target.files?.[0])} />
-        </label>
+        {showPhoto && (
+          <label className="form-field">
+            <span>Foto JPG (plantilla con imagen)</span>
+            <input type="file" accept="image/jpeg,.jpg" onChange={event => updatePhoto(event.target.files?.[0])} />
+          </label>
+        )}
       </div>
     </SectionCard>
   );

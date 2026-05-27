@@ -55,8 +55,8 @@ function PreviewSection({ sectionKey, data }) {
       {sectionKey === 'education' && data.items.map(item => <TimelineItem key={item.id} title={item.degree} subtitle={`${item.institution}${item.location ? ` | ${item.location}` : ''}`} date={item.duration || dateRange(item)} bullets={item.bullets} />)}
       {sectionKey === 'experience' && data.items.map(item => <TimelineItem key={item.id} title={item.role} subtitle={item.company} date={item.duration || dateRange(item)} bullets={item.bullets} />)}
       {sectionKey === 'projects' && data.items.map(item => <TimelineItem key={item.id} title={item.name} subtitle={[item.description, item.technologies].filter(Boolean).join(' | ')} date={item.link} bullets={item.bullets} />)}
-      {sectionKey === 'technicalSkills' && <SkillGroups groups={data.groups} />}
-      {sectionKey === 'personalSkills' && <Pills items={data.items} />}
+      {sectionKey === 'technicalSkills' && <SkillBullets groups={data.groups} />}
+      {sectionKey === 'personalSkills' && <BulletList items={data.items} />}
       {sectionKey === 'languages' && (
         <div className="cv-list-grid">
           {data.items.map(item => <span key={item.id}><strong>{item.name}</strong> {item.level}{item.certificate ? ` | ${item.certificate}` : ''}{item.note ? ` | ${item.note}` : ''}</span>)}
@@ -90,24 +90,20 @@ function TimelineItem({ title, subtitle, date, bullets = [] }) {
   );
 }
 
-function SkillGroups({ groups = {} }) {
+function SkillBullets({ groups = {} }) {
+  const allSkills = Object.values(groups).flat().filter(Boolean);
   return (
-    <div className="skill-groups">
-      {Object.entries(groups).map(([group, items]) => (
-        <div key={group}>
-          <strong>{group}</strong>
-          <Pills items={items} />
-        </div>
-      ))}
-    </div>
+    <ul className="cv-skill-bullets">
+      {allSkills.map(skill => <li key={skill}>{skill}</li>)}
+    </ul>
   );
 }
 
-function Pills({ items = [] }) {
+function BulletList({ items = [] }) {
   return (
-    <div className="pill-list">
-      {items.map(item => <span key={item}>{item}</span>)}
-    </div>
+    <ul className="cv-skill-bullets">
+      {items.filter(Boolean).map(item => <li key={item}>{item}</li>)}
+    </ul>
   );
 }
 

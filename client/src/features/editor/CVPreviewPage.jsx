@@ -1,20 +1,24 @@
 import { useState } from 'react';
 import CVPreview from './forms/CVPreview.jsx';
 import TemplateSelector from './forms/TemplateSelector.jsx';
-import { exportToPDF, savePreviewToCloud } from '../../services/cvService.js';
+import { downloadAsPDF } from '../../services/cvService.js';
 import { useCv } from '../../context/CvContext.jsx';
 
 export default function CVPreviewPage({ onNavigate }) {
   const { cv } = useCv();
   const [status, setStatus] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  async function saveCloud() {
+  async function handleDownload() {
     setStatus('');
+    setLoading(true);
     try {
-      await savePreviewToCloud(cv);
-      setStatus('CV enviado a la nube.');
+      await downloadAsPDF(cv.personal?.fullName || 'cv-comillas');
+      setStatus('PDF descargado correctamente.');
     } catch (error) {
-      setStatus(error.message);
+      setStatus(`Error: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -27,8 +31,9 @@ export default function CVPreviewPage({ onNavigate }) {
         </div>
         <div className="toolbar-actions">
           <button type="button" onClick={() => onNavigate('create')}>Editar</button>
-          <button type="button" className="primary-button" onClick={exportToPDF}>Descargar PDF</button>
-          <button type="button" onClick={saveCloud}>Guardar en la nube</button>
+          <button type="button" className="primary-button" disabled={loading} onClick={handleDownload}>
+            {loading ? 'Generando PDF…' : 'Descargar PDF'}
+          </button>
         </div>
       </section>
       {status && <p className="status-message">{status}</p>}

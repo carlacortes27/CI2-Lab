@@ -12,7 +12,6 @@ function emptyItem() {
     company: '',
     startDate: '',
     endDate: '',
-    duration: '',
     current: false,
     bullets: [{ id: crypto.randomUUID(), text: '' }],
   };
@@ -48,7 +47,6 @@ export default function ExperienceForm() {
               <Field label="Empresa" value={item.company} onChange={company => update(item.id, { company })} />
               <Field label="Fecha inicio" value={item.startDate} onChange={startDate => update(item.id, { startDate })} type="month" />
               <Field label="Fecha fin" value={item.endDate} onChange={endDate => update(item.id, { endDate })} type="month" disabled={item.current} error={dateError ? 'La fecha fin debe ser posterior' : ''} />
-              <Field label="Duración" value={item.duration} onChange={duration => update(item.id, { duration })} placeholder="Jun 2025 - Jul 2025" />
             </div>
             <label className="check-row">
               <input

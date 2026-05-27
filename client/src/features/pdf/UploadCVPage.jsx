@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import CVPreview from '../editor/forms/CVPreview.jsx';
 import TemplateSelector from '../editor/forms/TemplateSelector.jsx';
-import { analyzeUploadedCV, exportToPDF, improveUploadedCV, savePreviewToCloud } from '../../services/cvService.js';
+import { downloadAsPDF, improveUploadedCV } from '../../services/cvService.js';
 import { useCv } from '../../context/CvContext.jsx';
 
 export default function UploadCVPage({ onNavigate }) {
   const { cv, dispatch } = useCv();
   const [file, setFile] = useState(null);
   const [status, setStatus] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [converted, setConverted] = useState(false);
 
   function pickFile(selected) {
     const next = selected?.[0];
@@ -17,17 +19,40 @@ export default function UploadCVPage({ onNavigate }) {
       return;
     }
     setFile(next);
+    setConverted(false);
     setStatus(`Archivo cargado: ${next.name}`);
   }
 
-  async function run(action, successMessage) {
-    setStatus('');
+  async function convertToTemplate() {
+    if (!file) return;
+    setLoading(true);
+    setStatus('Extrayendo contenido del PDF… puede tardar unos segundos.');
     try {
-      const result = await action();
-      if (result?.cvData) dispatch({ type: 'SET_CV', payload: result.cvData });
-      setStatus(successMessage);
+      const result = await improveUploadedCV(file);
+      if (result?.cvData) {
+        // Preservar la plantilla que el usuario haya elegido
+        const cvWithStyle = { ...result.cvData, style: { ...result.cvData.style, ...cv.style } };
+        dispatch({ type: 'SET_CV', payload: cvWithStyle });
+        setConverted(true);
+        setStatus('CV extraído correctamente. Elige una plantilla y descarga tu PDF.');
+      }
     } catch (error) {
-      setStatus(error.message);
+      setStatus(`Error: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDownload() {
+    setLoading(true);
+    setStatus('Generando PDF…');
+    try {
+      await downloadAsPDF(cv.personal?.fullName || 'cv-comillas');
+      setStatus('PDF descargado.');
+    } catch (error) {
+      setStatus(`Error: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -36,7 +61,7 @@ export default function UploadCVPage({ onNavigate }) {
       <section className="upload-card">
         <p className="eyebrow">CV Comillas</p>
         <h1>Mejorar CV existente</h1>
-        <p>Sube un PDF para analizarlo, mejorarlo y pasarlo a una plantilla editable.</p>
+        <p>Sube tu CV en PDF, elige una plantilla y descarga tu CV renovado con el nuevo diseño.</p>
 
         <label
           className="dropzone"
@@ -55,15 +80,36 @@ export default function UploadCVPage({ onNavigate }) {
         {status && <p className="status-message">{status}</p>}
 
         <div className="upload-actions">
-          <button type="button" disabled={!file} onClick={() => run(() => analyzeUploadedCV(file), 'Análisis del CV solicitado.')}>Analizar CV</button>
-          <button type="button" disabled={!file} onClick={() => run(() => improveUploadedCV(file), 'Mejora del CV solicitada.')}>Mejorar CV</button>
-          <button type="button" disabled={!file} onClick={() => onNavigate('create')}>Elegir plantilla</button>
-          <button type="button" className="primary-button" disabled={!file} onClick={exportToPDF}>Descargar PDF</button>
-          <button type="button" disabled={!file} onClick={() => run(() => savePreviewToCloud(cv), 'CV enviado a la nube.')}>Guardar en la nube</button>
+          <button
+            type="button"
+            className="primary-button"
+            disabled={!file || loading}
+            onClick={convertToTemplate}
+          >
+            {loading && !converted ? 'Procesando…' : 'Convertir a plantilla'}
+          </button>
+
+          {converted && (
+            <>
+              <button type="button" disabled={loading} onClick={handleDownload}>
+                {loading ? 'Generando PDF…' : 'Descargar PDF'}
+              </button>
+              <button type="button" onClick={() => onNavigate('create')}>
+                Editar en el editor
+              </button>
+            </>
+          )}
         </div>
+
+        {converted && (
+          <p style={{ marginTop: 12, fontSize: 13, color: '#6b7280' }}>
+            Cambia la plantilla en el panel derecho para ver diferentes estilos.
+          </p>
+        )}
       </section>
+
       <section className="upload-side">
-        <h2>Plantillas CV Comillas</h2>
+        <h2>Elige tu plantilla</h2>
         <TemplateSelector />
         <div className="preview-mini">
           <CVPreview />
