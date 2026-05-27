@@ -936,44 +936,37 @@ button {
 }
 
 /* ── Transiciones de página ─────────────────────────────────────────────── */
-.page-wrapper {
-  animation-fill-mode: both;
-}
-
+/*
+ * IMPORTANTE: estas animaciones usan SOLO opacity, sin transform.
+ * Motivo: cualquier transform no-none en un ancestro convierte ese elemento
+ * en el containing block de sus descendientes con position:fixed (CSS spec).
+ * OpePortalPage usa position:fixed;inset:0 para cubrir la ventana; si el
+ * wrapper tuviera transform, la página OPE quedaría posicionada respecto al
+ * wrapper en lugar de al viewport, rompiendo su layout.
+ */
 .page-entering {
-  animation: pageEnter 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: pageEnter 260ms ease-out forwards;
 }
 
 .page-leaving {
-  animation: pageLeave 190ms cubic-bezier(0.4, 0, 1, 1);
+  animation: pageLeave 190ms ease-in forwards;
   pointer-events: none; /* evita clics accidentales durante la salida */
 }
 
 @keyframes pageEnter {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes pageLeave {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
+  from { opacity: 1; }
+  to   { opacity: 0; }
 }
 
 /* Sin animaciones en impresión y para usuarios que prefieren movimiento reducido */
 @media print {
-  .page-wrapper { animation: none !important; }
+  .page-entering,
+  .page-leaving { animation: none !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
