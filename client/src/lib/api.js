@@ -26,3 +26,7 @@ export function getOffers(filters = {}) {
 export function getOfferById(id) {
   return request(`/api/offers/${id}`);
 }
+
+export function getEvents() {
+  return request('/api/events');
+}

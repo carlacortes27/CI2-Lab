@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import offersRouter from './routes/offers.js';
+import eventsRouter from './routes/events.js';
 import cvRouter from './routes/cv.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -17,6 +18,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/offers', offersRouter);
+app.use('/api/events', eventsRouter);
 app.use('/api/cv', cvRouter);
 
 // Manejador de errores centralizado (debe ir al final)
