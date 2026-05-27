@@ -42,7 +42,7 @@ export default function App() {
         <Navbar currentPage={page} onNavigate={navigate} />
         {page !== 'home' && (
           <button type="button" className="back-button" onClick={goBack}>
-            Volver
+            ← Volver
           </button>
         )}
         {ROUTES.map(({ key, Page }) =>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 64" role="img" aria-labelledby="title">
+  <title id="title">Comillas Universidad Pontificia</title>
+  <rect width="240" height="64" fill="none"/>
+  <g fill="#f0b400">
+    <circle cx="24" cy="18" r="5"/>
+    <circle cx="16" cy="30" r="4"/>
+    <circle cx="32" cy="30" r="4"/>
+    <circle cx="24" cy="42" r="5"/>
+    <path d="M24 23v14M19 32h10M20.5 21.5l7 17M27.5 21.5l-7 17" stroke="#f0b400" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <g fill="#111827">
+    <text x="52" y="28" font-family="Arial, sans-serif" font-size="18" font-weight="700" letter-spacing=".5">COMILLAS</text>
+    <text x="52" y="45" font-family="Arial, sans-serif" font-size="8" font-weight="700" letter-spacing=".4">UNIVERSIDAD PONTIFICIA</text>
+  </g>
+</svg>
