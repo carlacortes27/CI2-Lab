@@ -1,5 +1,6 @@
 import express from 'express';
 import multer from 'multer';
+import https from 'https';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -57,21 +58,31 @@ router.post('/improve', upload.single('file'), async (req, res, next) => {
 });
 
 // ── HELPER: traducir texto via MyMemory ─────────────────────────────────────
-async function translateText(text, from, to) {
-  if (!text || typeof text !== 'string' || !text.trim()) return text;
+function translateText(text, from, to) {
+  if (!text || typeof text !== 'string' || !text.trim()) return Promise.resolve(text);
   const limited = text.slice(0, 450);
-  try {
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(limited)}&langpair=${from}|${to}`;
-    const response = await fetch(url);
-    if (!response.ok) return text;
-    const data = await response.json();
-    if (data.responseStatus === 200 && data.responseData?.translatedText) {
-      return data.responseData.translatedText;
-    }
-  } catch {
-    // caída silenciosa → devuelve original
-  }
-  return text;
+  const path = `/get?q=${encodeURIComponent(limited)}&langpair=${from}|${to}`;
+  return new Promise(resolve => {
+    const req = https.request(
+      { hostname: 'api.mymemory.translated.net', path, method: 'GET', rejectUnauthorized: false },
+      res => {
+        let raw = '';
+        res.on('data', chunk => { raw += chunk; });
+        res.on('end', () => {
+          try {
+            const data = JSON.parse(raw);
+            if (data.responseStatus === 200 && data.responseData?.translatedText) {
+              resolve(data.responseData.translatedText);
+            } else {
+              resolve(text);
+            }
+          } catch { resolve(text); }
+        });
+      }
+    );
+    req.on('error', () => resolve(text));
+    req.end();
+  });
 }
 
 async function translateCvData(cv, targetLang) {
@@ -99,6 +110,7 @@ async function translateCvData(cv, targetLang) {
   // Educación
   for (const item of result.sections?.education?.items || []) {
     if (item.degree) item.degree = await translateText(item.degree, fromLang, targetLang);
+    if (item.field) item.field = await translateText(item.field, fromLang, targetLang);
     for (const b of item.bullets || []) {
       if (b.text) b.text = await translateText(b.text, fromLang, targetLang);
     }
@@ -138,6 +150,8 @@ async function translateCvData(cv, targetLang) {
     if (item.organization) item.organization = await translateText(item.organization, fromLang, targetLang);
     if (item.description) item.description = await translateText(item.description, fromLang, targetLang);
   }
+
+  if (result.meta) result.meta.language = targetLang;
 
   return result;
 }
