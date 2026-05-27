@@ -1,4 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
+
+/* ── Variables globales Comillas Career ──────────────────────────────────── */
+:root {
+  /* Paleta */
+  --cc-orange:     #F5A623;
+  --cc-orange-bg:  #FEF3E2;
+  --cc-t1:         #1A1A1A;
+  --cc-t2:         #6B7280;
+  --cc-t3:         #9CA3AF;
+  --cc-bg:         #F6F7F9;
+  --cc-white:      #FFFFFF;
+  --cc-border:     #E5E7EB;
+  --cc-hover-bg:   #F3F4F6;
+
+  /* Sombras */
+  --cc-shadow-card:     0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --cc-shadow-elevated: 0 4px 12px rgba(0,0,0,0.08);
+
+  /* Radios */
+  --cc-radius-card:  16px;
+  --cc-radius-pill:  9999px;
+  --cc-radius-input: 12px;
+
+  /* Tipografía producto */
+  --cc-font: 'Inter', system-ui, -apple-system, sans-serif;
+}
 
 * {
   box-sizing: border-box;
@@ -10,4 +37,9 @@ body {
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   background: #f9fafb;
   color: #111827;
+}
+
+/* Dentro de ambos shells se fuerza Inter */
+[data-shell] {
+  font-family: var(--cc-font);
 }
