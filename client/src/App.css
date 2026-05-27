@@ -66,8 +66,9 @@ button {
 }
 
 .brand-logo {
-  width: 150px;
-  height: 42px;
+  width: 46px;
+  height: auto;
+  display: block;
   object-fit: contain;
 }
 
@@ -890,6 +891,16 @@ button {
   padding: 36px 56px;
 }
 
+.upload-flow {
+  grid-template-columns: minmax(320px, 760px);
+  justify-content: center;
+}
+
+.upload-flow.upload-step-preview {
+  grid-template-columns: minmax(300px, 380px) minmax(520px, 1fr);
+  justify-content: stretch;
+}
+
 .upload-card,
 .upload-side,
 .preview-toolbar {
@@ -907,6 +918,38 @@ button {
   background: #fffbeb;
   color: var(--ink);
   text-align: center;
+}
+
+.upload-progress {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  min-height: 220px;
+  margin: 28px 0 16px;
+  border-radius: 8px;
+  background: #fffbeb;
+  text-align: center;
+}
+
+.upload-template-stage {
+  display: grid;
+  gap: 20px;
+  margin-top: 26px;
+}
+
+.upload-template-stage h2 {
+  color: var(--ink);
+  font-size: 26px;
+}
+
+.upload-template-stage p {
+  margin-top: 6px;
+  color: var(--muted);
+}
+
+.upload-template-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(110px, 1fr));
 }
 
 .dropzone input {
@@ -949,12 +992,17 @@ button {
   .builder-page,
   .builder-columns,
   .upload-page,
+  .upload-flow.upload-step-preview,
   .hero-section {
     grid-template-columns: 1fr;
   }
 
   .action-grid {
     grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+
+  .upload-template-list {
+    grid-template-columns: repeat(3, minmax(120px, 1fr));
   }
 
   .builder-sidebar,
@@ -971,7 +1019,8 @@ button {
   }
 
   .brand-logo {
-    width: 122px;
+    width: 42px;
+    height: auto;
   }
 
   .nav-actions {
@@ -990,6 +1039,7 @@ button {
   }
 
   .action-grid,
+  .upload-template-list,
   .form-grid.two,
   .form-grid.four,
   .phone-row,
@@ -1013,7 +1063,8 @@ button {
   .preview-toolbar,
   .template-selector,
   .status-message,
-  .upload-card {
+  .upload-card,
+  .upload-side > h2 {
     display: none;
   }
 
@@ -1022,7 +1073,10 @@ button {
   .builder-page,
   .builder-workspace,
   .builder-columns,
-  .preview-pane {
+  .preview-pane,
+  .upload-page,
+  .upload-side,
+  .preview-center {
     display: block;
     padding: 0;
     margin: 0;

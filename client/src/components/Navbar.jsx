@@ -1,10 +1,10 @@
-import comillasLogo from '../assets/comillas-logo.svg';
+import icaiLogo from '../assets/imagen comillas.jpg';
 
 export default function Navbar({ onNavigate }) {
   return (
     <header className="topbar">
       <button className="brand" type="button" onClick={() => onNavigate('home')}>
-        <img className="brand-logo" src={comillasLogo} alt="Comillas Universidad Pontificia" />
+        <img className="brand-logo" src={icaiLogo} alt="ICAI Comillas" />
         <span>
           <strong>CV Comillas</strong>
           <small>Comillas Career</small>

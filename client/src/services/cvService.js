@@ -1,11 +1,7 @@
-const API_URL = import.meta.env.VITE_API_URL || '';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 const BUCKET_ENDPOINT = import.meta.env.VITE_BUCKET_ENDPOINT || '';
 
 async function request(path, options = {}) {
-  if (!API_URL) {
-    throw new Error('Backend no configurado. Define VITE_API_URL para activar este servicio.');
-  }
-
   const response = await fetch(`${API_URL}${path}`, {
     headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
     ...options,
@@ -33,13 +29,13 @@ export async function translateCV(cvData, targetLanguage) {
 }
 
 export async function analyzeUploadedCV(file) {
-  if (!API_URL) {
-    throw new Error('Backend no configurado. Define VITE_API_URL para analizar PDFs.');
-  }
   const formData = new FormData();
   formData.append('file', file);
-  const response = await fetch(`${API_URL}/cv/analyze`, { method: 'POST', body: formData });
-  if (!response.ok) throw new Error(`Error analizando CV (${response.status})`);
+  const response = await fetch(`${API_URL}/cv/upload`, { method: 'POST', body: formData });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.error || `Error analizando CV (${response.status})`);
+  }
   return response.json();
 }
 
