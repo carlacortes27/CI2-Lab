@@ -4,6 +4,7 @@ export default function Navbar({ currentPage, onNavigate }) {
     ['create', 'Crear CV'],
     ['upload', 'Subir CV'],
     ['preview', 'Vista previa'],
+    ['ope', 'Portal OPE'],
   ];
 
   return (

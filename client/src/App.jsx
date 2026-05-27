@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage.jsx';
 import CreateCVPage from './pages/CreateCVPage.jsx';
 import UploadCVPage from './pages/UploadCVPage.jsx';
 import CVPreviewPage from './pages/CVPreviewPage.jsx';
+import OpePortalPage from './pages/OpePortalPage.jsx';
 import './App.css';
 
 export default function App() {
@@ -39,6 +40,7 @@ export default function App() {
         {page === 'create' && <CreateCVPage onNavigate={navigate} />}
         {page === 'upload' && <UploadCVPage onNavigate={navigate} />}
         {page === 'preview' && <CVPreviewPage onNavigate={navigate} />}
+        {page === 'ope' && <OpePortalPage onNavigateToEditor={() => navigate('create')} />}
       </div>
     </CvProvider>
   );

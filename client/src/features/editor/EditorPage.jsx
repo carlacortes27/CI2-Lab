@@ -2,7 +2,7 @@ import EditorForm from './EditorForm.jsx';
 import CvPreview from './CvPreview.jsx';
 import { useCv } from '../../context/CvContext.jsx';
 
-export default function EditorPage() {
+export default function EditorPage({ onNavigateToOpe }) {
   const { cv } = useCv();
 
   return (
@@ -14,9 +14,20 @@ export default function EditorPage() {
           <span className="text-gray-300">|</span>
           <span className="text-sm text-gray-500">{cv.personal.fullName || 'Mi CV'}</span>
         </div>
-        <div className="flex items-center gap-2 text-xs text-gray-400">
-          <span>Guardado automáticamente</span>
-          <span className="w-2 h-2 rounded-full bg-green-400" title="Autoguardado activo" />
+        <div className="flex items-center gap-4">
+          {onNavigateToOpe && (
+            <button
+              type="button"
+              onClick={onNavigateToOpe}
+              className="text-sm font-medium text-[#C89600] hover:text-[#F0B400] transition-colors"
+            >
+              Portal OPE →
+            </button>
+          )}
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <span>Guardado automáticamente</span>
+            <span className="w-2 h-2 rounded-full bg-green-400" title="Autoguardado activo" />
+          </div>
         </div>
       </header>
 
