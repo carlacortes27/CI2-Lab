@@ -10,7 +10,13 @@
       "Bash(\nBASE=\"c:/Users/jpuen/OneDrive - Universidad Pontificia Comillas/Documentos/GitHub/CI2-Lab/client/src\"\n\n# Copiar offers → ope\ncp \"$BASE/features/offers/OfferDetail.jsx\" \"$BASE/features/ope/OfferDetail.jsx\"\ncp \"$BASE/features/offers/OfferListItem.jsx\" \"$BASE/features/ope/OfferListItem.jsx\"\n\n# Crear carpeta forms\nmkdir -p \"$BASE/features/editor/forms\"\n\n# Copiar todos los .jsx de components/cv/ → features/editor/forms/\ncp \"$BASE/components/cv/\"*.jsx \"$BASE/features/editor/forms/\"\n\necho \"=== features/ope/ ===\"\nls \"$BASE/features/ope/\"\necho \"=== features/editor/forms/ ===\"\nls \"$BASE/features/editor/forms/\"\n)",
       "Bash(npm run *)",
       "Bash(git add *)",
-      "Bash(git commit -m 'refactor: reestructuración en feature folders + routes.config.js *)"
+      "Bash(git commit -m 'refactor: reestructuración en feature folders + routes.config.js *)",
+      "Bash(npx vite *)",
+      "Bash(npx eslint *)",
+      "Bash(git commit -m 'feat\\(ope\\): redesign OfferDetail with full mockup layout *)",
+      "Bash(git commit -m 'feat\\(ui\\): smooth page transitions on navigation *)",
+      "Bash(git commit -m 'fix\\(ui\\): remove transform from page transitions to avoid breaking position:fixed *)",
+      "Bash(git merge *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\jpuen\\OneDrive - Universidad Pontificia Comillas\\Documentos\\GitHub\\CI2-Lab\\.claude",

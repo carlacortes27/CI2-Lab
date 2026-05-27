@@ -1,24 +1,32 @@
+/**
+ * CreateCVPage.jsx — Pantalla "Crear desde cero" del Shell B (Herramienta CV)
+ *
+ * Usa CVToolLayout para la estructura de shell (header + sidebar + workspace).
+ * El workspace se divide en dos columnas: formulario (izquierda) + vista previa A4 (derecha).
+ */
 import { useState } from 'react';
-import CVForm from './forms/CVForm.jsx';
-import CVPreview from './forms/CVPreview.jsx';
+import CVForm          from './forms/CVForm.jsx';
+import CVPreview       from './forms/CVPreview.jsx';
 import TemplateSelector from './forms/TemplateSelector.jsx';
 import { correctSpelling, downloadAsPDF, translateCV } from '../../services/cvService.js';
-import { useCv } from '../../context/CvContext.jsx';
+import { useCv }       from '../../context/CvContext.jsx';
+import CVToolLayout    from '../../layouts/CVToolLayout.jsx';
+import { T }           from '../../styles/theme.js';
 
 export default function CreateCVPage({ onNavigate }) {
   const { cv, dispatch } = useCv();
-  const [status, setStatus] = useState('');
+  const [status,  setStatus]  = useState('');
   const [loading, setLoading] = useState('');
 
-  async function runAction(label, action, successMessage) {
+  async function runAction(actionKey, action, successMsg) {
     setStatus('');
-    setLoading(label);
+    setLoading(actionKey);
     try {
       const result = await action();
       if (result?.cvData) dispatch({ type: 'SET_CV', payload: result.cvData });
-      setStatus(successMessage);
-    } catch (error) {
-      setStatus(`Error: ${error.message}`);
+      setStatus(successMsg);
+    } catch (err) {
+      setStatus(`Error: ${err.message}`);
     } finally {
       setLoading('');
     }
@@ -30,74 +38,127 @@ export default function CreateCVPage({ onNavigate }) {
     try {
       await downloadAsPDF(cv.personal?.fullName || 'cv-comillas');
       setStatus('PDF descargado correctamente.');
-    } catch (error) {
-      setStatus(`Error al generar PDF: ${error.message}`);
+    } catch (err) {
+      setStatus(`Error al generar PDF: ${err.message}`);
     } finally {
       setLoading('');
     }
   }
 
-  return (
-    <main className="builder-page">
-      <aside className="builder-sidebar">
-        <p className="eyebrow">CV Comillas</p>
-        <h1>Crear CV</h1>
-        <p>Completa cada bloque y visualiza el resultado al instante.</p>
-        <div className="choice-panel">
-          <button type="button" className="choice active">Crear desde cero</button>
-          <button type="button" className="choice" onClick={() => onNavigate('upload')}>
-            Mejorar CV existente
-          </button>
-        </div>
-        <button type="button" className="outline-button full" onClick={() => onNavigate('preview')}>
-          Abrir vista previa
-        </button>
-      </aside>
+  function handleStep(key) {
+    if (key === 'improve') onNavigate?.('upload');
+    if (key === 'preview') onNavigate?.('preview');
+    // 'create' no hace nada (ya estamos aquí)
+  }
 
-      <section className="builder-workspace">
-        <div className="builder-header">
-          <TemplateSelector />
-          <div className="toolbar-actions">
-            <button
-              type="button"
-              disabled={!!loading}
-              onClick={() => runAction('spell', () => correctSpelling(cv), 'Corrección aplicada.')}
-            >
-              {loading === 'spell' ? 'Corrigiendo...' : 'Corrección ortográfica'}
-            </button>
-            <button
-              type="button"
-              disabled={!!loading}
-              onClick={() => runAction('translate-en', () => translateCV(cv, 'en'), 'CV traducido al inglés.')}
-            >
-              {loading === 'translate-en' ? 'Traduciendo...' : 'Traducir a inglés'}
-            </button>
-            <button
-              type="button"
-              disabled={!!loading}
-              onClick={() => runAction('translate-es', () => translateCV(cv, 'es'), 'CV traducido al español.')}
-            >
-              {loading === 'translate-es' ? 'Traduciendo...' : 'Traducir a español'}
-            </button>
-            <button
-              type="button"
-              className="primary-button"
-              disabled={!!loading}
-              onClick={handleDownload}
-            >
-              {loading === 'pdf' ? 'Generando PDF...' : 'Descargar PDF'}
-            </button>
-          </div>
+  // Acciones del toolbar del header
+  const toolbarActions = [
+    {
+      label:   loading === 'spell' ? 'Corrigiendo' : 'Corrección ortográfica',
+      loading: loading === 'spell',
+      onClick: () => runAction('spell', () => correctSpelling(cv), 'Corrección aplicada.'),
+    },
+    {
+      label:   loading === 'translate-en' ? 'Traduciendo' : 'Traducir a inglés',
+      loading: loading === 'translate-en',
+      onClick: () => runAction('translate-en', () => translateCV(cv, 'en'), 'CV traducido al inglés.'),
+    },
+    {
+      label:   loading === 'translate-es' ? 'Traduciendo' : 'Traducir a español',
+      loading: loading === 'translate-es',
+      onClick: () => runAction('translate-es', () => translateCV(cv, 'es'), 'CV traducido al español.'),
+    },
+    {
+      label:   loading === 'pdf' ? 'Generando' : 'Descargar PDF',
+      loading: loading === 'pdf',
+      primary: true,
+      onClick: handleDownload,
+    },
+  ];
+
+  return (
+    <CVToolLayout
+      activeStep="create"
+      onNavigate={onNavigate}
+      toolbarActions={toolbarActions}
+      onStep={handleStep}
+    >
+      {/* Mensaje de estado (errores / confirmaciones) */}
+      {status && (
+        <div style={{
+          padding:         '10px 24px',
+          backgroundColor: status.startsWith('Error') ? '#FEF2F2' : '#F0FDF4',
+          borderBottom:    `1px solid ${status.startsWith('Error') ? '#FECACA' : '#BBF7D0'}`,
+          fontSize:        13,
+          color:           status.startsWith('Error') ? '#B91C1C' : '#15803D',
+          fontFamily:      T.font,
+          flexShrink:      0,
+        }}>
+          {status}
         </div>
-        {status && <p className="status-message">{status}</p>}
-        <div className="builder-columns">
+      )}
+
+      {/* Workspace: dos columnas scrollables */}
+      <div style={{
+        flex:               1,
+        overflow:           'hidden',
+        display:            'grid',
+        gridTemplateColumns: '1fr 1fr',
+      }}>
+        {/* Columna izquierda: selector de plantilla + formulario */}
+        <div style={{
+          overflowY: 'auto',
+          padding:   '28px 28px 40px',
+          borderRight: `1px solid ${T.border}`,
+          display:   'flex',
+          flexDirection: 'column',
+          gap:       20,
+        }}>
+          {/* Selector de plantilla y estilo */}
+          <div style={{
+            backgroundColor: T.white,
+            borderRadius:    T.radiusCard,
+            boxShadow:       T.shadowCard,
+            padding:         24,
+          }}>
+            <TemplateSelector />
+          </div>
+
+          {/* Formulario por secciones */}
           <CVForm />
-          <div className="preview-pane">
-            <h2>Vista previa A4</h2>
+        </div>
+
+        {/* Columna derecha: vista previa A4 */}
+        <div style={{
+          overflowY:       'auto',
+          padding:         '28px 28px 40px',
+          backgroundColor: T.bg,
+          display:         'flex',
+          flexDirection:   'column',
+          gap:             16,
+        }}>
+          {/* Título del panel */}
+          <h2 style={{
+            fontSize:   16,
+            fontWeight: 600,
+            color:      T.t1,
+            fontFamily: T.font,
+            margin:     0,
+          }}>
+            Vista previa A4
+          </h2>
+
+          {/* Render del CV */}
+          <div style={{
+            backgroundColor: T.white,
+            borderRadius:    T.radiusCard,
+            boxShadow:       T.shadowElevated,
+            overflow:        'hidden',
+          }}>
             <CVPreview />
           </div>
         </div>
-      </section>
-    </main>
+      </div>
+    </CVToolLayout>
   );
 }
