@@ -40,19 +40,27 @@ export default function EducationForm() {
         return (
           <article className="entry-card" key={item.id}>
             <div className="entry-header">
-              <strong>{item.degree || 'Nueva educacion'}</strong>
+              <strong>{item.degree || 'Nueva educación'}</strong>
               <button type="button" onClick={() => dispatch({ type: 'DELETE_ITEM', payload: { section: SECTION, id: item.id } })}>Eliminar</button>
             </div>
             <div className="form-grid two">
               <Field label="Universidad / centro" value={item.institution} onChange={institution => update(item.id, { institution })} />
               <Field label="Ciudad / país" value={item.location} onChange={location => update(item.id, { location })} />
               <Field label="Titulación" value={item.degree} onChange={degree => update(item.id, { degree })} />
-              <Field label="Duracion" value={item.duration} onChange={duration => update(item.id, { duration })} placeholder="2022 - Actualidad" />
+              <Field label="Duración" value={item.duration} onChange={duration => update(item.id, { duration })} placeholder="2022 - Actualidad" />
               <Field label="Fecha inicio" value={item.startDate} onChange={startDate => update(item.id, { startDate })} type="month" />
-              <Field label="Fecha fin" value={item.endDate} onChange={endDate => update(item.id, { endDate })} type="month" error={dateError ? 'La fecha fin debe ser posterior' : ''} />
+              <Field label="Fecha fin" value={item.endDate} onChange={endDate => update(item.id, { endDate })} type="month" disabled={item.current} error={dateError ? 'La fecha fin debe ser posterior' : ''} />
             </div>
             <label className="check-row">
-              <input type="checkbox" checked={item.current} onChange={event => update(item.id, { current: event.target.checked })} />
+              <input
+                type="checkbox"
+                checked={item.current}
+                onChange={event => update(item.id, {
+                  current: event.target.checked,
+                  endDate: event.target.checked ? '' : item.endDate,
+                  duration: event.target.checked ? '' : item.duration,
+                })}
+              />
               En curso
             </label>
             <BulletEditor item={item} onChange={updateBullet} section={SECTION} />
@@ -72,7 +80,7 @@ export function BulletEditor({ item, onChange, section }) {
       <span>Bullet points editables</span>
       {bullets.map(bullet => (
         <div className="bullet-row" key={bullet.id}>
-          <input value={bullet.text} onChange={event => onChange(item, bullet.id, event.target.value)} placeholder="Especializacion, logro, herramienta o responsabilidad" />
+          <input value={bullet.text} onChange={event => onChange(item, bullet.id, event.target.value)} placeholder="Especialización, logro, herramienta o responsabilidad" />
           <button type="button" onClick={() => dispatch({ type: 'DELETE_BULLET', payload: { section, itemId: item.id, bulletId: bullet.id } })}>Quitar</button>
         </div>
       ))}

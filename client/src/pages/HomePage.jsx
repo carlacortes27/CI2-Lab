@@ -20,11 +20,11 @@ export default function HomePage({ onNavigate }) {
     <main className="home-page">
       <section className="hero-section">
         <div className="hero-copy">
-          <p className="eyebrow">Comillas Career</p>
-          <h1>Impulsa tu carrera desde un CV claro y profesional</h1>
+          <p className="eyebrow">CV Comillas</p>
+          <h1>CV Comillas</h1>
           <p>
-            Crea, mejora, traduce y descarga tu curriculum con una estructura pensada para estudiantes
-            y primeras experiencias profesionales.
+            Crea, mejora, previsualiza y descarga tu CV en PDF con plantillas profesionales
+            pensadas para estudiantes y primeras experiencias.
           </p>
           <div className="hero-actions">
             <button type="button" className="dark-button" onClick={() => onNavigate('create')}>

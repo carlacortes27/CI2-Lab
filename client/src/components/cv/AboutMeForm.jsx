@@ -10,7 +10,7 @@ export default function AboutMeForm() {
   return (
     <SectionCard title="Sobre mí">
       <TextArea
-        label="Descripcion corta"
+        label="Sobre mí"
         value={text}
         maxLength={status.max}
         rows={4}

@@ -21,11 +21,22 @@ export default function PersonalInfoForm() {
     dispatch({ type: 'UPDATE_PERSONAL', payload: { links: [...rest, { id: label.toLowerCase(), label, url }] } });
   }
 
+  function updatePhoto(file) {
+    if (!file) return;
+    if (!['image/jpeg', 'image/jpg'].includes(file.type)) {
+      window.alert('La foto debe ser un archivo .jpg');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => dispatch({ type: 'UPDATE_PERSONAL', payload: { photoUrl: reader.result } });
+    reader.readAsDataURL(file);
+  }
+
   return (
     <SectionCard title="Datos personales">
       <div className="form-grid two">
         <Field label="Nombre completo" value={p.fullName} onChange={fullName => update({ fullName })} />
-        <Field label="Ubicacion" value={p.location} onChange={location => update({ location })} />
+        <Field label="Ubicación" value={p.location} onChange={location => update({ location })} />
         <Field label="Email personal" value={p.email} onChange={email => update({ email })} type="email" error={emailError} />
         <div className="phone-row">
           <Select label="Pais" value={p.phoneCountry || '+34'} onChange={phoneCountry => update({ phoneCountry })}>
@@ -39,10 +50,14 @@ export default function PersonalInfoForm() {
           onChange={url => updateLink('LinkedIn', url)}
         />
         <Field
-          label="GitHub o portfolio"
-          value={p.links.find(link => link.label === 'GitHub')?.url || p.links.find(link => link.label === 'Portfolio')?.url}
-          onChange={url => updateLink('GitHub', url)}
+          label="Portfolio"
+          value={p.links.find(link => link.label === 'Portfolio')?.url}
+          onChange={url => updateLink('Portfolio', url)}
         />
+        <label className="form-field">
+          <span>Foto JPG para plantillas con imagen</span>
+          <input type="file" accept="image/jpeg,.jpg" onChange={event => updatePhoto(event.target.files?.[0])} />
+        </label>
       </div>
     </SectionCard>
   );

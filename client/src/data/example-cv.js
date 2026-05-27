@@ -23,7 +23,7 @@ export const exampleCv = {
     photoUrl: null,
     links: [
       { id: 'lnk_1', label: 'LinkedIn', url: 'linkedin.com/in/marta-saldana' },
-      { id: 'lnk_2', label: 'GitHub', url: 'github.com/martasaldana' },
+      { id: 'lnk_2', label: 'Portfolio', url: 'portfolio.com/marta-saldana' },
     ],
   },
   sections: {

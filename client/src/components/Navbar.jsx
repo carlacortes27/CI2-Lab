@@ -11,11 +11,11 @@ export default function Navbar({ currentPage, onNavigate }) {
       <button className="brand" type="button" onClick={() => onNavigate('home')}>
         <span className="brand-mark">C</span>
         <span>
-          <strong>Comillas</strong>
-          <small>Career CV</small>
+          <strong>CV Comillas</strong>
+          <small>Editor profesional</small>
         </span>
       </button>
-      <nav className="nav-links" aria-label="Navegacion principal">
+      <nav className="nav-links" aria-label="Navegación principal">
         {links.map(([page, label]) => (
           <button
             key={page}
@@ -28,7 +28,7 @@ export default function Navbar({ currentPage, onNavigate }) {
         ))}
       </nav>
       <div className="nav-actions">
-        <button type="button" className="ghost-button">Iniciar sesion</button>
+        <button type="button" className="ghost-button">Iniciar sesión</button>
         <button type="button" className="primary-button" onClick={() => onNavigate('create')}>
           Crear CV
         </button>

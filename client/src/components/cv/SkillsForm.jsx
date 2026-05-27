@@ -5,7 +5,7 @@ const technicalGroups = [
   ['lenguajes', 'Lenguajes'],
   ['software', 'Software'],
   ['herramientas', 'Herramientas'],
-  ['tecnologias', 'Tecnologias'],
+  ['tecnologias', 'Tecnologías'],
 ];
 
 export default function SkillsForm() {
@@ -50,7 +50,7 @@ export default function SkillsForm() {
           label="Competencias separadas por coma"
           value={personal.join(', ')}
           onChange={updatePersonal}
-          placeholder="liderazgo, adaptacion, proactividad, comunicacion"
+          placeholder="liderazgo, adaptación, proactividad, comunicación"
         />
       </SectionCard>
     </>

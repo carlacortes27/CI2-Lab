@@ -1,4 +1,4 @@
-export function Field({ label, value, onChange, type = 'text', placeholder, error }) {
+export function Field({ label, value, onChange, type = 'text', placeholder, error, disabled = false }) {
   return (
     <label className="form-field">
       <span>{label}</span>
@@ -6,6 +6,7 @@ export function Field({ label, value, onChange, type = 'text', placeholder, erro
         type={type}
         value={value || ''}
         placeholder={placeholder}
+        disabled={disabled}
         onChange={event => onChange(event.target.value)}
         aria-invalid={Boolean(error)}
       />

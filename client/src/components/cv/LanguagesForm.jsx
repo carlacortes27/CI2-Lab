@@ -2,7 +2,6 @@ import { useCv } from '../../context/CvContext.jsx';
 import { Field, Select, SectionCard } from './FormControls.jsx';
 
 const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Nativo'];
-const certificates = ['', 'Cambridge', 'IELTS', 'TOEFL', 'TOEIC', 'DELF', 'EOI', 'Otro'];
 const SECTION = 'languages';
 
 function emptyItem() {
@@ -26,9 +25,7 @@ export default function LanguagesForm() {
             <Select label="Nivel" value={String(item.level)} onChange={level => update(item.id, { level })}>
               {levels.map(level => <option key={level}>{level}</option>)}
             </Select>
-            <Select label="Certificado opcional" value={item.certificate} onChange={certificate => update(item.id, { certificate })}>
-              {certificates.map(cert => <option key={cert} value={cert}>{cert || 'Sin certificado'}</option>)}
-            </Select>
+            <Field label="Certificado opcional" value={item.certificate} onChange={certificate => update(item.id, { certificate })} placeholder="Cambridge, IELTS, TOEFL..." />
             <Field label="Nota o año" value={item.note} onChange={note => update(item.id, { note })} />
           </div>
           <button type="button" onClick={() => dispatch({ type: 'DELETE_ITEM', payload: { section: SECTION, id: item.id } })}>Eliminar idioma</button>
