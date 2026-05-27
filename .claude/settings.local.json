@@ -16,7 +16,8 @@
       "Bash(git commit -m 'feat\\(ope\\): redesign OfferDetail with full mockup layout *)",
       "Bash(git commit -m 'feat\\(ui\\): smooth page transitions on navigation *)",
       "Bash(git commit -m 'fix\\(ui\\): remove transform from page transitions to avoid breaking position:fixed *)",
-      "Bash(git merge *)"
+      "Bash(git merge *)",
+      "Bash(git commit -m 'feat\\(ui\\): sistema visual unificado - Pasos 1-4 *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\jpuen\\OneDrive - Universidad Pontificia Comillas\\Documentos\\GitHub\\CI2-Lab\\.claude",
