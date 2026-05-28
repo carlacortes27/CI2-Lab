@@ -1,0 +1,33 @@
+[
+  {
+    "id": "adv_001",
+    "name": "María López",
+    "role": "CV y empleabilidad",
+    "availableDays": [1, 2, 3, 4, 5],
+    "slots": [
+      "09:00", "09:30", "10:00", "10:30",
+      "11:00", "11:30", "12:00", "12:30",
+      "13:00", "15:30", "16:00", "16:30"
+    ]
+  },
+  {
+    "id": "adv_002",
+    "name": "Javier Martín",
+    "role": "Preparación de entrevistas y selección",
+    "availableDays": [1, 2, 3, 4, 5],
+    "slots": [
+      "09:00", "09:30", "10:00", "10:30",
+      "11:00", "11:30", "12:00", "12:30"
+    ]
+  },
+  {
+    "id": "adv_003",
+    "name": "Lucía Fernández",
+    "role": "Prácticas y primer empleo",
+    "availableDays": [1, 2, 3, 4, 5],
+    "slots": [
+      "10:00", "10:30", "11:00", "11:30",
+      "12:00", "13:00", "15:30", "16:00"
+    ]
+  }
+]
