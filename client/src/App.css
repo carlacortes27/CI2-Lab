@@ -348,7 +348,7 @@ body:has([data-shell]) .back-button {
 .action-card {
   display: grid;
   gap: 14px;
-  align-content: start;
+  align-content: space-between;
   min-height: 220px;
   padding: 24px;
 }
@@ -378,6 +378,34 @@ body:has([data-shell]) .back-button {
 .upload-card p {
   color: var(--muted);
   line-height: 1.55;
+}
+
+.contact-content {
+  display: grid;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.contact-item {
+  color: var(--muted);
+  line-height: 1.55;
+  font-size: 14px;
+  margin: 0;
+}
+
+.contact-item strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.contact-item a {
+  color: var(--gold);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.contact-item a:hover {
+  text-decoration: underline;
 }
 
 .builder-page {

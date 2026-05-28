@@ -6,7 +6,7 @@ export default function HomePage({ onNavigate }) {
     {
       icon: 'ID',
       title: 'Crear CV',
-      text: 'Disena un CV profesional con plantillas adaptadas al perfil universitario.',
+      text: 'Diseña un CV profesional con plantillas adaptadas al perfil universitario.',
       action: 'Crear CV',
       page: 'create',
     },
@@ -20,16 +20,16 @@ export default function HomePage({ onNavigate }) {
     {
       icon: 'OPE',
       title: 'OPE / Ofertas',
-      text: 'Consulta practicas y oportunidades de empleo conectadas con Comillas.',
+      text: 'Consulta prácticas y oportunidades de empleo conectadas con Comillas.',
       action: 'Ver ofertas',
       page: 'ope',
     },
     {
-      icon: 'OK',
-      title: 'Seguimiento',
-      text: 'Manten a la vista tus candidaturas y proximos pasos cuando esten disponibles.',
-      action: 'Abrir OPE',
-      page: 'ope',
+      icon: 'INFO',
+      title: 'Contacto OPE',
+      text: 'Conecta con la Oficina de Prácticas y Empleo para resolver tus dudas.',
+      action: 'Ver contacto',
+      isContact: true,
     },
   ];
 
@@ -40,7 +40,7 @@ export default function HomePage({ onNavigate }) {
           <p className="eyebrow">Comillas Career</p>
           <h1>Impulsa tu carrera desde Comillas</h1>
           <p>
-            Crea tu CV, mejora tu perfil y encuentra practicas u oportunidades ajustadas a tu
+            Crea tu CV, mejora tu perfil y encuentra prácticas u oportunidades ajustadas a tu
             trayectoria desde un mismo espacio.
           </p>
           <div className="hero-actions">
@@ -51,13 +51,13 @@ export default function HomePage({ onNavigate }) {
                   Crear mi CV
                 </button>
                 <button type="button" className="outline-button" onClick={logout}>
-                  Cerrar sesion
+                  Cerrar sesión
                 </button>
               </>
             ) : (
               <>
                 <button type="button" className="dark-button" onClick={() => onNavigate('login')}>
-                  Iniciar sesion
+                  Iniciar sesión
                 </button>
                 <button type="button" className="outline-button" onClick={() => onNavigate('register')}>
                   Registrarse
@@ -99,10 +99,34 @@ export default function HomePage({ onNavigate }) {
           <article className="action-card" key={card.title}>
             <span className="card-icon">{card.icon}</span>
             <h2>{card.title}</h2>
-            <p>{card.text}</p>
-            <button type="button" onClick={() => onNavigate(card.page)}>
-              {card.action}
-            </button>
+            {card.isContact ? (
+              <div className="contact-content">
+                <p className="contact-item">
+                  <strong>Email:</strong>
+                  <br />
+                  <a href="mailto:ope@comillas.edu">ope@comillas.edu</a>
+                </p>
+                <p className="contact-item">
+                  <strong>Teléfono:</strong>
+                  <br />
+                  <a href="tel:+34915406000">+34 91 540 6000</a>
+                </p>
+                <p className="contact-item">
+                  <strong>Dirección:</strong>
+                  <br />
+                  Calle Alberto Aguilera, 32
+                  <br />
+                  28015 Madrid
+                </p>
+              </div>
+            ) : (
+              <p>{card.text}</p>
+            )}
+            {!card.isContact && (
+              <button type="button" onClick={() => onNavigate(card.page)}>
+                {card.action}
+              </button>
+            )}
           </article>
         ))}
       </section>
