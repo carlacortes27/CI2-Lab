@@ -23,7 +23,6 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!token) {
-      setCheckingSession(false);
       return;
     }
 
