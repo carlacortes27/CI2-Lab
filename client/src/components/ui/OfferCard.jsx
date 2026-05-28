@@ -1,17 +1,22 @@
-/**
- * OfferCard.jsx — Tarjeta de oferta de prácticas/empleo
- *
- * Reemplaza a OfferListItem. Implementa el diseño spec § 2.9:
- *  CompanyLogo | badge DESTACADA | título | empresa | metadatos | tags | MATCH | bookmark
- */
-import { T } from '../../styles/theme.js';
-import CompanyLogo    from './CompanyLogo.jsx';
-import Badge          from './Badge.jsx';
-import { PinIcon, MonitorIcon, ClockIcon, BookmarkIcon } from './Icons.jsx';
+import { T, brandColor, initials } from '../../styles/theme.js';
+import Button from './Button.jsx';
+import { PinIcon, MonitorIcon, ClockIcon } from './Icons.jsx';
 
 const MODALITY_LABEL = { presencial: 'Presencial', hibrido: 'Híbrido', remoto: 'Remoto' };
 
-/** Score sintético hasta que WS6 implemente el motor real */
+const SECTOR_STYLES = {
+  'Consultoría': { bg: '#DBEAFE', color: '#1D4ED8' },
+  'Finanzas':    { bg: '#DBEAFE', color: '#1D4ED8' },
+  'Energía':     { bg: '#DCFCE7', color: '#15803D' },
+  'Industrial':  { bg: '#DCFCE7', color: '#15803D' },
+  'Tecnología':  { bg: '#F3E8FF', color: '#7E22CE' },
+  'Legal':       { bg: '#F3E8FF', color: '#7E22CE' },
+};
+
+function sectorStyle(sector) {
+  return SECTOR_STYLES[sector] ?? { bg: T.orangeBg, color: '#B45309' };
+}
+
 function mockScore(offerId, rank) {
   const base  = Math.max(78, 97 - rank * 5);
   const tweak = (offerId.charCodeAt(offerId.length - 1) % 5) - 2;
@@ -19,135 +24,152 @@ function mockScore(offerId, rank) {
 }
 
 export default function OfferCard({ offer, rank = 0, onClick }) {
-  const score       = mockScore(offer.id, rank);
-  const isDestacada = score >= 90;
-  const tags        = offer.requirements?.hardSkills?.slice(0, 3) ?? [];
+  const score        = mockScore(offer.id, rank);
+  const isDestacada  = score >= 90;
+  const tags         = offer.requirements?.hardSkills?.slice(0, 3) ?? [];
+  const sector       = offer.sector || 'Prácticas';
+  const badgeStyle   = sectorStyle(sector);
+  const companyColor = brandColor(offer.company);
+  const companyInits = initials(offer.company);
 
   return (
-    <button
-      type="button"
+    <div
       onClick={onClick}
       style={{
-        display:         'block',
-        width:           '100%',
-        textAlign:       'left',
-        backgroundColor: T.white,
-        borderRadius:    T.radiusCard,
-        boxShadow:       T.shadowCard,
-        padding:         24,
-        border:          '1px solid transparent',
-        cursor:          'pointer',
-        transition:      'box-shadow 0.15s, border-color 0.15s',
-        fontFamily:      T.font,
+        backgroundColor:     T.white,
+        borderRadius:        T.radiusCard,
+        boxShadow:           T.shadowCard,
+        border:              `1px solid ${T.border}`,
+        padding:             14,
+        display:             'grid',
+        gridTemplateColumns: '58px 1fr auto',
+        gap:                 14,
+        alignItems:          'start',
+        cursor:              'pointer',
+        transition:          'box-shadow 0.15s, transform 0.15s',
+        fontFamily:          T.font,
       }}
       onMouseEnter={e => {
-        e.currentTarget.style.boxShadow    = T.shadowElevated;
-        e.currentTarget.style.borderColor  = '#F0D0A0';
+        e.currentTarget.style.boxShadow = T.shadowElevated;
+        e.currentTarget.style.transform = 'translateY(-1px)';
       }}
       onMouseLeave={e => {
-        e.currentTarget.style.boxShadow    = T.shadowCard;
-        e.currentTarget.style.borderColor  = 'transparent';
+        e.currentTarget.style.boxShadow = T.shadowCard;
+        e.currentTarget.style.transform = 'translateY(0)';
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20 }}>
-
-        {/* Logo empresa */}
-        <CompanyLogo company={offer.company} size={64} />
-
-        {/* Contenido central */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {/* Badge DESTACADA */}
-          {isDestacada && (
-            <div style={{ marginBottom: 8 }}>
-              <Badge label="DESTACADA" variant="decorative" />
-            </div>
-          )}
-
-          {/* Título */}
-          <p style={{ fontSize: 16, fontWeight: 600, color: T.t1, lineHeight: 1.4, margin: 0, marginBottom: 4 }}>
-            {offer.title}
-          </p>
-
-          {/* Empresa */}
-          <p style={{ fontSize: 13, color: T.t2, marginBottom: 10 }}>
-            {offer.company}
-          </p>
-
-          {/* Meta */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12, flexWrap: 'wrap' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: T.t3 }}>
-              <PinIcon size={12} />{offer.location}
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: T.t3 }}>
-              <MonitorIcon size={12} />{MODALITY_LABEL[offer.modality] ?? offer.modality}
-            </span>
-            {offer.duration && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: T.t3 }}>
-                <ClockIcon size={12} />{offer.duration}
-              </span>
-            )}
-          </div>
-
-          {/* Tags de habilidades */}
-          {tags.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {tags.map(tag => (
-                <span key={tag} style={{
-                  padding:         '4px 10px',
-                  borderRadius:    T.radiusPill,
-                  backgroundColor: T.hoverBg,
-                  color:           T.t2,
-                  fontSize:        12,
-                }}>
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* MATCH + Bookmark (derecha) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-          {/* Bloque MATCH */}
-          <div style={{
-            backgroundColor: T.orangeBg,
-            borderRadius:    T.radiusInput,
-            padding:         '12px 14px',
-            display:         'flex',
-            flexDirection:   'column',
-            alignItems:      'center',
-            gap:             2,
-            minWidth:        72,
-          }}>
-            <span style={{
-              fontSize:      10,
-              fontWeight:    700,
-              color:         T.t3,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              lineHeight:    1,
-            }}>
-              MATCH
-            </span>
-            <span style={{ fontSize: 24, fontWeight: 700, color: T.orange, lineHeight: 1.2 }}>
-              {score}%
-            </span>
-          </div>
-
-          {/* Bookmark */}
-          <button
-            type="button"
-            onClick={e => e.stopPropagation()}
-            title="Guardar oferta"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: T.t3 }}
-            onMouseEnter={e => e.currentTarget.style.color = T.orange}
-            onMouseLeave={e => e.currentTarget.style.color = T.t3}
-          >
-            <BookmarkIcon size={18} />
-          </button>
-        </div>
-
+      {/* Bloque empresa */}
+      <div style={{
+        width:           58,
+        minHeight:       64,
+        border:          `1px solid ${T.border}`,
+        borderRadius:    T.radiusInput,
+        backgroundColor: T.orangeBg,
+        display:         'flex',
+        flexDirection:   'column',
+        alignItems:      'center',
+        justifyContent:  'center',
+        flexShrink:      0,
+      }}>
+        <span style={{ fontSize: 18, fontWeight: 700, color: companyColor, lineHeight: 1, fontFamily: T.font }}>
+          {companyInits}
+        </span>
+        <span style={{ fontSize: 8, fontWeight: 700, color: T.orange, letterSpacing: '0.05em', textTransform: 'uppercase', marginTop: 4, maxWidth: 50, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center', fontFamily: T.font }}>
+          {offer.company?.split(' ')[0] ?? ''}
+        </span>
       </div>
-    </button>
+
+      {/* Contenido central */}
+      <div style={{ minWidth: 0 }}>
+        {/* Badges */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+          <span style={{
+            padding:         '3px 10px',
+            borderRadius:    T.radiusPill,
+            backgroundColor: badgeStyle.bg,
+            color:           badgeStyle.color,
+            fontSize:        11,
+            fontWeight:      700,
+            fontFamily:      T.font,
+          }}>
+            {sector}
+          </span>
+          {isDestacada && (
+            <span style={{
+              padding:         '3px 10px',
+              borderRadius:    T.radiusPill,
+              backgroundColor: T.orangeBg,
+              color:           '#B45309',
+              fontSize:        11,
+              fontWeight:      700,
+              fontFamily:      T.font,
+            }}>
+              Destacada
+            </span>
+          )}
+        </div>
+
+        {/* Título */}
+        <p style={{ fontSize: 15, fontWeight: 600, color: T.t1, lineHeight: 1.35, margin: 0, fontFamily: T.font }}>
+          {offer.title}
+        </p>
+
+        {/* Empresa */}
+        <p style={{ fontSize: 12, color: T.t2, marginTop: 4, marginBottom: 0, fontFamily: T.font }}>
+          {offer.company}
+        </p>
+
+        {/* Metadatos */}
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 8, color: T.t2, fontSize: 12, fontFamily: T.font }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <PinIcon size={12} color={T.t3} />{offer.location}
+          </span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <MonitorIcon size={12} color={T.t3} />{MODALITY_LABEL[offer.modality] ?? offer.modality}
+          </span>
+          {offer.duration && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <ClockIcon size={12} color={T.t3} />{offer.duration}
+            </span>
+          )}
+        </div>
+
+        {/* Match % + tags */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+          <span style={{
+            padding:         '4px 8px',
+            borderRadius:    T.radiusPill,
+            backgroundColor: T.orangeBg,
+            color:           T.orange,
+            fontSize:        11,
+            fontWeight:      700,
+            fontFamily:      T.font,
+          }}>
+            {score}% match
+          </span>
+          {tags.map(tag => (
+            <span key={tag} style={{
+              padding:         '4px 8px',
+              borderRadius:    T.radiusPill,
+              backgroundColor: T.hoverBg,
+              color:           T.t2,
+              fontSize:        11,
+              fontFamily:      T.font,
+            }}>
+              {tag}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Acción derecha */}
+      <Button
+        variant="secondary"
+        onClick={e => { e.stopPropagation(); onClick?.(); }}
+        style={{ alignSelf: 'center', padding: '8px 16px', fontSize: 12 }}
+      >
+        Ver oferta
+      </Button>
+    </div>
   );
 }

@@ -171,7 +171,7 @@ function Sidebar({ active, onSection, onNavigate }) {
 }
 
 // ── Header (88px, ancho completo) ─────────────────────────────────────────────
-function PortalHeader({ userName, userDegree }) {
+function PortalHeader({ userName, userDegree, searchQuery = '', onSearchChange }) {
   return (
     <header className="portal-shell-header" style={{
       minHeight:       96,
@@ -240,6 +240,8 @@ function PortalHeader({ userName, userDegree }) {
           <input
             type="text"
             placeholder="Buscar empresas, posiciones o palabras clave"
+            value={searchQuery}
+            onChange={e => onSearchChange?.(e.target.value)}
             style={{
               width:          '100%',
               paddingLeft:    46,
@@ -420,6 +422,8 @@ export default function PortalLayout({
   userDegree        = 'ICAI',
   rightPanel,
   rightPanelVisible = !!rightPanel,
+  searchQuery       = '',
+  onSearchChange,
   children,
 }) {
   return (
@@ -438,7 +442,7 @@ export default function PortalLayout({
       <style>{ANIMATION_STYLES}</style>
 
       {/* HEADER — 88px, ancho completo */}
-      <PortalHeader userName={userName} userDegree={userDegree} />
+      <PortalHeader userName={userName} userDegree={userDegree} searchQuery={searchQuery} onSearchChange={onSearchChange} />
 
       {/* CONTENIDO: sidebar | main | panel derecho */}
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>

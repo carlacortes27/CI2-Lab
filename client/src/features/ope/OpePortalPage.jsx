@@ -4,7 +4,7 @@
  * Usa PortalLayout para la estructura de shells (header + sidebar + grid).
  * Gestiona las pestañas y el estado de datos.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { flushSync } from 'react-dom';
 import { getOffers, getEvents } from '../../lib/api.js';
 import { useAuth } from '../../context/useAuth.js';
@@ -17,7 +17,6 @@ import {
   ApplicationCard,
   StatBox,
   FilterDropdown,
-  Badge,
   Button,
   Card,
   Pill,
@@ -885,7 +884,8 @@ export default function OpePortalPage({
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showAll,       setShowAll]       = useState(false);
-  const [filters, setFilters] = useState({ sector: '', location: '', modality: '' });
+  const [filters,     setFilters]     = useState({ sector: '', location: '', modality: '' });
+  const [searchQuery, setSearchQuery] = useState('');
 
   function changeSection(key) {
     if (!document.startViewTransition) {
@@ -922,6 +922,34 @@ export default function OpePortalPage({
       .finally(() => setEventsLoading(false));
   }, []);
 
+  const filteredOffers = useMemo(() => {
+    if (!searchQuery.trim()) return offers;
+    const q = searchQuery.toLowerCase();
+    return offers.filter(o =>
+      o.title?.toLowerCase().includes(q) ||
+      o.company?.toLowerCase().includes(q) ||
+      o.description?.toLowerCase().includes(q) ||
+      o.sector?.toLowerCase().includes(q) ||
+      o.requirements?.keywords?.some(k => k.toLowerCase().includes(q))
+    );
+  }, [offers, searchQuery]);
+
+  const filteredEvents = useMemo(() => {
+    if (!searchQuery.trim()) return events;
+    const q = searchQuery.toLowerCase();
+    return events.filter(e =>
+      e.title?.toLowerCase().includes(q) ||
+      e.organizer?.toLowerCase().includes(q) ||
+      e.company?.toLowerCase().includes(q) ||
+      e.description?.toLowerCase().includes(q) ||
+      e.tags?.some(t => t.toLowerCase().includes(q))
+    );
+  }, [events, searchQuery]);
+
+  function handleSearchChange(q) {
+    setSearchQuery(q);
+  }
+
   // Vista de detalle de una oferta
   if (selectedOffer) {
     return (
@@ -931,6 +959,8 @@ export default function OpePortalPage({
         onNavigate={onNavigate}
         userName={displayName}
         userDegree={displayDetail}
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
       >
         <OfferDetail offer={selectedOffer} onBack={() => setSelectedOffer(null)} />
       </PortalLayout>
@@ -946,9 +976,84 @@ export default function OpePortalPage({
         onNavigate={onNavigate}
         userName={displayName}
         userDegree={displayDetail}
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
       >
         <EventDetail event={selectedEvent} onBack={() => setSelectedEvent(null)} />
       </PortalLayout>
+    );
+  }
+
+  // Vista de resultados de búsqueda combinada
+  function renderSearchResults() {
+    const q = searchQuery.trim();
+    const totalCount = filteredOffers.length + filteredEvents.length;
+
+    return (
+      <>
+        <div>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: T.t1, lineHeight: 1.2, margin: 0, fontFamily: T.font }}>
+            Resultados para &ldquo;{q}&rdquo;
+          </h1>
+          <p style={{ fontSize: 14, color: T.t2, marginTop: 8, fontFamily: T.font }}>
+            {totalCount === 0
+              ? 'No se encontraron resultados.'
+              : `${totalCount} resultado${totalCount !== 1 ? 's' : ''} encontrado${totalCount !== 1 ? 's' : ''}`}
+          </p>
+        </div>
+
+        {/* Sección Ofertas */}
+        <div>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: T.t1, margin: '0 0 12px', fontFamily: T.font }}>
+            Ofertas y prácticas
+            <span style={{ fontSize: 13, fontWeight: 400, color: T.t3, marginLeft: 8 }}>({filteredOffers.length})</span>
+          </h2>
+          {loading && <LoadingSkeleton />}
+          {!loading && filteredOffers.length === 0 && (
+            <p style={{ fontSize: 14, color: T.t3, fontFamily: T.font, padding: '16px 0' }}>
+              No hay ofertas que coincidan con la búsqueda.
+            </p>
+          )}
+          {!loading && filteredOffers.slice(0, 5).map((offer, idx) => (
+            <OfferCard key={offer.id} offer={offer} rank={idx} onClick={() => setSelectedOffer(offer)} />
+          ))}
+          {!loading && filteredOffers.length > 5 && (
+            <button
+              type="button"
+              onClick={() => { setSearchQuery(''); changeSection('ofertas'); }}
+              style={{ fontSize: 13, fontWeight: 500, color: T.orange, background: 'none', border: 'none', cursor: 'pointer', fontFamily: T.font, padding: '8px 0' }}
+            >
+              Ver las {filteredOffers.length} ofertas →
+            </button>
+          )}
+        </div>
+
+        {/* Sección Eventos */}
+        <div>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: T.t1, margin: '0 0 12px', fontFamily: T.font }}>
+            Eventos
+            <span style={{ fontSize: 13, fontWeight: 400, color: T.t3, marginLeft: 8 }}>({filteredEvents.length})</span>
+          </h2>
+          {eventsLoading && <LoadingSkeleton />}
+          {!eventsLoading && filteredEvents.length === 0 && (
+            <p style={{ fontSize: 14, color: T.t3, fontFamily: T.font, padding: '16px 0' }}>
+              No hay eventos que coincidan con la búsqueda.
+            </p>
+          )}
+          {!eventsLoading && filteredEvents.slice(0, 5).map(event => (
+            <EventCard key={event.id} event={event} compact onClick={setSelectedEvent} />
+          ))}
+          {!eventsLoading && filteredEvents.length > 5 && (
+            <button
+              type="button"
+              onClick={() => { setSearchQuery(''); changeSection('eventos'); }}
+              style={{ fontSize: 13, fontWeight: 500, color: T.orange, background: 'none', border: 'none', cursor: 'pointer', fontFamily: T.font, padding: '8px 0' }}
+            >
+              Ver los {filteredEvents.length} eventos →
+            </button>
+          )}
+        </div>
+      </>
     );
   }
 
@@ -956,10 +1061,11 @@ export default function OpePortalPage({
   function renderContent() {
     switch (activeSection) {
       case 'inicio':
+        if (searchQuery.trim()) return renderSearchResults();
         return (
           <TabInicio
             firstName={firstName}
-            offers={offers}
+            offers={filteredOffers}
             loading={loading}
             error={error}
             showAll={showAll}
@@ -973,7 +1079,7 @@ export default function OpePortalPage({
       case 'ofertas':
         return (
           <TabOfertas
-            offers={offers}
+            offers={filteredOffers}
             loading={loading}
             error={error}
             showAll={showAll}
@@ -990,7 +1096,7 @@ export default function OpePortalPage({
       case 'eventos':
         return (
           <TabEventos
-            events={events}
+            events={filteredEvents}
             loading={eventsLoading}
             error={eventsError}
             scope={eventScope}
@@ -1020,6 +1126,8 @@ export default function OpePortalPage({
       userDegree={displayDetail}
       rightPanel={<CandidaturasPanel onSection={changeSection} vtActive={activeSection === 'inicio'} />}
       rightPanelVisible={activeSection === 'inicio'}
+      searchQuery={searchQuery}
+      onSearchChange={handleSearchChange}
     >
       {renderContent()}
     </PortalLayout>
