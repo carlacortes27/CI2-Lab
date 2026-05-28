@@ -21,6 +21,9 @@ app.use('/api/offers', offersRouter);
 app.use('/api/events', eventsRouter);
 app.use('/api/cv', cvRouter);
 
+// WS3 registrará su router aquí: app.use('/api/pdf', pdfRouter)
+// WS5 registrará su router aquí para la generación de PDF
+
 // Manejador de errores centralizado (debe ir al final)
 app.use(errorHandler);
 
