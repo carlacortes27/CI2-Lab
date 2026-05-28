@@ -14,6 +14,7 @@ export function createBlankCv() {
       fontFamily: 'Inter, system-ui, sans-serif',
       fontSize: 'medium',
       accentColor: '#f5b21b',
+      blockStyles: {},
     },
     personal: {
       fullName: '',

@@ -192,6 +192,36 @@ function cvReducer(cv, action) {
     case 'UPDATE_STYLE':
       return withUpdated({ ...cv, style: { ...cv.style, ...action.payload } });
 
+    case 'UPDATE_BLOCK_STYLE': {
+      const { blockId, style } = action.payload;
+      return withUpdated({
+        ...cv,
+        style: {
+          ...cv.style,
+          blockStyles: {
+            ...(cv.style.blockStyles || {}),
+            [blockId]: {
+              ...(cv.style.blockStyles?.[blockId] || {}),
+              ...style,
+            },
+          },
+        },
+      });
+    }
+
+    case 'RESET_BLOCK_STYLE': {
+      const { blockId } = action.payload;
+      const nextStyles = { ...(cv.style.blockStyles || {}) };
+      delete nextStyles[blockId];
+      return withUpdated({
+        ...cv,
+        style: {
+          ...cv.style,
+          blockStyles: nextStyles,
+        },
+      });
+    }
+
     case 'UPDATE_SECTION':
       return withUpdated({
         ...cv,

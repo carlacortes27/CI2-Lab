@@ -743,7 +743,7 @@ body:has([data-shell]) .back-button {
 
 .cv-sheet {
   width: 794px;
-  height: 1123px;
+  min-height: 1123px;
   max-width: 100%;
   margin: 0 auto;
   padding: 34px 40px;
@@ -751,7 +751,7 @@ body:has([data-shell]) .back-button {
   background: white;
   box-shadow: var(--shadow);
   color: #1f2937;
-  overflow: hidden;
+  overflow: visible;
   transform-origin: top center;
 }
 
@@ -838,10 +838,7 @@ body:has([data-shell]) .back-button {
 }
 
 .cv-summary {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
+  white-space: pre-wrap;
 }
 
 .cv-item {
@@ -1109,14 +1106,60 @@ body:has([data-shell]) .back-button {
   opacity: 0.45;
 }
 
+.part-editor {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+}
+
+.part-editor.empty {
+  color: var(--muted);
+}
+
+.part-editor-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.part-editor-head h2 {
+  color: var(--ink);
+  font-size: 20px;
+}
+
+.part-editor-head button {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.part-style-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.part-toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+}
+
 .preview-center {
   margin-top: 20px;
 }
 
 .preview-mini {
   margin-top: 20px;
-  max-height: 520px;
-  overflow: hidden;
+  max-height: 680px;
+  overflow: auto;
 }
 
 .preview-title {

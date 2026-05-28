@@ -53,20 +53,20 @@ export default function CVPreview() {
 
       {cv.layout.order.map(key => {
         if (!s[key]?.visible) return null;
-        return <PreviewSection key={key} sectionKey={key} data={s[key]} labels={labels} />;
+        return <PreviewSection key={key} sectionKey={key} data={s[key]} labels={labels} blockStyles={cv.style?.blockStyles || {}} />;
       })}
     </article>
   );
 }
 
-function PreviewSection({ sectionKey, data, labels }) {
+function PreviewSection({ sectionKey, data, labels, blockStyles }) {
   return (
     <section className="cv-section">
       <h2>{labels[sectionKey]}</h2>
-      {sectionKey === 'summary' && <p className="cv-summary">{fourLines(data.text)}</p>}
-      {sectionKey === 'education' && data.items.map(item => <TimelineItem key={item.id} title={item.degree} subtitle={`${item.institution}${item.location ? ` | ${item.location}` : ''}`} date={item.duration || dateRange(item)} bullets={item.bullets} />)}
-      {sectionKey === 'experience' && data.items.map(item => <TimelineItem key={item.id} title={item.role} subtitle={item.company} date={item.duration || dateRange(item)} bullets={item.bullets} />)}
-      {sectionKey === 'projects' && data.items.map(item => <TimelineItem key={item.id} title={item.name} subtitle={[item.description, item.technologies].filter(Boolean).join(' | ')} date={item.link} bullets={item.bullets} />)}
+      {sectionKey === 'summary' && <p className="cv-summary" style={textStyle(blockStyles.summary)}>{data.text}</p>}
+      {sectionKey === 'education' && data.items.map(item => <TimelineItem key={item.id} sectionKey={sectionKey} item={item} title={item.degree} titleField="degree" subtitle={`${item.institution}${item.location ? ` | ${item.location}` : ''}`} date={item.duration || dateRange(item)} bullets={item.bullets} blockStyles={blockStyles} />)}
+      {sectionKey === 'experience' && data.items.map(item => <TimelineItem key={item.id} sectionKey={sectionKey} item={item} title={item.role} titleField="role" subtitle={item.company} date={item.duration || dateRange(item)} bullets={item.bullets} blockStyles={blockStyles} />)}
+      {sectionKey === 'projects' && data.items.map(item => <TimelineItem key={item.id} sectionKey={sectionKey} item={item} title={item.name} titleField="name" subtitle={[item.description, item.technologies].filter(Boolean).join(' | ')} date={item.link} bullets={item.bullets} blockStyles={blockStyles} />)}
       {sectionKey === 'technicalSkills' && <SkillBullets groups={data.groups} />}
       {sectionKey === 'personalSkills' && <BulletList items={data.items} />}
       {sectionKey === 'languages' && (
@@ -76,26 +76,30 @@ function PreviewSection({ sectionKey, data, labels }) {
       )}
       {sectionKey === 'certifications' && data.items.map(item => (
         <div className="cv-line" key={item.id}>
-          <strong>{item.name}</strong>
+          <strong style={textStyle(blockStyles[`certifications:${item.id}:name`])}>{item.name}</strong>
           <span>{[item.issuer, item.level, item.date].filter(Boolean).join(' | ')}</span>
         </div>
       ))}
-      {sectionKey === 'volunteering' && data.items.map(item => <div className="cv-line" key={item.id}><strong>{item.organization}</strong><span>{[item.date, item.description].filter(Boolean).join(' | ')}</span></div>)}
+      {sectionKey === 'volunteering' && data.items.map(item => <div className="cv-line" key={item.id}><strong>{item.organization}</strong><span style={textStyle(blockStyles[`volunteering:${item.id}:description`])}>{[item.date, item.description].filter(Boolean).join(' | ')}</span></div>)}
     </section>
   );
 }
 
-function TimelineItem({ title, subtitle, date, bullets = [] }) {
+function TimelineItem({ sectionKey, item, title, titleField, subtitle, date, bullets = [], blockStyles }) {
   return (
     <div className="cv-item">
       <div className="cv-item-top">
-        <strong>{title}</strong>
+        <strong style={textStyle(blockStyles[`${sectionKey}:${item.id}:${titleField}`])}>{title}</strong>
         {date && <span>{date}</span>}
       </div>
       {subtitle && <p className="cv-subtitle">{subtitle}</p>}
       {bullets?.length > 0 && (
         <ul>
-          {bullets.filter(bullet => bullet.text).slice(0, 3).map(bullet => <li key={bullet.id}>{bullet.text}</li>)}
+          {bullets.filter(bullet => bullet.text).map(bullet => (
+            <li key={bullet.id} style={textStyle(blockStyles[`${sectionKey}:${item.id}:bullet:${bullet.id}`])}>
+              {bullet.text}
+            </li>
+          ))}
         </ul>
       )}
     </div>
@@ -127,6 +131,14 @@ function dateRange(item) {
   return [item.startDate, item.current ? 'Actualidad' : item.endDate].filter(Boolean).join(' - ');
 }
 
-function fourLines(text = '') {
-  return String(text).split('\n').slice(0, 4).join('\n');
+function textStyle(style = {}) {
+  const result = {};
+  if (style.fontFamily) result.fontFamily = style.fontFamily;
+  if (style.fontSize) {
+    result.fontSize = `${style.fontSize}px`;
+    result.lineHeight = 1.35;
+  }
+  if (style.fontWeight) result.fontWeight = style.fontWeight;
+  if (style.fontStyle) result.fontStyle = style.fontStyle;
+  return result;
 }
