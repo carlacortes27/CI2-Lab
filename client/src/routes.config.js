@@ -13,6 +13,8 @@
 
 // ── P1: UI general ────────────────────────────────────────────────────────────
 import HomePage from './features/home/HomePage.jsx';
+import LoginPage from './features/auth/LoginPage.jsx';
+import RegisterPage from './features/auth/RegisterPage.jsx';
 
 // ── P2: Editor de CV ──────────────────────────────────────────────────────────
 import CreateCVPage   from './features/editor/CreateCVPage.jsx';
@@ -36,6 +38,8 @@ import OpePortalPage from './features/ope/OpePortalPage.jsx';
 export const ROUTES = [
   // ── P1 ──────────────────────────────────────────────────────────────────────
   { key: 'home',    label: 'Inicio',       nav: true,  Page: HomePage },
+  { key: 'login',   label: 'Login',        nav: false, Page: LoginPage },
+  { key: 'register', label: 'Registro',    nav: false, Page: RegisterPage },
 
   // ── P2 ──────────────────────────────────────────────────────────────────────
   { key: 'create',  label: 'Crear CV',     nav: true,  Page: CreateCVPage },

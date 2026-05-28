@@ -1,8 +1,18 @@
 // En desarrollo, Vite proxea /api → http://localhost:3001
 const BASE_URL = '';
 
-async function request(path) {
-  const res = await fetch(`${BASE_URL}${path}`);
+async function request(path, options = {}) {
+  const headers = {
+    ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+    ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
+    ...options.headers,
+  };
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: options.method ?? 'GET',
+    headers,
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || `Error ${res.status}`);
@@ -29,4 +39,20 @@ export function getOfferById(id) {
 
 export function getEvents() {
   return request('/api/events');
+}
+
+export function registerUser(data) {
+  return request('/api/auth/register', { method: 'POST', body: data });
+}
+
+export function loginUser(data) {
+  return request('/api/auth/login', { method: 'POST', body: data });
+}
+
+export function getCurrentUser(token) {
+  return request('/api/auth/me', { token });
+}
+
+export function logoutUser(token) {
+  return request('/api/auth/logout', { method: 'POST', token });
 }
