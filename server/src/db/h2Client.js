@@ -21,9 +21,15 @@ let jdbcUrlLogged = false;
 async function readJsonDb() {
   try {
     const raw = await fs.readFile(jsonDbPath, 'utf8');
-    return JSON.parse(raw);
+    const db = JSON.parse(raw);
+    return {
+      users: db.users || [],
+      nextId: db.nextId || 1,
+      applications: db.applications || [],
+      nextApplicationId: db.nextApplicationId || 1,
+    };
   } catch {
-    return { users: [], nextId: 1 };
+    return { users: [], nextId: 1, applications: [], nextApplicationId: 1 };
   }
 }
 
@@ -121,4 +127,83 @@ export async function listUsers() {
     return db.users;
   }
   return runBridge('listUsers');
+}
+
+const APPLICATION_PHASES = ['enviada', 'revision', 'entrevista', 'aceptada', 'finalizada'];
+
+export async function listApplicationsByUser(userId) {
+  await initDatabase();
+  if (useJsonFallback) {
+    const db = await readJsonDb();
+    return db.applications
+      .filter(app => app.userId === Number(userId))
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+  return runBridge('listApplications', [String(userId)]);
+}
+
+export async function createApplication({ userId, offerId }) {
+  await initDatabase();
+  if (useJsonFallback) {
+    const db = await readJsonDb();
+    const existing = db.applications.find(app => app.userId === Number(userId) && app.offerId === offerId);
+    if (existing) {
+      if (existing.status === 'guardada') {
+        existing.status = 'enviada';
+        existing.updatedAt = new Date().toISOString();
+        await writeJsonDb(db);
+      }
+      return existing;
+    }
+    const now = new Date().toISOString();
+    const application = {
+      id: db.nextApplicationId++,
+      userId: Number(userId),
+      offerId,
+      status: 'enviada',
+      createdAt: now,
+      updatedAt: now,
+    };
+    db.applications.push(application);
+    await writeJsonDb(db);
+    return application;
+  }
+  return runBridge('createApplication', [String(userId), offerId]);
+}
+
+export async function saveApplication({ userId, offerId }) {
+  await initDatabase();
+  if (useJsonFallback) {
+    const db = await readJsonDb();
+    const existing = db.applications.find(app => app.userId === Number(userId) && app.offerId === offerId);
+    if (existing) return existing;
+    const now = new Date().toISOString();
+    const application = {
+      id: db.nextApplicationId++,
+      userId: Number(userId),
+      offerId,
+      status: 'guardada',
+      createdAt: now,
+      updatedAt: now,
+    };
+    db.applications.push(application);
+    await writeJsonDb(db);
+    return application;
+  }
+  return runBridge('saveApplication', [String(userId), offerId]);
+}
+
+export async function advanceApplication({ userId, applicationId }) {
+  await initDatabase();
+  if (useJsonFallback) {
+    const db = await readJsonDb();
+    const application = db.applications.find(app => app.userId === Number(userId) && app.id === Number(applicationId));
+    if (!application) return null;
+    const currentIndex = APPLICATION_PHASES.indexOf(application.status);
+    application.status = APPLICATION_PHASES[Math.min(currentIndex + 1, APPLICATION_PHASES.length - 1)];
+    application.updatedAt = new Date().toISOString();
+    await writeJsonDb(db);
+    return application;
+  }
+  return runBridge('advanceApplication', [String(applicationId), String(userId)]);
 }

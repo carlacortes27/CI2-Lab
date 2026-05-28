@@ -41,6 +41,22 @@ export function getEvents() {
   return request('/api/events');
 }
 
+export function getApplications(token) {
+  return request('/api/applications', { token });
+}
+
+export function applyToOffer(offerId, token) {
+  return request('/api/applications', { method: 'POST', body: { offerId }, token });
+}
+
+export function saveOffer(offerId, token) {
+  return request('/api/applications/saved', { method: 'POST', body: { offerId }, token });
+}
+
+export function advanceApplication(applicationId, token) {
+  return request(`/api/applications/${applicationId}/advance`, { method: 'POST', token });
+}
+
 export function registerUser(data) {
   return request('/api/auth/register', { method: 'POST', body: data });
 }

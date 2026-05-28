@@ -24,30 +24,6 @@ const card = {
 };
 
 // ── Colores de marca (igual que OfferListItem) ────────────────────────────────
-const BRAND_TEXT = {
-  mckinsey:  '#1A1A2E', iberdrola: '#00A650', deloitte:  '#86BC25',
-  kpmg:      '#00338D', pwc:       '#E0301E', ey:        '#2E2E2E',
-  accenture: '#A100FF', santander: '#EC0000', bbva:      '#004481',
-  telefonica:'#019DF4', acciona:   '#E30613', repsol:    '#B8960A',
-  naturgy:   '#FF6B00', endesa:    '#00A3E0', cepsa:     '#00A86B',
-  redexis:   '#0099A8', amazon:    '#FF9900', google:    '#4285F4',
-  microsoft: '#00A4EF', indra:     '#003DA5', capgemini: '#0070AD',
-  ferrovial: '#0085CA',
-};
-
-function getBrandColor(company) {
-  if (!company) return '#374151';
-  const words = company.toLowerCase().split(/\s+/);
-  for (const w of words) if (BRAND_TEXT[w]) return BRAND_TEXT[w];
-  let h = 0;
-  for (let i = 0; i < company.length; i++) h = company.charCodeAt(i) + ((h << 5) - h);
-  return `hsl(${Math.abs(h) % 360},55%,35%)`;
-}
-
-function getInitials(company) {
-  return (company ?? '').split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('');
-}
-
 // ── Etiquetas ─────────────────────────────────────────────────────────────────
 const MODALITY_LABEL = { presencial: 'Presencial', hibrido: 'Híbrido', remoto: 'Remoto' };
 const TYPE_LABEL     = { practicas: 'Prácticas',   empleo: 'Empleo' };
@@ -56,6 +32,68 @@ function formatDate(dateStr) {
   if (!dateStr) return '—';
   const [y, m, d] = dateStr.split('-');
   return d ? `${d}/${m}/${y}` : `${m}/${y}`;
+}
+
+const APPLICATION_PHASES = [
+  { key: 'enviada', label: 'Inscrito' },
+  { key: 'revision', label: 'CV revisado' },
+  { key: 'entrevista', label: 'Entrevista' },
+  { key: 'aceptada', label: 'Oferta final' },
+  { key: 'finalizada', label: 'Finalizado' },
+];
+
+function ApplicationProgress({ application, onAdvance, advancing }) {
+  const activeIndex = Math.max(0, APPLICATION_PHASES.findIndex(phase => phase.key === application?.status));
+  const isFinal = activeIndex === APPLICATION_PHASES.length - 1;
+
+  return (
+    <div style={{ ...card, padding: '22px 28px', marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18, marginBottom: 18 }}>
+        <div>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: T.t1, margin: 0 }}>Progreso de la candidatura</h2>
+          <p style={{ fontSize: 13, color: T.t2, margin: '5px 0 0' }}>
+            Fase actual: {APPLICATION_PHASES[activeIndex]?.label}
+          </p>
+        </div>
+        <button
+          type="button"
+          disabled={isFinal || advancing}
+          onClick={onAdvance}
+          style={{
+            padding: '10px 18px',
+            borderRadius: T.pillRadius,
+            backgroundColor: isFinal ? '#F3F4F6' : T.orange,
+            color: isFinal ? T.t3 : T.white,
+            fontSize: 13,
+            fontWeight: 700,
+            border: 'none',
+            cursor: isFinal || advancing ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {advancing ? 'Actualizando...' : 'Siguiente fase'}
+        </button>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${APPLICATION_PHASES.length}, 1fr)`, gap: 8 }}>
+        {APPLICATION_PHASES.map((phase, index) => {
+          const completed = index <= activeIndex;
+          return (
+            <div key={phase.key}>
+              <div style={{ height: 8, borderRadius: T.pillRadius, backgroundColor: completed ? T.orange : T.border }} />
+              <p style={{
+                margin: '7px 0 0',
+                fontSize: 11,
+                fontWeight: completed ? 700 : 500,
+                color: completed ? T.t1 : T.t3,
+                textAlign: 'center',
+              }}>
+                {phase.label}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 // ── Generadores de contenido de respaldo ──────────────────────────────────────
@@ -216,9 +254,18 @@ function SectionHeader({ icon, title }) {
 }
 
 // ── Componente principal ──────────────────────────────────────────────────────
-export default function OfferDetail({ offer, onBack }) {
-  const brandColor      = getBrandColor(offer.company);
-  const initials        = getInitials(offer.company);
+export default function OfferDetail({
+  offer,
+  onBack,
+  application,
+  onApply,
+  onSave,
+  onAdvanceApplication,
+  applying = false,
+  saving = false,
+  advancing = false,
+  applyError,
+}) {
   const typeLabel       = TYPE_LABEL[offer.type]     ?? offer.type;
   const modalityLabel   = MODALITY_LABEL[offer.modality] ?? offer.modality;
   const allTags         = [
@@ -228,6 +275,8 @@ export default function OfferDetail({ offer, onBack }) {
   const responsibilities = deriveResponsibilities(offer);
   const whatWeOffer      = deriveWhatWeOffer(offer);
   const languages        = offer.requirements?.languages ?? [];
+  const isSaved = application?.status === 'guardada';
+  const isApplied = Boolean(application) && !isSaved;
 
   return (
     <div style={{ padding: '28px 40px', backgroundColor: T.bg, minHeight: '100%' }}>
@@ -326,9 +375,11 @@ export default function OfferDetail({ offer, onBack }) {
 
           {/* Acciones: guardar + compartir */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, marginTop: 4 }}>
-            <button type="button" title="Guardar oferta"
+            <button type="button" title={application ? 'Oferta guardada' : 'Guardar oferta'}
+              disabled={Boolean(application) || saving}
+              onClick={onSave}
               style={{ width: 38, height: 38, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: `1px solid ${T.border}`, cursor: 'pointer' }}
-              onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#F9FAFB'; }}
+              onMouseEnter={e => { if (!application && !saving) e.currentTarget.style.backgroundColor = '#F9FAFB'; }}
               onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
               <BookmarkIco />
             </button>
@@ -341,6 +392,14 @@ export default function OfferDetail({ offer, onBack }) {
           </div>
         </div>
       </div>
+
+      {isApplied && (
+        <ApplicationProgress
+          application={application}
+          onAdvance={onAdvanceApplication}
+          advancing={advancing}
+        />
+      )}
 
       {/* ── Grid: Descripción + Qué ofrece ─────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
@@ -469,45 +528,65 @@ export default function OfferDetail({ offer, onBack }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
         <button
           type="button"
+          disabled={isApplied || applying}
+          onClick={onApply}
           style={{
             padding: '14px 36px',
             borderRadius: T.pillRadius,
-            backgroundColor: T.orange,
+            backgroundColor: isApplied ? T.green : T.orange,
             color: T.white,
             fontSize: 15,
             fontWeight: 700,
             border: 'none',
-            cursor: 'pointer',
+            cursor: isApplied || applying ? 'default' : 'pointer',
             transition: 'background-color 0.15s, transform 0.1s',
             boxShadow: `0 2px 8px rgba(245,166,35,0.35)`,
           }}
-          onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#D4880A'; }}
-          onMouseLeave={e => { e.currentTarget.style.backgroundColor = T.orange; }}
+          onMouseEnter={e => { if (!isApplied && !applying) e.currentTarget.style.backgroundColor = '#D4880A'; }}
+          onMouseLeave={e => { if (!isApplied && !applying) e.currentTarget.style.backgroundColor = T.orange; }}
           onMouseDown={e =>  { e.currentTarget.style.transform = 'scale(0.98)'; }}
           onMouseUp={e =>    { e.currentTarget.style.transform = 'scale(1)'; }}
         >
-          Inscribirse en la oferta
+          {isApplied ? 'Inscrito en la oferta' : applying ? 'Inscribiendo...' : 'Inscribirse en la oferta'}
         </button>
 
         <button
           type="button"
+          disabled={Boolean(application) || saving}
+          onClick={onSave}
           style={{
             padding: '14px 28px',
             borderRadius: T.pillRadius,
-            backgroundColor: 'transparent',
-            color: T.t2,
+            backgroundColor: isSaved ? T.greenBg : 'transparent',
+            color: isSaved ? T.green : T.t2,
             fontSize: 15,
             fontWeight: 500,
-            border: `1px solid ${T.border}`,
-            cursor: 'pointer',
+            border: `1px solid ${isSaved ? T.green : T.border}`,
+            cursor: application || saving ? 'default' : 'pointer',
             transition: 'border-color 0.15s, color 0.15s',
           }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = T.t2; e.currentTarget.style.color = T.t1; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.t2; }}
+          onMouseEnter={e => {
+            if (!application && !saving) {
+              e.currentTarget.style.borderColor = T.t2;
+              e.currentTarget.style.color = T.t1;
+            }
+          }}
+          onMouseLeave={e => {
+            if (!application && !saving) {
+              e.currentTarget.style.borderColor = T.border;
+              e.currentTarget.style.color = T.t2;
+            }
+          }}
         >
-          Guardar oferta
+          {isSaved ? 'Oferta guardada' : saving ? 'Guardando...' : 'Guardar oferta'}
         </button>
       </div>
+
+      {applyError && (
+        <p style={{ fontSize: 13, color: '#B91C1C', marginTop: 12 }}>
+          {applyError}
+        </p>
+      )}
 
     </div>
   );
