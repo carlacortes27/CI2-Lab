@@ -71,8 +71,8 @@ body:has([data-shell]) .back-button {
 }
 
 .brand-logo {
-  width: 150px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
 }
 
@@ -1118,7 +1118,8 @@ body:has([data-shell]) .back-button {
   }
 
   .brand-logo {
-    width: 122px;
+    width: 40px;
+    height: 40px;
   }
 
   .nav-actions {

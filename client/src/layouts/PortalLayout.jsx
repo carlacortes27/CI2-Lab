@@ -14,6 +14,7 @@
  *  children        → contenido del área central (main)
  */
 import { T } from '../styles/theme.js';
+import icaiLogo from '../assets/imagen comillas.jpg';
 import {
   HomeIcon, BriefcaseIcon, ClipboardIcon, BuildingIcon,
   CalendarIcon, BookIcon, CompassIcon, UserIcon, SettingsIcon,
@@ -172,18 +173,58 @@ function Sidebar({ active, onSection, onNavigate }) {
 // ── Header (88px, ancho completo) ─────────────────────────────────────────────
 function PortalHeader({ userName, userDegree }) {
   return (
-    <header style={{
-      height:          88,
+    <header className="portal-shell-header" style={{
+      minHeight:       96,
       backgroundColor: T.white,
       borderBottom:    `1px solid ${T.border}`,
       display:         'flex',
       alignItems:      'center',
-      padding:         '0 40px',
+      padding:         '18px 40px',
       gap:             24,
       flexShrink:      0,
+      flexWrap:        'wrap',
+      position:        'relative',
+      zIndex:          2,
     }}>
+      <div className="shell-brand" style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, minWidth: 0 }}>
+        <img
+          src={icaiLogo}
+          alt="ICAI Universidad Pontificia Comillas"
+          style={{
+            width:      42,
+            maxWidth:   '42vw',
+            height:     42,
+            objectFit:  'contain',
+            flexShrink: 0,
+          }}
+        />
+        <div style={{ textAlign: 'left' }}>
+          <p style={{
+            fontSize:      13,
+            fontWeight:    800,
+            color:         T.t1,
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+            lineHeight:    1,
+            fontFamily:    T.font,
+          }}>
+            CV Comillas
+          </p>
+          <p style={{
+            fontSize:   10,
+            fontWeight: 400,
+            color:      T.t3,
+            marginTop:  2,
+            lineHeight: 1,
+            fontFamily: T.font,
+          }}>
+            Comillas Career
+          </p>
+        </div>
+      </div>
+
       {/* Buscador centrado */}
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+      <div className="portal-search" style={{ flex: '1 1 360px', minWidth: 220, display: 'flex', justifyContent: 'center' }}>
         <div style={{ position: 'relative', width: '100%', maxWidth: 720 }}>
           <span style={{
             position:       'absolute',
@@ -227,7 +268,7 @@ function PortalHeader({ userName, userDegree }) {
       </div>
 
       {/* Iconos + perfil */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+      <div className="portal-user-actions" style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
         {/* Campana */}
         <div style={{ position: 'relative' }}>
           <button

@@ -11,6 +11,7 @@
  *  children        → contenido del workspace (form + preview columns)
  */
 import { T } from '../styles/theme.js';
+import icaiLogo from '../assets/imagen comillas.jpg';
 import {
   ArrowLeftIcon,
   DownloadIcon,
@@ -151,19 +152,33 @@ function CVSidebar({ activeStep, onNavigate, onStep }) {
 // ── Header del Shell CV (64px, ancho completo) ────────────────────────────────
 function CVHeader({ toolbarActions }) {
   return (
-    <header style={{
-      height:          64,
+    <header className="cv-shell-header" style={{
+      minHeight:       88,
       backgroundColor: T.white,
       borderBottom:    `1px solid ${T.border}`,
       display:         'flex',
       alignItems:      'center',
       justifyContent:  'space-between',
-      padding:         '0 32px',
+      padding:         '16px 32px',
       flexShrink:      0,
-      gap:             24,
+      gap:             20,
+      flexWrap:        'wrap',
+      position:        'relative',
+      zIndex:          2,
     }}>
       {/* Label CV COMILLAS — solo branding, sin navegación */}
-      <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+      <div className="shell-brand" style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, minWidth: 0 }}>
+        <img
+          src={icaiLogo}
+          alt="ICAI Universidad Pontificia Comillas"
+          style={{
+            width:      42,
+            maxWidth:   '42vw',
+            height:     42,
+            objectFit:  'contain',
+            flexShrink: 0,
+          }}
+        />
         <div style={{ textAlign: 'left' }}>
           <p style={{
             fontSize:      13,
@@ -191,7 +206,15 @@ function CVHeader({ toolbarActions }) {
 
       {/* Botones de toolbar action */}
       {toolbarActions && toolbarActions.length > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="cv-shell-actions" style={{
+          display:        'flex',
+          alignItems:     'center',
+          justifyContent: 'flex-end',
+          gap:            10,
+          flexWrap:       'wrap',
+          flex:           '1 1 520px',
+          minWidth:       0,
+        }}>
           {toolbarActions.map(({ label, onClick, loading: isLoading, primary = false }) => (
             <button
               key={label}
