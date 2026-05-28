@@ -19,7 +19,7 @@ import icaiLogo from '../assets/imagen comillas.jpg';
 import { useAuth } from '../context/useAuth.js';
 import {
   HomeIcon, BriefcaseIcon, ClipboardIcon, BuildingIcon,
-  CalendarIcon, BookIcon, CompassIcon, UserIcon, SettingsIcon,
+  CalendarIcon, BookIcon, CompassIcon, UserIcon,
   SearchIcon, BellIcon, MailIcon, ChevronDownIcon,
   ArrowLeftIcon,
 } from '../components/ui/Icons.jsx';
@@ -35,7 +35,6 @@ const NAV_ITEMS = [
   { key: 'recursos',     label: 'Recursos',         Icon: BookIcon      },
   { key: 'orientacion',  label: 'Orientación',      Icon: CompassIcon   },
   { key: 'perfil',       label: 'Mi perfil',        Icon: UserIcon      },
-  { key: 'ajustes',      label: 'Ajustes',          Icon: SettingsIcon  },
 ];
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -81,7 +80,7 @@ function Sidebar({ active, onSection, onNavigate }) {
       </div>
 
       {/* Navegación */}
-      <nav style={{ padding: '0 12px', flex: 1 }}>
+      <nav style={{ padding: '0 12px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly' }}>
         {NAV_ITEMS.map(({ key, label, Icon }) => {
           const isActive = active === key;
           return (
@@ -96,7 +95,6 @@ function Sidebar({ active, onSection, onNavigate }) {
                 width:           '100%',
                 padding:         '11px 14px',
                 borderRadius:    T.radiusInput,
-                marginBottom:    2,
                 backgroundColor: isActive ? T.orange : 'transparent',
                 color:           isActive ? T.white : '#4B5563',
                 fontSize:        14,
