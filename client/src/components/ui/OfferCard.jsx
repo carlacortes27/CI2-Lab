@@ -61,7 +61,7 @@ export default function OfferCard({ offer, rank = 0, onClick }) {
       <CompanyLogo
         company={offer.company}
         size={58}
-        style={{ backgroundColor: T.orangeBg, height: 64 }}
+        style={{ height: 64 }}
       />
 
       {/* Contenido central */}
