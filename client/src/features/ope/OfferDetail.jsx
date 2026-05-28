@@ -15,6 +15,8 @@ const T = {
   pillRadius: 9999,
   green:      '#16A34A',
   greenBg:    '#F0FDF4',
+  red:        '#DC2626',
+  redBg:      '#FEF2F2',
 };
 
 const card = {
@@ -42,9 +44,10 @@ const APPLICATION_PHASES = [
   { key: 'finalizada', label: 'Finalizado' },
 ];
 
-function ApplicationProgress({ application, onAdvance, advancing }) {
+function ApplicationProgress({ application, onAdvance, onReject, advancing, rejecting }) {
   const activeIndex = Math.max(0, APPLICATION_PHASES.findIndex(phase => phase.key === application?.status));
-  const isFinal = activeIndex === APPLICATION_PHASES.length - 1;
+  const isRejected = application?.status === 'rechazada';
+  const isFinal = isRejected || activeIndex === APPLICATION_PHASES.length - 1;
 
   return (
     <div style={{ ...card, padding: '22px 28px', marginBottom: 24 }}>
@@ -52,33 +55,52 @@ function ApplicationProgress({ application, onAdvance, advancing }) {
         <div>
           <h2 style={{ fontSize: 16, fontWeight: 700, color: T.t1, margin: 0 }}>Progreso de la candidatura</h2>
           <p style={{ fontSize: 13, color: T.t2, margin: '5px 0 0' }}>
-            Fase actual: {APPLICATION_PHASES[activeIndex]?.label}
+            Fase actual: {isRejected ? 'Rechazada' : APPLICATION_PHASES[activeIndex]?.label}
           </p>
         </div>
-        <button
-          type="button"
-          disabled={isFinal || advancing}
-          onClick={onAdvance}
-          style={{
-            padding: '10px 18px',
-            borderRadius: T.pillRadius,
-            backgroundColor: isFinal ? '#F3F4F6' : T.orange,
-            color: isFinal ? T.t3 : T.white,
-            fontSize: 13,
-            fontWeight: 700,
-            border: 'none',
-            cursor: isFinal || advancing ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {advancing ? 'Actualizando...' : 'Siguiente fase'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <button
+            type="button"
+            disabled={isFinal || advancing || rejecting}
+            onClick={onAdvance}
+            style={{
+              padding: '10px 18px',
+              borderRadius: T.pillRadius,
+              backgroundColor: isFinal ? '#F3F4F6' : T.orange,
+              color: isFinal ? T.t3 : T.white,
+              fontSize: 13,
+              fontWeight: 700,
+              border: 'none',
+              cursor: isFinal || advancing || rejecting ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {advancing ? 'Actualizando...' : 'Siguiente fase'}
+          </button>
+          <button
+            type="button"
+            disabled={isFinal || advancing || rejecting}
+            onClick={onReject}
+            style={{
+              padding: '10px 18px',
+              borderRadius: T.pillRadius,
+              backgroundColor: isRejected ? '#F3F4F6' : T.redBg,
+              color: isRejected ? T.t3 : '#B91C1C',
+              fontSize: 13,
+              fontWeight: 700,
+              border: `1px solid ${isRejected ? T.border : '#FECACA'}`,
+              cursor: isFinal || advancing || rejecting ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {rejecting ? 'Actualizando...' : 'Rechazada'}
+          </button>
+        </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${APPLICATION_PHASES.length}, 1fr)`, gap: 8 }}>
         {APPLICATION_PHASES.map((phase, index) => {
-          const completed = index <= activeIndex;
+          const completed = !isRejected && index <= activeIndex;
           return (
             <div key={phase.key}>
-              <div style={{ height: 8, borderRadius: T.pillRadius, backgroundColor: completed ? T.orange : T.border }} />
+              <div style={{ height: 8, borderRadius: T.pillRadius, backgroundColor: isRejected ? T.redBg : completed ? T.orange : T.border }} />
               <p style={{
                 margin: '7px 0 0',
                 fontSize: 11,
@@ -261,9 +283,11 @@ export default function OfferDetail({
   onApply,
   onSave,
   onAdvanceApplication,
+  onRejectApplication,
   applying = false,
   saving = false,
   advancing = false,
+  rejecting = false,
   applyError,
 }) {
   const typeLabel       = TYPE_LABEL[offer.type]     ?? offer.type;
@@ -378,7 +402,7 @@ export default function OfferDetail({
             <button type="button" title={application ? 'Oferta guardada' : 'Guardar oferta'}
               disabled={Boolean(application) || saving}
               onClick={onSave}
-              style={{ width: 38, height: 38, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: `1px solid ${T.border}`, cursor: 'pointer' }}
+              style={{ width: 38, height: 38, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: `1px solid ${T.border}`, cursor: application || saving ? 'default' : 'pointer', opacity: application ? 0.7 : 1 }}
               onMouseEnter={e => { if (!application && !saving) e.currentTarget.style.backgroundColor = '#F9FAFB'; }}
               onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
               <BookmarkIco />
@@ -397,7 +421,9 @@ export default function OfferDetail({
         <ApplicationProgress
           application={application}
           onAdvance={onAdvanceApplication}
+          onReject={onRejectApplication}
           advancing={advancing}
+          rejecting={rejecting}
         />
       )}
 

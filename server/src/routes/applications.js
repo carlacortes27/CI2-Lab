@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { advanceApplication, createApplication, listApplicationsByUser, saveApplication } from '../db/h2Client.js';
+import { advanceApplication, createApplication, listApplicationsByUser, rejectApplication, saveApplication } from '../db/h2Client.js';
 import { requireAuth } from './auth.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -72,6 +72,23 @@ router.post('/saved', async (req, res, next) => {
 router.post('/:id/advance', async (req, res, next) => {
   try {
     const application = await advanceApplication({
+      userId: req.user.id,
+      applicationId: req.params.id,
+    });
+
+    if (!application) {
+      return res.status(404).json({ error: 'Candidatura no encontrada' });
+    }
+
+    res.json(enrichApplication(application));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/:id/reject', async (req, res, next) => {
+  try {
+    const application = await rejectApplication({
       userId: req.user.id,
       applicationId: req.params.id,
     });

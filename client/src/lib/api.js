@@ -57,6 +57,10 @@ export function advanceApplication(applicationId, token) {
   return request(`/api/applications/${applicationId}/advance`, { method: 'POST', token });
 }
 
+export function rejectApplication(applicationId, token) {
+  return request(`/api/applications/${applicationId}/reject`, { method: 'POST', token });
+}
+
 export function registerUser(data) {
   return request('/api/auth/register', { method: 'POST', body: data });
 }
