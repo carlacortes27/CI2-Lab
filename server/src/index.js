@@ -1,9 +1,11 @@
 import express from 'express';
 import cors from 'cors';
+import authRouter from './routes/auth.js';
 import offersRouter from './routes/offers.js';
 import eventsRouter from './routes/events.js';
 import cvRouter from './routes/cv.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { initDatabase } from './db/h2Client.js';
 
 const app = express();
 const PORT = 3001;
@@ -20,6 +22,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/offers', offersRouter);
 app.use('/api/events', eventsRouter);
 app.use('/api/cv', cvRouter);
+app.use('/api/auth', authRouter);
 
 // WS3 registrará su router aquí: app.use('/api/pdf', pdfRouter)
 // WS5 registrará su router aquí para la generación de PDF
@@ -27,6 +30,13 @@ app.use('/api/cv', cvRouter);
 // Manejador de errores centralizado (debe ir al final)
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`Servidor cvComillas en http://localhost:${PORT}`);
-});
+initDatabase()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Servidor cvComillas en http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('No se pudo inicializar H2:', err);
+    process.exit(1);
+  });
