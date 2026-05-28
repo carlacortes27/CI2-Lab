@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/useAuth.js';
+import { useRedirect } from '../../context/RedirectContext.jsx';
 
 export default function AuthFormPage({ mode = 'login', onNavigate }) {
   const isRegister = mode === 'register';
   const { login, register } = useAuth();
+  const { getAndClearIntendedPage } = useRedirect();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -15,9 +17,9 @@ export default function AuthFormPage({ mode = 'login', onNavigate }) {
   function validate() {
     if (isRegister && !form.name.trim()) return 'El nombre es obligatorio';
     if (!form.email.trim()) return 'El email es obligatorio';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return 'Introduce un email valido';
-    if (!form.password) return 'La contrasena es obligatoria';
-    if (isRegister && form.password.length < 6) return 'La contrasena debe tener al menos 6 caracteres';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return 'Introduce un email válido';
+    if (!form.password) return 'La contraseña es obligatoria';
+    if (isRegister && form.password.length < 6) return 'La contraseña debe tener al menos 6 caracteres';
     return '';
   }
 
@@ -39,13 +41,15 @@ export default function AuthFormPage({ mode = 'login', onNavigate }) {
           email: form.email.trim(),
           password: form.password,
         });
+        onNavigate('home');
       } else {
         await login({
           email: form.email.trim(),
           password: form.password,
         });
+        const intendedPage = getAndClearIntendedPage();
+        onNavigate(intendedPage || 'home');
       }
-      onNavigate('home');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -61,7 +65,7 @@ export default function AuthFormPage({ mode = 'login', onNavigate }) {
         <p>
           {isRegister
             ? 'Registra tus datos para guardar tu perfil en la base H2.'
-            : 'Accede con tu email y contrasena para continuar.'}
+            : 'Accede con tu email y contraseña para continuar.'}
         </p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
@@ -90,7 +94,7 @@ export default function AuthFormPage({ mode = 'login', onNavigate }) {
           </label>
 
           <label className="form-field">
-            <span>Contrasena</span>
+            <span>Contraseña</span>
             <input
               name="password"
               type="password"
@@ -103,7 +107,7 @@ export default function AuthFormPage({ mode = 'login', onNavigate }) {
           {error && <p className="auth-error">{error}</p>}
 
           <button type="submit" className="primary-button full" disabled={submitting}>
-            {submitting ? 'Guardando...' : isRegister ? 'Registrarse' : 'Iniciar sesion'}
+            {submitting ? 'Guardando...' : isRegister ? 'Registrarse' : 'Iniciar sesión'}
           </button>
         </form>
 
