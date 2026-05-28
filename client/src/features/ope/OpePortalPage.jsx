@@ -10,6 +10,7 @@ import { advanceApplication, applyToOffer, getApplications, getOffers, getEvents
 import { useAuth } from '../../context/useAuth.js';
 import OfferDetail        from './OfferDetail.jsx';
 import EventDetail        from './EventDetail.jsx';
+import OrientacionPanel  from './OrientacionPanel.jsx';
 import PortalLayout       from '../../layouts/PortalLayout.jsx';
 import { T }              from '../../styles/theme.js';
 import {
@@ -1383,7 +1384,7 @@ export default function OpePortalPage({
       case 'recursos':
         return <TabPlaceholder title="Recursos" />;
       case 'orientacion':
-        return <TabPlaceholder title="Orientación" />;
+        return <OrientacionPanel />;
       case 'perfil':
         return <TabPlaceholder title="Mi perfil" />;
       case 'ajustes':

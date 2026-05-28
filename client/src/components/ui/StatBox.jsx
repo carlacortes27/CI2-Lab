@@ -21,7 +21,7 @@ export default function StatBox({ value, label, color = T.t2, bordered = false, 
       ...style,
     }}>
       <span style={{
-        fontSize:   22,
+        fontSize:   40,
         fontWeight: 700,
         color,
         lineHeight: 1,
@@ -29,7 +29,7 @@ export default function StatBox({ value, label, color = T.t2, bordered = false, 
         {value}
       </span>
       <span style={{
-        fontSize:   11,
+        fontSize:   14,
         fontWeight: 400,
         color:      T.t3,
         marginTop:  5,

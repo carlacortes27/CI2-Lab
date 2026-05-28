@@ -95,6 +95,7 @@ function buildCVPdf(pdf, cv) {
   const p   = cv.personal  || {};
   const s   = cv.sections  || {};
   const order = cv.layout?.order || Object.keys(s);
+  const blockStyles = cv.style?.blockStyles || {};
 
   // Dimensiones A4 en mm
   const pageW  = 210;
@@ -109,7 +110,7 @@ function buildCVPdf(pdf, cv) {
   const gray   = { r: 90,  g: 90,  b: 90  };
   const light  = { r: 150, g: 150, b: 150 };
 
-  let y = marginL; // cursor vertical
+  let y = 46; // cursor vertical
 
   // ── Cabecera ──────────────────────────────────────────────────────────────
   pdf.setFillColor(accent.r, accent.g, accent.b);
@@ -137,8 +138,6 @@ function buildCVPdf(pdf, cv) {
     const contactLine = contactItems.join('  ·  ');
     pdf.text(contactLine, marginL, 31, { maxWidth: contentW });
   }
-
-  y = 46;
 
   // ── Secciones ─────────────────────────────────────────────────────────────
   const sectionLabels = {
@@ -177,7 +176,7 @@ function buildCVPdf(pdf, cv) {
     // Contenido según tipo de sección
     switch (key) {
       case 'summary':
-        y = addWrappedText(pdf, sec.text || '', marginL, y, contentW, 9, black, 'normal', 5);
+        y = addWrappedText(pdf, sec.text || '', marginL, y, contentW, black, textOptions(blockStyles.summary, 9, 'normal'));
         break;
 
       case 'education':
@@ -189,7 +188,16 @@ function buildCVPdf(pdf, cv) {
             ? [item.institution, item.location].filter(Boolean).join(' | ')
             : item.company;
           const date     = item.duration || dateRange(item);
-          y = addTimelineItem(pdf, { title, subtitle, date, bullets: item.bullets }, marginL, y, contentW, black, gray, light);
+          y = addTimelineItem(pdf, {
+            sectionKey: key,
+            item,
+            title,
+            titleField: key === 'education' ? 'degree' : 'role',
+            subtitle,
+            date,
+            bullets: item.bullets,
+            blockStyles,
+          }, marginL, y, contentW, black, gray, light);
         }
         break;
 
@@ -197,7 +205,16 @@ function buildCVPdf(pdf, cv) {
         for (const item of sec.items || []) {
           y = ensureSpace(pdf, y, pageH, 16);
           const subtitle = [item.description, item.technologies].filter(Boolean).join(' | ');
-          y = addTimelineItem(pdf, { title: item.name, subtitle, date: item.link, bullets: item.bullets }, marginL, y, contentW, black, gray, light);
+          y = addTimelineItem(pdf, {
+            sectionKey: key,
+            item,
+            title: item.name,
+            titleField: 'name',
+            subtitle,
+            date: item.link,
+            bullets: item.bullets,
+            blockStyles,
+          }, marginL, y, contentW, black, gray, light);
         }
         break;
 
@@ -229,9 +246,7 @@ function buildCVPdf(pdf, cv) {
       case 'certifications':
         for (const item of sec.items || []) {
           y = ensureSpace(pdf, y, pageH, 6);
-          pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(9);
-          pdf.setTextColor(black.r, black.g, black.b);
+          applyTextStyle(pdf, blockStyles[`certifications:${item.id}:name`], 9, black, 'bold');
           pdf.text(item.name, marginL, y);
           pdf.setFont('helvetica', 'normal');
           pdf.setTextColor(gray.r, gray.g, gray.b);
@@ -250,7 +265,15 @@ function buildCVPdf(pdf, cv) {
           pdf.text(item.organization || '', marginL, y);
           y += 4.5;
           if (item.description) {
-            y = addWrappedText(pdf, [item.date, item.description].filter(Boolean).join(' | '), marginL + 3, y, contentW - 3, 8, gray, 'normal', 4);
+            y = addWrappedText(
+              pdf,
+              [item.date, item.description].filter(Boolean).join(' | '),
+              marginL + 3,
+              y,
+              contentW - 3,
+              gray,
+              textOptions(blockStyles[`volunteering:${item.id}:description`], 8, 'normal')
+            );
           }
         }
         break;
@@ -265,13 +288,11 @@ function buildCVPdf(pdf, cv) {
 
 // ── Helpers de renderizado ────────────────────────────────────────────────────
 
-function addTimelineItem(pdf, { title, subtitle, date, bullets = [] }, x, y, maxW, black, gray, light) {
+function addTimelineItem(pdf, { sectionKey, item, title, titleField, subtitle, date, bullets = [], blockStyles = {} }, x, y, maxW, black, gray, light) {
   // Título + fecha en la misma línea
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(9.5);
-  pdf.setTextColor(black.r, black.g, black.b);
+  const titleOptions = applyTextStyle(pdf, blockStyles[`${sectionKey}:${item.id}:${titleField}`], 9.5, black, 'bold');
   if (date) {
-    const dateW = pdf.getStringUnitWidth(date) * 9.5 / pdf.internal.scaleFactor;
+    const dateW = pdf.getStringUnitWidth(date) * titleOptions.fontSize / pdf.internal.scaleFactor;
     pdf.text(title || '', x, y, { maxWidth: maxW - dateW - 4 });
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8.5);
@@ -280,22 +301,27 @@ function addTimelineItem(pdf, { title, subtitle, date, bullets = [] }, x, y, max
   } else {
     pdf.text(title || '', x, y, { maxWidth: maxW });
   }
-  y += 4.5;
+  y += Math.max(4.5, titleOptions.lineH);
 
   if (subtitle) {
-    pdf.setFont('helvetica', 'italic');
-    pdf.setFontSize(8.5);
-    pdf.setTextColor(gray.r, gray.g, gray.b);
-    y = addWrappedText(pdf, subtitle, x, y, maxW, 8.5, gray, 'italic', 4);
+    y = addWrappedText(pdf, subtitle, x, y, maxW, gray, textOptions(null, 8.5, 'italic'));
   }
 
-  const validBullets = (bullets || []).filter(b => b.text).slice(0, 3);
+  const validBullets = (bullets || []).filter(b => b.text);
   if (validBullets.length) {
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8.5);
     pdf.setTextColor(black.r, black.g, black.b);
     for (const b of validBullets) {
-      y = addWrappedText(pdf, `• ${b.text}`, x + 3, y, maxW - 3, 8.5, black, 'normal', 4);
+      y = addWrappedText(
+        pdf,
+        `• ${b.text}`,
+        x + 3,
+        y,
+        maxW - 3,
+        black,
+        textOptions(blockStyles[`${sectionKey}:${item.id}:bullet:${b.id}`], 8.5, 'normal')
+      );
     }
   }
 
@@ -314,17 +340,60 @@ function addBulletList(pdf, items, x, y, maxW, fontSize, color) {
   return y;
 }
 
-function addWrappedText(pdf, text, x, y, maxW, fontSize, color, style, lineH) {
+function addWrappedText(pdf, text, x, y, maxW, fontSizeOrColor, colorOrOptions, style, lineH) {
   if (!text) return y;
-  pdf.setFont('helvetica', style || 'normal');
-  pdf.setFontSize(fontSize);
+  const isStyledCall = typeof fontSizeOrColor === 'object' && typeof colorOrOptions === 'object' && 'fontSize' in colorOrOptions;
+  const color = isStyledCall ? fontSizeOrColor : colorOrOptions;
+  const options = isStyledCall
+    ? colorOrOptions
+    : textOptions(null, fontSizeOrColor, style || 'normal', lineH);
+  pdf.setFont(options.font, options.fontFace);
+  pdf.setFontSize(options.fontSize);
   pdf.setTextColor(color.r, color.g, color.b);
   const lines = pdf.splitTextToSize(String(text), maxW);
+  const pageH = pdf.internal.pageSize.getHeight();
   for (const line of lines) {
+    if (y > pageH - 15) {
+      pdf.addPage();
+      y = 18;
+    }
     pdf.text(line, x, y);
-    y += lineH;
+    y += options.lineH;
   }
   return y;
+}
+
+function textOptions(style, baseSize, defaultFace, customLineH) {
+  const fontSize = Number(style?.fontSize) || baseSize;
+  return {
+    font: pdfFont(style?.fontFamily),
+    fontFace: pdfFontFace(style, defaultFace),
+    fontSize,
+    lineH: customLineH || Math.max(3.8, fontSize * 0.48),
+  };
+}
+
+function applyTextStyle(pdf, style, baseSize, color, defaultFace) {
+  const options = textOptions(style, baseSize, defaultFace);
+  pdf.setFont(options.font, options.fontFace);
+  pdf.setFontSize(options.fontSize);
+  pdf.setTextColor(color.r, color.g, color.b);
+  return options;
+}
+
+function pdfFont(fontFamily = '') {
+  const normalized = String(fontFamily).toLowerCase();
+  if (normalized.includes('times') || normalized.includes('georgia')) return 'times';
+  return 'helvetica';
+}
+
+function pdfFontFace(style = {}, defaultFace = 'normal') {
+  const bold = style?.fontWeight === '700' || defaultFace === 'bold' || defaultFace === 'bolditalic';
+  const italic = style?.fontStyle === 'italic' || defaultFace === 'italic' || defaultFace === 'bolditalic';
+  if (bold && italic) return 'bolditalic';
+  if (bold) return 'bold';
+  if (italic) return 'italic';
+  return 'normal';
 }
 
 function ensureSpace(pdf, y, pageH, needed) {

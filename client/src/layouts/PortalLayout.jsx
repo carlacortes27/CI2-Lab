@@ -13,12 +13,14 @@
  *  rightPanel      → JSX del panel derecho (opcional; si null, grid 2 columnas)
  *  children        → contenido del área central (main)
  */
+import { useEffect, useRef, useState } from 'react';
 import { T } from '../styles/theme.js';
 import icaiLogo from '../assets/imagen comillas.jpg';
+import { useAuth } from '../context/useAuth.js';
 import {
   HomeIcon, BriefcaseIcon, ClipboardIcon, BuildingIcon,
   CalendarIcon, BookIcon, CompassIcon, UserIcon, SettingsIcon,
-  SearchIcon, BellIcon, MailIcon, ChevronDownIcon, TrophyIcon,
+  SearchIcon, BellIcon, MailIcon, ChevronDownIcon,
   ArrowLeftIcon,
 } from '../components/ui/Icons.jsx';
 import Avatar from '../components/ui/Avatar.jsx';
@@ -171,7 +173,102 @@ function Sidebar({ active, onSection, onNavigate }) {
 }
 
 // ── Header (88px, ancho completo) ─────────────────────────────────────────────
-function PortalHeader({ userName, userDegree, searchQuery = '', onSearchChange }) {
+function PortalHeader({ userName, userDegree, searchQuery = '', onSearchChange, onSection, onNavigate }) {
+  const { logout } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const buttonRef = useRef(null);
+  const itemRefs = useRef([]);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+
+    function handlePointerDown(event) {
+      if (!menuRef.current?.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+        buttonRef.current?.focus();
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [menuOpen]);
+
+  function openMenu() {
+    setMenuOpen(true);
+    requestAnimationFrame(() => itemRefs.current[0]?.focus());
+  }
+
+  function closeMenu() {
+    setMenuOpen(false);
+  }
+
+  function handleButtonKeyDown(event) {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      openMenu();
+    }
+  }
+
+  function handleMenuKeyDown(event, index) {
+    const items = itemRefs.current.filter(Boolean);
+    const lastIndex = items.length - 1;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      items[index === lastIndex ? 0 : index + 1]?.focus();
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      items[index === 0 ? lastIndex : index - 1]?.focus();
+    }
+
+    if (event.key === 'Home') {
+      event.preventDefault();
+      items[0]?.focus();
+    }
+
+    if (event.key === 'End') {
+      event.preventDefault();
+      items[lastIndex]?.focus();
+    }
+  }
+
+  function handleProfile() {
+    closeMenu();
+    onSection?.('perfil');
+  }
+
+  async function handleSwitchAccount() {
+    closeMenu();
+    await logout();
+    onNavigate?.('login');
+  }
+
+  async function handleLogout() {
+    closeMenu();
+    await logout();
+    onNavigate?.('home');
+  }
+
+  const menuItems = [
+    { label: 'Mi perfil', action: handleProfile },
+    { label: 'Cambiar cuenta', action: handleSwitchAccount },
+    { label: 'Cerrar sesión', action: handleLogout, danger: true },
+  ];
+
   return (
     <header className="portal-shell-header" style={{
       minHeight:       96,
@@ -338,34 +435,106 @@ function PortalHeader({ userName, userDegree, searchQuery = '', onSearchChange }
         <div style={{ width: 1, height: 28, backgroundColor: T.border, margin: '0 8px' }} />
 
         {/* Avatar + nombre */}
-        <button
-          type="button"
-          style={{
-            display:    'flex',
-            alignItems: 'center',
-            gap:        10,
-            padding:    '8px 12px',
-            borderRadius: T.radiusCard,
-            background: 'none',
-            border:     'none',
-            cursor:     'pointer',
-          }}
-          onMouseEnter={e => e.currentTarget.style.backgroundColor = T.hoverBg}
-          onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
-        >
-          <Avatar name={userName} size={36} />
-          <div style={{ textAlign: 'left' }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: T.t1, lineHeight: 1.3, fontFamily: T.font }}>
-              {userName}
-            </p>
-            <p style={{ fontSize: 11, color: T.t3, lineHeight: 1.3, fontFamily: T.font }}>
-              {userDegree}
-            </p>
-          </div>
-          <span style={{ color: T.t3 }}>
-            <ChevronDownIcon size={14} />
-          </span>
-        </button>
+        <div ref={menuRef} style={{ position: 'relative' }}>
+          <button
+            ref={buttonRef}
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            aria-controls="portal-profile-menu"
+            onClick={() => setMenuOpen(open => !open)}
+            onKeyDown={handleButtonKeyDown}
+            style={{
+              display:    'flex',
+              alignItems: 'center',
+              gap:        10,
+              padding:    '8px 12px',
+              borderRadius: T.radiusCard,
+              background: menuOpen ? T.hoverBg : 'none',
+              border:     'none',
+              cursor:     'pointer',
+              boxShadow:  menuOpen ? T.shadowElevated : 'none',
+            }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = T.hoverBg}
+            onMouseLeave={e => {
+              if (!menuOpen) e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+          >
+            <Avatar name={userName} size={36} />
+            <div style={{ textAlign: 'left' }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: T.t1, lineHeight: 1.3, fontFamily: T.font }}>
+                {userName}
+              </p>
+              <p style={{ fontSize: 11, color: T.t3, lineHeight: 1.3, fontFamily: T.font }}>
+                {userDegree}
+              </p>
+            </div>
+            <span
+              style={{
+                color: T.t3,
+                display: 'flex',
+                transform: menuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.15s ease',
+              }}
+            >
+              <ChevronDownIcon size={14} />
+            </span>
+          </button>
+
+          {menuOpen && (
+            <div
+              id="portal-profile-menu"
+              role="menu"
+              aria-label="Menú de usuario"
+              style={{
+                position:        'absolute',
+                top:             'calc(100% + 8px)',
+                right:           0,
+                zIndex:          10,
+                minWidth:        220,
+                padding:         6,
+                borderRadius:    T.radiusCard,
+                border:          `1px solid ${T.border}`,
+                backgroundColor: T.white,
+                boxShadow:       T.shadowElevated,
+              }}
+            >
+              {menuItems.map((item, index) => (
+                <button
+                  key={item.label}
+                  ref={(node) => {
+                    itemRefs.current[index] = node;
+                  }}
+                  type="button"
+                  role="menuitem"
+                  onClick={item.action}
+                  onKeyDown={(event) => handleMenuKeyDown(event, index)}
+                  style={{
+                    width:           '100%',
+                    display:         'flex',
+                    alignItems:      'center',
+                    padding:         '10px 12px',
+                    borderRadius:    T.radiusInput,
+                    border:          'none',
+                    backgroundColor: 'transparent',
+                    color:           item.danger ? '#991B1B' : T.t1,
+                    fontSize:        13,
+                    fontWeight:      600,
+                    fontFamily:      T.font,
+                    textAlign:       'left',
+                    cursor:          'pointer',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = item.danger ? '#FEF2F2' : T.hoverBg}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                  onFocus={e => e.currentTarget.style.backgroundColor = item.danger ? '#FEF2F2' : T.hoverBg}
+                  onBlur={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
@@ -442,7 +611,14 @@ export default function PortalLayout({
       <style>{ANIMATION_STYLES}</style>
 
       {/* HEADER — 88px, ancho completo */}
-      <PortalHeader userName={userName} userDegree={userDegree} searchQuery={searchQuery} onSearchChange={onSearchChange} />
+      <PortalHeader
+        userName={userName}
+        userDegree={userDegree}
+        searchQuery={searchQuery}
+        onSearchChange={onSearchChange}
+        onSection={onSection}
+        onNavigate={onNavigate}
+      />
 
       {/* CONTENIDO: sidebar | main | panel derecho */}
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>

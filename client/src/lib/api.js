@@ -72,3 +72,19 @@ export function getCurrentUser(token) {
 export function logoutUser(token) {
   return request('/api/auth/logout', { method: 'POST', token });
 }
+
+export function getAdvisors() {
+  return request('/api/advisors');
+}
+
+export function getAdvisorById(id) {
+  return request(`/api/advisors/${id}`);
+}
+
+export function getAppointments() {
+  return request('/api/appointments');
+}
+
+export function createAppointment(data) {
+  return request('/api/appointments', { method: 'POST', body: data });
+}

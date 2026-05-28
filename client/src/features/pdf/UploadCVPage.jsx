@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import CVPreview from '../editor/forms/CVPreview.jsx';
 import TemplateSelector from '../editor/forms/TemplateSelector.jsx';
+import CVPartEditor from './CVPartEditor.jsx';
 import { downloadAsPDF, improveUploadedCV } from '../../services/cvService.js';
 import { useCv } from '../../context/CvContext.jsx';
 
@@ -80,7 +81,7 @@ export default function UploadCVPage({ onNavigate }) {
         <ol className="upload-steps" aria-label="Flujo de conversion">
           <li className={file ? 'done' : 'active'}>Subir PDF</li>
           <li className={file ? 'active' : ''}>Elegir plantilla</li>
-          <li className={converted ? 'active' : ''}>Preview</li>
+          <li className={converted ? 'active' : ''}>Editar partes</li>
           <li className={converted ? 'active' : ''}>Descargar PDF</li>
         </ol>
 
@@ -138,6 +139,8 @@ export default function UploadCVPage({ onNavigate }) {
             )}
           </div>
         )}
+
+        {converted && <CVPartEditor />}
       </section>
 
       <section className="upload-side">
