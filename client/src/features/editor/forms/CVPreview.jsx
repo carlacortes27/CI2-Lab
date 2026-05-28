@@ -25,14 +25,12 @@ const labelsByLang = {
   },
 };
 
-const photoTemplates = new Set(['moderna', 'profesional']);
-
 export default function CVPreview() {
   const { cv } = useCv();
   const p = cv.personal;
   const s = cv.sections;
   const accent = cv.style.accentColor;
-  const showPhoto = photoTemplates.has(cv.style.template) && p.photoUrl;
+  const showPhoto = Boolean(p.photoUrl);
   const labels = labelsByLang[cv.meta?.language] || labelsByLang.es;
 
   return (

@@ -4,10 +4,20 @@ import https from 'https';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
-const pdfParse = require('pdf-parse');
+const { PDFParse } = require('pdf-parse');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+
+async function extractPdfText(buffer) {
+  const parser = new PDFParse({ data: buffer });
+  try {
+    const result = await parser.getText();
+    return result.text || '';
+  } finally {
+    await parser.destroy();
+  }
+}
 
 // ── TRADUCCIÓN ──────────────────────────────────────────────────────────────
 router.post('/translate', async (req, res, next) => {
@@ -37,8 +47,8 @@ router.post('/correct-spelling', async (req, res, next) => {
 router.post('/analyze', upload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No se recibió ningún archivo PDF' });
-    const data = await pdfParse(req.file.buffer);
-    const cvData = parsePdfTextToCv(data.text);
+    const text = await extractPdfText(req.file.buffer);
+    const cvData = parsePdfTextToCv(text);
     res.json({ cvData });
   } catch (error) {
     next(error);
@@ -49,8 +59,8 @@ router.post('/analyze', upload.single('file'), async (req, res, next) => {
 router.post('/improve', upload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No se recibió ningún archivo PDF' });
-    const data = await pdfParse(req.file.buffer);
-    const cvData = parsePdfTextToCv(data.text);
+    const text = await extractPdfText(req.file.buffer);
+    const cvData = parsePdfTextToCv(text);
     res.json({ cvData });
   } catch (error) {
     next(error);
@@ -322,7 +332,13 @@ function parsePdfTextToCv(rawText) {
       fontFamily: 'Arial, sans-serif',
       fontSize: 'medium',
     },
-    meta: { schemaVersion: 1 },
+    meta: {
+      schemaVersion: 1,
+      id: `cv_pdf_${newId()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      language: 'es',
+    },
   };
 }
 
