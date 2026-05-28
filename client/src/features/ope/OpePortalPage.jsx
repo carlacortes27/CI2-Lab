@@ -9,6 +9,7 @@ import { flushSync } from 'react-dom';
 import { getOffers, getEvents } from '../../lib/api.js';
 import { useAuth } from '../../context/useAuth.js';
 import OfferDetail        from './OfferDetail.jsx';
+import EventDetail        from './EventDetail.jsx';
 import PortalLayout       from '../../layouts/PortalLayout.jsx';
 import { T }              from '../../styles/theme.js';
 import {
@@ -439,7 +440,7 @@ function TabCandidaturas() {
 }
 
 // ── Pestaña: Eventos ──────────────────────────────────────────────────────────
-function EventCard({ event, compact = false }) {
+function EventCard({ event, compact = false, onClick }) {
   const date = formatEventDate(event);
   const isOpen = event.registrationStatus === 'Abierta';
   const actionLabel = isOpen ? 'Inscribirme' : event.registrationStatus;
@@ -447,17 +448,24 @@ function EventCard({ event, compact = false }) {
   const categoryStyle = eventCategoryStyle(category);
 
   return (
-    <div style={{
-      backgroundColor: T.white,
-      borderRadius: T.radiusCard,
-      boxShadow: T.shadowCard,
-      border: compact ? `1px solid ${T.border}` : 'none',
-      padding: compact ? 14 : 24,
-      display: 'grid',
-      gridTemplateColumns: compact ? '58px 1fr auto' : '76px 1fr auto',
-      gap: compact ? 14 : 20,
-      alignItems: 'start',
-    }}>
+    <div
+      onClick={() => onClick?.(event)}
+      style={{
+        backgroundColor: T.white,
+        borderRadius: T.radiusCard,
+        boxShadow: T.shadowCard,
+        border: compact ? `1px solid ${T.border}` : 'none',
+        padding: compact ? 14 : 24,
+        display: 'grid',
+        gridTemplateColumns: compact ? '58px 1fr auto' : '76px 1fr auto',
+        gap: compact ? 14 : 20,
+        alignItems: 'start',
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'box-shadow 0.15s, transform 0.15s',
+      }}
+      onMouseEnter={e => { if (onClick) { e.currentTarget.style.boxShadow = T.shadowElevated; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+      onMouseLeave={e => { if (onClick) { e.currentTarget.style.boxShadow = T.shadowCard; e.currentTarget.style.transform = 'translateY(0)'; } }}
+    >
       <div style={{
         width: compact ? 58 : 76,
         minHeight: compact ? 64 : 86,
@@ -656,7 +664,7 @@ function EventsCalendar({
   );
 }
 
-function TabEventos({ events, loading, error, scope, setScope }) {
+function TabEventos({ events, loading, error, scope, setScope, onEventClick }) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -767,7 +775,7 @@ function TabEventos({ events, loading, error, scope, setScope }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {visibleEvents.map(event => (
-            <EventCard key={event.id} event={event} compact />
+            <EventCard key={event.id} event={event} compact onClick={onEventClick} />
           ))}
         </div>
       )}
@@ -875,6 +883,7 @@ export default function OpePortalPage({
   const [eventsError,   setEventsError]   = useState(null);
   const [eventScope,    setEventScope]    = useState('proximos');
   const [selectedOffer, setSelectedOffer] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [showAll,       setShowAll]       = useState(false);
   const [filters, setFilters] = useState({ sector: '', location: '', modality: '' });
 
@@ -928,6 +937,21 @@ export default function OpePortalPage({
     );
   }
 
+  // Vista de detalle de un evento
+  if (selectedEvent) {
+    return (
+      <PortalLayout
+        activeSection="eventos"
+        onSection={changeSection}
+        onNavigate={onNavigate}
+        userName={displayName}
+        userDegree={displayDetail}
+      >
+        <EventDetail event={selectedEvent} onBack={() => setSelectedEvent(null)} />
+      </PortalLayout>
+    );
+  }
+
   // Contenido central según pestaña
   function renderContent() {
     switch (activeSection) {
@@ -971,6 +995,7 @@ export default function OpePortalPage({
             error={eventsError}
             scope={eventScope}
             setScope={setEventScope}
+            onEventClick={setSelectedEvent}
           />
         );
       case 'recursos':
