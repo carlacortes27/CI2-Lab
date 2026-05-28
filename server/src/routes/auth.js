@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import express from 'express';
 import bcrypt from 'bcryptjs';
-import { createUser, findUserByEmail, findUserById, getJdbcUrl, listUsers } from '../db/h2Client.js';
+import { createUser, findUserByEmail, findUserById, getDatabaseInfo, listUsers } from '../db/postgresClient.js';
 
 const router = express.Router();
 const sessions = new Map();
@@ -133,11 +133,11 @@ router.post('/register', async (req, res, next) => {
     let user;
 
     try {
-      console.log(`Ejecutando INSERT real en USERS: ${email}`);
+      console.log(`Ejecutando INSERT en PostgreSQL USERS: ${email}`);
       user = await createUser({ name, email, passwordHash });
       console.log(`Usuario insertado en USERS: ${email}`);
     } catch (insertError) {
-      console.error(`Error al insertar usuario en H2 (${email}):`, insertError);
+      console.error(`Error al insertar usuario (${email}):`, insertError);
       throw insertError;
     }
 
@@ -212,8 +212,8 @@ router.get('/debug/users', async (req, res, next) => {
     const users = await listUsers();
 
     res.json({
-      jdbcUrl: getJdbcUrl(),
-      table: 'USERS',
+      database: getDatabaseInfo(),
+      table: 'users',
       users: users.map(user => ({
         id: user.id,
         name: user.name,

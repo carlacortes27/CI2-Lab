@@ -155,6 +155,7 @@ function buildCVPdf(pdf, cv) {
   for (const key of order) {
     const sec = s[key];
     if (!sec?.visible) continue;
+    if (!sectionHasContent(key, sec)) continue;
 
     // Asegurar espacio mínimo para el título de sección (evitar huérfanos)
     if (y > pageH - 20) {
@@ -181,7 +182,7 @@ function buildCVPdf(pdf, cv) {
 
       case 'education':
       case 'experience':
-        for (const item of sec.items || []) {
+        for (const item of (sec.items || []).filter(entry => itemHasContent(entry, key === 'education' ? ['degree', 'institution', 'location', 'duration', 'startDate', 'endDate'] : ['role', 'company', 'duration', 'startDate', 'endDate']))) {
           y = ensureSpace(pdf, y, pageH, 18);
           const title    = key === 'education' ? item.degree : item.role;
           const subtitle = key === 'education'
@@ -202,7 +203,7 @@ function buildCVPdf(pdf, cv) {
         break;
 
       case 'projects':
-        for (const item of sec.items || []) {
+        for (const item of (sec.items || []).filter(entry => itemHasContent(entry, ['name', 'description', 'technologies', 'link']))) {
           y = ensureSpace(pdf, y, pageH, 16);
           const subtitle = [item.description, item.technologies].filter(Boolean).join(' | ');
           y = addTimelineItem(pdf, {
@@ -229,7 +230,7 @@ function buildCVPdf(pdf, cv) {
         break;
 
       case 'languages':
-        for (const item of sec.items || []) {
+        for (const item of (sec.items || []).filter(entry => itemHasContent(entry, ['name', 'level', 'certificate', 'note']))) {
           y = ensureSpace(pdf, y, pageH, 6);
           pdf.setFont('helvetica', 'bold');
           pdf.setFontSize(9);
@@ -244,7 +245,7 @@ function buildCVPdf(pdf, cv) {
         break;
 
       case 'certifications':
-        for (const item of sec.items || []) {
+        for (const item of (sec.items || []).filter(entry => itemHasContent(entry, ['name', 'issuer', 'level', 'date']))) {
           y = ensureSpace(pdf, y, pageH, 6);
           applyTextStyle(pdf, blockStyles[`certifications:${item.id}:name`], 9, black, 'bold');
           pdf.text(item.name, marginL, y);
@@ -257,7 +258,7 @@ function buildCVPdf(pdf, cv) {
         break;
 
       case 'volunteering':
-        for (const item of sec.items || []) {
+        for (const item of (sec.items || []).filter(entry => itemHasContent(entry, ['organization', 'date', 'description']))) {
           y = ensureSpace(pdf, y, pageH, 10);
           pdf.setFont('helvetica', 'bold');
           pdf.setFontSize(9);
@@ -402,6 +403,28 @@ function ensureSpace(pdf, y, pageH, needed) {
     return 18;
   }
   return y;
+}
+
+function sectionHasContent(sectionKey, data) {
+  if (!data?.visible) return false;
+  if (sectionKey === 'summary') return hasText(data.text);
+  if (sectionKey === 'technicalSkills') return Object.values(data.groups || {}).some(group => group.some(hasText));
+  if (sectionKey === 'personalSkills') return (data.items || []).some(hasText);
+  if (sectionKey === 'languages') return (data.items || []).some(item => itemHasContent(item, ['name', 'level', 'certificate', 'note']));
+  if (sectionKey === 'certifications') return (data.items || []).some(item => itemHasContent(item, ['name', 'issuer', 'level', 'date']));
+  if (sectionKey === 'volunteering') return (data.items || []).some(item => itemHasContent(item, ['organization', 'date', 'description']));
+  if (sectionKey === 'education') return (data.items || []).some(item => itemHasContent(item, ['degree', 'institution', 'location', 'duration', 'startDate', 'endDate']));
+  if (sectionKey === 'experience') return (data.items || []).some(item => itemHasContent(item, ['role', 'company', 'duration', 'startDate', 'endDate']));
+  if (sectionKey === 'projects') return (data.items || []).some(item => itemHasContent(item, ['name', 'description', 'technologies', 'link']));
+  return true;
+}
+
+function itemHasContent(item, fields) {
+  return fields.some(field => hasText(item?.[field])) || (item?.bullets || []).some(bullet => hasText(bullet.text));
+}
+
+function hasText(value) {
+  return String(value || '').trim().length > 0;
 }
 
 function dateRange(item) {

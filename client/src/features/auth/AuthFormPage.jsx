@@ -64,7 +64,7 @@ export default function AuthFormPage({ mode = 'login', onNavigate }) {
         <h1>{isRegister ? 'Crear cuenta' : 'Iniciar sesion'}</h1>
         <p>
           {isRegister
-            ? 'Registra tus datos para guardar tu perfil en la base H2.'
+            ? 'Registra tus datos para guardar tu perfil en la base compartida.'
             : 'Accede con tu email y contraseña para continuar.'}
         </p>
 

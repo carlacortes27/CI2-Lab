@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useCv } from '../../context/CvContext.jsx';
 
 const sectionLabels = {
@@ -22,11 +22,10 @@ const sizes = [
   ['14', 'Muy grande'],
 ];
 
-export default function CVPartEditor() {
+export default function CVPartEditor({ selectedBlockId }) {
   const { cv, dispatch } = useCv();
   const blocks = useMemo(() => getEditableBlocks(cv), [cv]);
-  const [selectedId, setSelectedId] = useState(blocks[0]?.id || 'summary');
-  const selected = blocks.find(block => block.id === selectedId) || blocks[0];
+  const selected = blocks.find(block => block.id === selectedBlockId) || blocks[0];
 
   if (!selected) {
     return (
@@ -38,37 +37,6 @@ export default function CVPartEditor() {
   }
 
   const blockStyle = cv.style?.blockStyles?.[selected.id] || {};
-
-  function updateText(value) {
-    if (selected.kind === 'summary') {
-      dispatch({ type: 'UPDATE_SUMMARY', payload: value });
-      return;
-    }
-
-    if (selected.kind === 'bullet') {
-      dispatch({
-        type: 'UPDATE_BULLET',
-        payload: {
-          section: selected.section,
-          itemId: selected.itemId,
-          bulletId: selected.bulletId,
-          text: value,
-        },
-      });
-      return;
-    }
-
-    if (selected.kind === 'itemField') {
-      dispatch({
-        type: 'UPDATE_ITEM',
-        payload: {
-          section: selected.section,
-          id: selected.itemId,
-          data: { [selected.field]: value },
-        },
-      });
-    }
-  }
 
   function updateStyle(key, value) {
     dispatch({
@@ -86,6 +54,7 @@ export default function CVPartEditor() {
         <div>
           <p className="eyebrow">Ajuste fino</p>
           <h2>Editar por partes</h2>
+          <p className="part-selected">{selected.label}</p>
         </div>
         <button
           type="button"
@@ -95,26 +64,6 @@ export default function CVPartEditor() {
           Quitar estilo
         </button>
       </div>
-
-      <label className="form-field">
-        <span>Parte del CV</span>
-        <select value={selected.id} onChange={event => setSelectedId(event.target.value)}>
-          {blocks.map(block => (
-            <option key={block.id} value={block.id}>
-              {block.label}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="form-field">
-        <span>Texto</span>
-        <textarea
-          rows={selected.kind === 'summary' ? 5 : 3}
-          value={selected.text}
-          onChange={event => updateText(event.target.value)}
-        />
-      </label>
 
       <div className="part-style-grid">
         <label className="form-field">
