@@ -1,7 +1,9 @@
 import { useAuth } from '../../context/useAuth.js';
+import { useRedirect } from '../../context/RedirectContext.jsx';
 
 export default function HomePage({ onNavigate }) {
   const { user, logout } = useAuth();
+  const { saveIntendedPage } = useRedirect();
   const cards = [
     {
       icon: 'ID',
@@ -127,6 +129,7 @@ export default function HomePage({ onNavigate }) {
                 type="button" 
                 onClick={() => {
                   if (!user && ['create', 'upload', 'ope'].includes(card.page)) {
+                    saveIntendedPage(card.page);
                     onNavigate('login');
                   } else {
                     onNavigate(card.page);
