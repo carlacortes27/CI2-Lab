@@ -56,7 +56,7 @@ async function runBridge(command, args = []) {
   await ensureBridge();
   const { stdout, stderr } = await execFileAsync(
     'java',
-    ['-cp', `${h2JarPath}${path.delimiter}${__dirname}`, 'H2AuthBridge', command, jdbcUrl, ...args],
+    ['-Dfile.encoding=UTF-8', '-cp', `${h2JarPath}${path.delimiter}${__dirname}`, 'H2AuthBridge', command, jdbcUrl, ...args],
     { cwd: serverRoot, windowsHide: true, maxBuffer: 1024 * 1024 }
   );
   if (stderr.trim()) console.warn(stderr.trim());
