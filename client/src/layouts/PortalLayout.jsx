@@ -328,41 +328,79 @@ function PortalHeader({ userName, userDegree }) {
   );
 }
 
+const ANIMATION_STYLES = `
+  @keyframes portalTabIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Suprime el crossfade global — sólo animan los elementos con nombre */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  /* Slide + scale para el título "Ofertas" y los filtros */
+  ::view-transition-group(ofertas-heading),
+  ::view-transition-group(ofertas-filters) {
+    animation-duration: 0.38s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Expansión de la tarjeta Mis candidaturas */
+  ::view-transition-group(cand-card) {
+    animation-duration: 0.45s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Expansión de la tarjeta Próximos eventos → panel Eventos */
+  ::view-transition-group(eventos-card) {
+    animation-duration: 0.5s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  ::view-transition-old(eventos-card) {
+    animation-duration: 0.2s;
+    animation-timing-function: ease-out;
+  }
+  ::view-transition-new(eventos-card) {
+    animation-duration: 0.35s;
+    animation-delay: 0.15s;
+    animation-timing-function: ease-out;
+  }
+`;
+
 // ── PortalLayout ──────────────────────────────────────────────────────────────
 export default function PortalLayout({
-  activeSection = 'inicio',
+  activeSection     = 'inicio',
   onSection,
   onNavigate,
-  userName   = 'Usuario',
-  userDegree = 'ICAI',
-  rightPanel,          // JSX del panel derecho (optional)
-  children,            // contenido del área central
+  userName          = 'Usuario',
+  userDegree        = 'ICAI',
+  rightPanel,
+  rightPanelVisible = !!rightPanel,
+  children,
 }) {
-  const gridCols = rightPanel ? '260px 1fr 380px' : '260px 1fr';
-
   return (
     <div
       data-shell="portal"
       style={{
-        position:    'fixed',
-        inset:       0,
-        zIndex:      50,
-        display:     'flex',
-        flexDirection:'column',
-        fontFamily:  T.font,
+        position:        'fixed',
+        inset:           0,
+        zIndex:          50,
+        display:         'flex',
+        flexDirection:   'column',
+        fontFamily:      T.font,
         backgroundColor: T.bg,
       }}
     >
+      <style>{ANIMATION_STYLES}</style>
+
       {/* HEADER — 88px, ancho completo */}
       <PortalHeader userName={userName} userDegree={userDegree} />
 
-      {/* GRID DE CONTENIDO */}
-      <div style={{
-        flex:               1,
-        overflow:           'hidden',
-        display:            'grid',
-        gridTemplateColumns: gridCols,
-      }}>
+      {/* CONTENIDO: sidebar | main | panel derecho */}
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
         {/* Sidebar */}
         <Sidebar
           active={activeSection}
@@ -370,20 +408,41 @@ export default function PortalLayout({
           onNavigate={onNavigate}
         />
 
-        {/* Área central */}
-        <main style={{ overflowY: 'auto', padding: '32px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-          {children}
+        {/* Área central — cada cambio de pestaña anima la entrada */}
+        <main style={{ flex: 1, minWidth: 0, overflowY: 'auto', padding: '32px 40px' }}>
+          <div
+            key={activeSection}
+            style={{ display: 'flex', flexDirection: 'column', gap: 24, animation: 'portalTabIn 0.25s ease both' }}
+          >
+            {children}
+          </div>
         </main>
 
-        {/* Panel derecho (opcional) */}
-        {rightPanel && (
+        {/* Panel derecho: siempre montado, colapsa con transición */}
+        {!!rightPanel && (
           <aside style={{
-            overflowY:       'auto',
-            padding:         24,
-            backgroundColor: T.bg,
-            borderLeft:      `1px solid ${T.border}`,
+            width:      rightPanelVisible ? 380 : 0,
+            flexShrink: 0,
+            overflow:   'hidden',
+            transition: rightPanelVisible
+              ? 'width 0.35s cubic-bezier(0.22,1,0.36,1)'
+              : 'width 0.35s cubic-bezier(0.22,1,0.36,1) 0.15s',
           }}>
-            {rightPanel}
+            <div style={{
+              width:           380,
+              height:          '100%',
+              overflowY:       'auto',
+              padding:         24,
+              boxSizing:       'border-box',
+              backgroundColor: T.bg,
+              borderLeft:      `1px solid ${T.border}`,
+              opacity:         rightPanelVisible ? 1 : 0,
+              transition:      rightPanelVisible
+                ? 'opacity 0.2s ease 0.1s'
+                : 'opacity 0.15s ease',
+            }}>
+              {rightPanel}
+            </div>
           </aside>
         )}
       </div>

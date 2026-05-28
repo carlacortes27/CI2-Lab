@@ -5,6 +5,7 @@
  * Gestiona las pestañas y el estado de datos.
  */
 import { useState, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import { getOffers, getEvents } from '../../lib/api.js';
 import OfferDetail        from './OfferDetail.jsx';
 import PortalLayout       from '../../layouts/PortalLayout.jsx';
@@ -22,7 +23,6 @@ import {
   CalendarIcon,
   BookIcon,
   FilterIcon,
-  InfoIcon,
   PinIcon,
   ClockIcon,
   UserIcon,
@@ -130,7 +130,7 @@ function buildCalendarWeeks(monthDate, events) {
 }
 
 // ── Panel Mis Candidaturas ────────────────────────────────────────────────────
-function CandidaturasPanel() {
+function CandidaturasPanel({ onSection, vtActive = false }) {
   const counts = {
     enviadas:   8,
     revision:   MOCK_CANDIDATURAS.filter(c => c.status === 'revision').length,
@@ -139,11 +139,12 @@ function CandidaturasPanel() {
   };
 
   return (
-    <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard }}>
+    <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard, ...(vtActive && { viewTransitionName: 'cand-card' }) }}>
       {/* Cabecera */}
       <div style={{ padding: '20px 20px 16px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 15, fontWeight: 600, color: T.t1, fontFamily: T.font }}>Mis candidaturas</span>
         <button type="button" style={{ fontSize: 13, fontWeight: 500, color: T.orange, background: 'none', border: 'none', cursor: 'pointer', fontFamily: T.font }}
+          onClick={() => onSection('candidaturas')}
           onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
           onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
           Ver todas →
@@ -189,15 +190,21 @@ function CandidaturasPanel() {
 }
 
 // ── Próximos Eventos ──────────────────────────────────────────────────────────
-function ProximosEventos() {
+function ProximosEventos({ onSection }) {
   return (
-    <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard }}>
+    <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard, viewTransitionName: 'eventos-card' }}>
       <div style={{ padding: '20px 20px 16px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 15, fontWeight: 600, color: T.t1, fontFamily: T.font }}>
           <CalendarIcon size={15} color={T.orange} />
           Próximos eventos
         </span>
-        <button type="button" style={{ fontSize: 13, fontWeight: 500, color: T.orange, background: 'none', border: 'none', cursor: 'pointer', fontFamily: T.font }}>
+        <button
+          type="button"
+          onClick={() => onSection?.('eventos')}
+          style={{ fontSize: 13, fontWeight: 500, color: T.orange, background: 'none', border: 'none', cursor: 'pointer', fontFamily: T.font }}
+          onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+          onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+        >
           Ver todos →
         </button>
       </div>
@@ -275,7 +282,7 @@ function LoadingSkeleton() {
 }
 
 // ── Pestaña: Inicio ───────────────────────────────────────────────────────────
-function TabInicio({ firstName, offers, loading, error, showAll, setShowAll, filters, setFilters, onOfferClick }) {
+function TabInicio({ firstName, offers, loading, error, showAll, setShowAll, filters, setFilters, onOfferClick, onSection }) {
   const visibleOffers = showAll ? offers : offers.slice(0, 3);
   const hasMore       = !showAll && offers.length > 3;
 
@@ -291,48 +298,33 @@ function TabInicio({ firstName, offers, loading, error, showAll, setShowAll, fil
         </p>
       </div>
 
-      {/* Card de ofertas recomendadas + filtros */}
-      <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard }}>
-        <div style={{ padding: '20px 24px 16px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 600, color: T.t1, fontFamily: T.font }}>
-            Ofertas recomendadas para ti
-            <InfoIcon size={15} color={T.t3} />
-          </span>
-          <button type="button" style={{ fontSize: 13, fontWeight: 500, color: T.orange, background: 'none', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: T.font }}>
-            Ver todas las ofertas →
-          </button>
-        </div>
-        <div style={{ padding: '16px 24px', display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-          <FilterDropdown
-            label="Área profesional"
-            options={SECTORES}
-            value={filters.sector}
-            onChange={v => setFilters(f => ({ ...f, sector: v }))}
-          />
-          <FilterDropdown
-            label="Ubicación"
-            options={UBICACIONES}
-            value={filters.location}
-            onChange={v => setFilters(f => ({ ...f, location: v }))}
-          />
-          <FilterDropdown
-            label="Modalidad"
-            options={MODALIDADES}
-            value={filters.modality}
-            onChange={v => setFilters(f => ({ ...f, modality: v }))}
-          />
-          <FilterDropdown
-            label="Duración"
-            options={DURACIONES}
-            value=""
-            onChange={() => {}}
-          />
-          <button type="button"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: T.radiusPill, border: `1px solid ${T.border}`, backgroundColor: T.white, color: T.t2, fontSize: 13, cursor: 'pointer', fontFamily: T.font }}>
-            <FilterIcon size={14} />
-            Más filtros
-          </button>
-        </div>
+      {/* Ofertas */}
+      <h2 style={{ fontSize: 20, fontWeight: 700, color: T.t1, fontFamily: T.font, margin: 0, viewTransitionName: 'ofertas-heading' }}>Ofertas</h2>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, viewTransitionName: 'ofertas-filters' }}>
+        <FilterDropdown
+          label="Área profesional"
+          options={SECTORES}
+          value={filters.sector}
+          onChange={v => setFilters(f => ({ ...f, sector: v }))}
+        />
+        <FilterDropdown
+          label="Ubicación"
+          options={UBICACIONES}
+          value={filters.location}
+          onChange={v => setFilters(f => ({ ...f, location: v }))}
+        />
+        <FilterDropdown
+          label="Modalidad"
+          options={MODALIDADES}
+          value={filters.modality}
+          onChange={v => setFilters(f => ({ ...f, modality: v }))}
+        />
+        <FilterDropdown
+          label="Duración"
+          options={DURACIONES}
+          value=""
+          onChange={() => {}}
+        />
       </div>
 
       {/* Tarjetas de oferta */}
@@ -371,7 +363,7 @@ function TabInicio({ firstName, offers, loading, error, showAll, setShowAll, fil
       {/* Secciones inferiores */}
       {!loading && !error && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-          <ProximosEventos />
+          <ProximosEventos onSection={onSection} />
           <RecursosParaTi />
         </div>
       )}
@@ -386,8 +378,8 @@ function TabOfertas({ offers, loading, error, showAll, setShowAll, filters, setF
 
   return (
     <>
-      <h1 style={{ fontSize: 28, fontWeight: 700, color: T.t1, fontFamily: T.font }}>Ofertas</h1>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+      <h1 style={{ fontSize: 28, fontWeight: 700, color: T.t1, fontFamily: T.font, viewTransitionName: 'ofertas-heading' }}>Ofertas</h1>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, viewTransitionName: 'ofertas-filters' }}>
         <FilterDropdown label="Área profesional" options={SECTORES}    value={filters.sector}   onChange={v => setFilters(f => ({ ...f, sector: v }))} />
         <FilterDropdown label="Ubicación"         options={UBICACIONES} value={filters.location} onChange={v => setFilters(f => ({ ...f, location: v }))} />
         <FilterDropdown label="Modalidad"         options={MODALIDADES} value={filters.modality} onChange={v => setFilters(f => ({ ...f, modality: v }))} />
@@ -420,7 +412,7 @@ function TabCandidaturas() {
   };
 
   return (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, viewTransitionName: 'cand-card' }}>
       <h1 style={{ fontSize: 28, fontWeight: 700, color: T.t1, fontFamily: T.font }}>Mis candidaturas</h1>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
         <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard, textAlign: 'center', padding: '20px 8px' }}>
@@ -441,7 +433,7 @@ function TabCandidaturas() {
           <ApplicationCard key={c.id} candidatura={c} isLast={i === MOCK_CANDIDATURAS.length - 1} />
         ))}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -734,7 +726,7 @@ function TabEventos({ events, loading, error, scope, setScope }) {
   };
 
   const featuredPanel = (
-    <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard, padding: 20, transition: 'transform 0.22s ease, opacity 0.22s ease' }}>
+    <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard, padding: 20, viewTransitionName: 'eventos-card', transition: 'transform 0.22s ease, opacity 0.22s ease' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 16 }}>
         <div>
           <h2 style={{ fontSize: 18, fontWeight: 600, color: T.t1, margin: 0, fontFamily: T.font }}>
@@ -882,6 +874,16 @@ export default function OpePortalPage({
   const [showAll,       setShowAll]       = useState(false);
   const [filters, setFilters] = useState({ sector: '', location: '', modality: '' });
 
+  function changeSection(key) {
+    if (!document.startViewTransition) {
+      setActiveSection(key);
+      return;
+    }
+    document.startViewTransition(() => {
+      flushSync(() => setActiveSection(key));
+    });
+  }
+
   // Carga de ofertas según filtros
   useEffect(() => {
     setLoading(true);
@@ -912,7 +914,7 @@ export default function OpePortalPage({
     return (
       <PortalLayout
         activeSection="ofertas"
-        onSection={setActiveSection}
+        onSection={changeSection}
         onNavigate={onNavigate}
         userName={userName}
         userDegree={userDegree}
@@ -921,9 +923,6 @@ export default function OpePortalPage({
       </PortalLayout>
     );
   }
-
-  // Determinar si la pestaña activa tiene panel derecho
-  const hasRightPanel = activeSection === 'inicio';
 
   // Contenido central según pestaña
   function renderContent() {
@@ -940,6 +939,7 @@ export default function OpePortalPage({
             filters={filters}
             setFilters={setFilters}
             onOfferClick={setSelectedOffer}
+            onSection={changeSection}
           />
         );
       case 'ofertas':
@@ -985,11 +985,12 @@ export default function OpePortalPage({
   return (
     <PortalLayout
       activeSection={activeSection}
-      onSection={setActiveSection}
+      onSection={changeSection}
       onNavigate={onNavigate}
       userName={userName}
       userDegree={userDegree}
-      rightPanel={hasRightPanel ? <CandidaturasPanel /> : undefined}
+      rightPanel={<CandidaturasPanel onSection={changeSection} vtActive={activeSection === 'inicio'} />}
+      rightPanelVisible={activeSection === 'inicio'}
     >
       {renderContent()}
     </PortalLayout>
