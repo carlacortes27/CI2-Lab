@@ -283,9 +283,8 @@ function LoadingSkeleton() {
 }
 
 // ── Pestaña: Inicio ───────────────────────────────────────────────────────────
-function TabInicio({ firstName, offers, loading, error, showAll, setShowAll, filters, setFilters, onOfferClick, onSection }) {
-  const visibleOffers = showAll ? offers : offers.slice(0, 3);
-  const hasMore       = !showAll && offers.length > 3;
+function TabInicio({ firstName, offers, loading, error, filters, setFilters, onOfferClick, onSection }) {
+  const visibleOffers = offers.slice(0, 3);
 
   return (
     <>
@@ -352,12 +351,11 @@ function TabInicio({ firstName, offers, loading, error, showAll, setShowAll, fil
         />
       ))}
 
-      {hasMore && (
+      {!loading && !error && offers.length > 0 && (
         <div style={{ textAlign: 'center' }}>
-          <button type="button" onClick={() => setShowAll(true)}
-            style={{ fontSize: 14, fontWeight: 500, color: T.orange, background: 'none', border: 'none', cursor: 'pointer', fontFamily: T.font }}>
-            Ver más ofertas →
-          </button>
+          <Button variant="secondary" onClick={() => onSection('ofertas')}>
+            Ver todas las ofertas →
+          </Button>
         </div>
       )}
 
@@ -1068,8 +1066,6 @@ export default function OpePortalPage({
             offers={filteredOffers}
             loading={loading}
             error={error}
-            showAll={showAll}
-            setShowAll={setShowAll}
             filters={filters}
             setFilters={setFilters}
             onOfferClick={setSelectedOffer}

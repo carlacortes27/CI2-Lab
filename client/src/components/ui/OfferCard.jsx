@@ -1,5 +1,6 @@
-import { T, brandColor, initials } from '../../styles/theme.js';
+import { T } from '../../styles/theme.js';
 import Button from './Button.jsx';
+import CompanyLogo from './CompanyLogo.jsx';
 import { PinIcon, MonitorIcon, ClockIcon } from './Icons.jsx';
 
 const MODALITY_LABEL = { presencial: 'Presencial', hibrido: 'Híbrido', remoto: 'Remoto' };
@@ -24,13 +25,11 @@ function mockScore(offerId, rank) {
 }
 
 export default function OfferCard({ offer, rank = 0, onClick }) {
-  const score        = mockScore(offer.id, rank);
-  const isDestacada  = score >= 90;
-  const tags         = offer.requirements?.hardSkills?.slice(0, 3) ?? [];
-  const sector       = offer.sector || 'Prácticas';
-  const badgeStyle   = sectorStyle(sector);
-  const companyColor = brandColor(offer.company);
-  const companyInits = initials(offer.company);
+  const score       = mockScore(offer.id, rank);
+  const isDestacada = score >= 90;
+  const tags        = offer.requirements?.hardSkills?.slice(0, 3) ?? [];
+  const sector      = offer.sector || 'Prácticas';
+  const badgeStyle  = sectorStyle(sector);
 
   return (
     <div
@@ -59,25 +58,11 @@ export default function OfferCard({ offer, rank = 0, onClick }) {
       }}
     >
       {/* Bloque empresa */}
-      <div style={{
-        width:           58,
-        minHeight:       64,
-        border:          `1px solid ${T.border}`,
-        borderRadius:    T.radiusInput,
-        backgroundColor: T.orangeBg,
-        display:         'flex',
-        flexDirection:   'column',
-        alignItems:      'center',
-        justifyContent:  'center',
-        flexShrink:      0,
-      }}>
-        <span style={{ fontSize: 18, fontWeight: 700, color: companyColor, lineHeight: 1, fontFamily: T.font }}>
-          {companyInits}
-        </span>
-        <span style={{ fontSize: 8, fontWeight: 700, color: T.orange, letterSpacing: '0.05em', textTransform: 'uppercase', marginTop: 4, maxWidth: 50, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center', fontFamily: T.font }}>
-          {offer.company?.split(' ')[0] ?? ''}
-        </span>
-      </div>
+      <CompanyLogo
+        company={offer.company}
+        size={58}
+        style={{ backgroundColor: T.orangeBg, height: 64 }}
+      />
 
       {/* Contenido central */}
       <div style={{ minWidth: 0 }}>
