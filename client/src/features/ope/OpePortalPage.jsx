@@ -8,6 +8,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { flushSync } from 'react-dom';
 import { getOffers, getEvents } from '../../lib/api.js';
 import { useAuth } from '../../context/useAuth.js';
+import { useCv } from '../../context/CvContext.jsx';
 import OfferDetail        from './OfferDetail.jsx';
 import EventDetail        from './EventDetail.jsx';
 import PortalLayout       from '../../layouts/PortalLayout.jsx';
@@ -52,6 +53,12 @@ const SECTORES    = ['Consultoría', 'Energía', 'Finanzas', 'Tecnología', 'Leg
 const MODALIDADES = [{ value: 'presencial', label: 'Presencial' }, { value: 'hibrido', label: 'Híbrido' }, { value: 'remoto', label: 'Remoto' }];
 const UBICACIONES = ['Madrid', 'Barcelona', 'Bilbao', 'Sevilla', 'Remoto'];
 const DURACIONES  = ['3 meses', '6 meses', '12 meses'];
+const JORNADAS    = [{ value: 'completa', label: 'Completa' }, { value: 'parcial', label: 'Parcial' }, { value: 'flexible', label: 'Flexible' }];
+const HORARIOS    = [{ value: 'manana', label: 'Mañana' }, { value: 'tarde', label: 'Tarde' }, { value: 'flexible', label: 'Flexible' }];
+const IDIOMAS     = ['Inglés', 'Francés', 'Alemán', 'Español'];
+const NIVELES_IDIOMA = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Nativo'];
+const TECNOLOGIAS = ['Excel', 'PowerPoint', 'Python', 'SQL', 'Power BI', 'AutoCAD', 'MATLAB', 'AWS', 'Java', 'Git', 'C/C++', 'R Studio'];
+const AREAS_INTERES = ['datos', 'consultoría', 'energía', 'renovables', 'finanzas', 'sostenibilidad', 'cloud', 'operaciones', 'estrategia', 'ingeniería'];
 
 function eventDateTime(event) {
   return new Date(`${event.date}T${event.startTime || '00:00'}`);
@@ -847,6 +854,501 @@ function TabEventos({ events, loading, error, scope, setScope, onEventClick }) {
 }
 
 // ── Placeholder para pestañas en construcción ─────────────────────────────────
+function PreferenceField({ label, children }) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: T.t1, marginBottom: 8, fontFamily: T.font }}>
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function ToggleGroup({ options, value = [], onChange, disabled = false }) {
+  const normalizedOptions = options.map(option => (
+    typeof option === 'string' ? { value: option, label: option } : option
+  ));
+  const selectedValues = Array.isArray(value) ? value : [];
+
+  function toggle(item) {
+    if (disabled) return;
+    const next = selectedValues.includes(item)
+      ? selectedValues.filter(current => current !== item)
+      : [...selectedValues, item];
+    onChange(next);
+  }
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      {normalizedOptions.map(option => {
+        const active = selectedValues.includes(option.value);
+        return (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => toggle(option.value)}
+            disabled={disabled}
+            style={{
+              padding: '8px 12px',
+              borderRadius: T.radiusPill,
+              border: `1px solid ${active ? T.orange : T.border}`,
+              backgroundColor: active ? T.orangeBg : T.white,
+              color: active ? '#B45309' : T.t2,
+              fontSize: 13,
+              fontWeight: active ? 700 : 500,
+              cursor: disabled ? 'not-allowed' : 'pointer',
+              opacity: disabled ? 0.6 : 1,
+              fontFamily: T.font,
+            }}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function MultiSelectDropdown({ label, options = [], value = [], onChange, disabled = false }) {
+  const [open, setOpen] = useState(false);
+  const selected = Array.isArray(value) ? value.filter(Boolean) : [];
+  const normalizedOptions = options.map(option => (
+    typeof option === 'string' ? { value: option, label: option } : option
+  ));
+
+  function toggle(item) {
+    const next = selected.includes(item)
+      ? selected.filter(current => current !== item)
+      : [...selected, item];
+    onChange(next);
+  }
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        type="button"
+        onClick={() => disabled ? null : setOpen(current => !current)}
+        disabled={disabled}
+        style={{
+          width: '100%',
+          minHeight: 42,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          border: `1px solid ${selected.length ? T.orange : T.border}`,
+          borderRadius: T.radiusInput,
+          backgroundColor: selected.length ? T.orangeBg : T.white,
+          color: selected.length ? '#B45309' : T.t2,
+          padding: '9px 12px',
+          fontSize: 13,
+          fontWeight: selected.length ? 700 : 500,
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.6 : 1,
+          fontFamily: T.font,
+          textAlign: 'left',
+        }}
+      >
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {selected.length ? selected.join(', ') : label}
+        </span>
+        <span style={{ color: T.t3, fontSize: 12 }}>▼</span>
+      </button>
+
+      {open && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 20 }} onClick={() => setOpen(false)} />
+          <div style={{
+            position: 'absolute',
+            top: 'calc(100% + 8px)',
+            left: 0,
+            right: 0,
+            zIndex: 30,
+            backgroundColor: T.white,
+            border: `1px solid ${T.border}`,
+            borderRadius: T.radiusInput,
+            boxShadow: T.shadowElevated,
+            maxHeight: 240,
+            overflowY: 'auto',
+          }}>
+            {normalizedOptions.length === 0 ? (
+              <p style={{ padding: 12, margin: 0, fontSize: 13, color: T.t3, fontFamily: T.font }}>
+                No hay ubicaciones publicadas.
+              </p>
+            ) : normalizedOptions.map(option => {
+              const active = selected.includes(option.value);
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => disabled ? null : toggle(option.value)}
+                  disabled={disabled}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    border: 'none',
+                    borderBottom: `1px solid ${T.border}`,
+                    backgroundColor: active ? T.orangeBg : T.white,
+                    color: active ? '#B45309' : T.t1,
+                    padding: '10px 12px',
+                    fontSize: 13,
+                    fontWeight: active ? 700 : 500,
+                    cursor: disabled ? 'not-allowed' : 'pointer',
+                    opacity: disabled ? 0.6 : 1,
+                    fontFamily: T.font,
+                    textAlign: 'left',
+                  }}
+                >
+                  {option.label}
+                  {active && <span>✓</span>}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function TextInput({ value, onChange, type = 'text', placeholder, disabled = false }) {
+  return (
+    <input
+      type={type}
+      value={value || ''}
+      placeholder={placeholder}
+      disabled={disabled}
+      onChange={event => onChange(event.target.value)}
+      style={{
+        width: '100%',
+        boxSizing: 'border-box',
+        border: `1px solid ${T.border}`,
+        borderRadius: T.radiusInput,
+        padding: '10px 12px',
+        fontSize: 13,
+        color: disabled ? T.t3 : T.t1,
+        outline: 'none',
+        fontFamily: T.font,
+        backgroundColor: disabled ? T.hoverBg : T.white,
+        cursor: disabled ? 'not-allowed' : 'text',
+      }}
+    />
+  );
+}
+
+function commaText(values = []) {
+  return values.join(', ');
+}
+
+function parseCommaText(value) {
+  return value
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean);
+}
+
+function normalizeLanguagePreferences(languages = []) {
+  return languages
+    .map(language => (
+      typeof language === 'string'
+        ? { name: language, level: '' }
+        : { name: language.name || '', level: language.level || '' }
+    ))
+    .filter(language => language.name);
+}
+
+function LanguagePreferences({ value = [], onChange, disabled = false }) {
+  const languages = normalizeLanguagePreferences(Array.isArray(value) ? value : []);
+
+  function updateLanguage(name, level) {
+    const exists = languages.some(language => language.name === name);
+    const next = exists
+      ? languages.map(language => language.name === name ? { ...language, level } : language)
+      : [...languages, { name, level }];
+    onChange(next);
+  }
+
+  function removeLanguage(name) {
+    onChange(languages.filter(language => language.name !== name));
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {IDIOMAS.map(languageName => {
+        const selected = languages.find(language => language.name === languageName);
+        return (
+          <div key={languageName} style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) 132px',
+            gap: 8,
+            alignItems: 'center',
+          }}>
+            <button
+              type="button"
+              onClick={() => disabled ? null : (selected ? removeLanguage(languageName) : updateLanguage(languageName, 'B2'))}
+              disabled={disabled}
+              style={{
+                padding: '9px 12px',
+                borderRadius: T.radiusPill,
+                border: `1px solid ${selected ? T.orange : T.border}`,
+                backgroundColor: selected ? T.orangeBg : T.white,
+                color: selected ? '#B45309' : T.t2,
+                fontSize: 13,
+                fontWeight: selected ? 700 : 500,
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                opacity: disabled ? 0.6 : 1,
+                fontFamily: T.font,
+                textAlign: 'left',
+              }}
+            >
+              {languageName}
+            </button>
+            <select
+              value={selected?.level || ''}
+              disabled={!selected || disabled}
+              onChange={event => updateLanguage(languageName, event.target.value)}
+              style={{
+                border: `1px solid ${T.border}`,
+                borderRadius: T.radiusInput,
+                padding: '9px 10px',
+                fontSize: 13,
+                color: selected && !disabled ? T.t1 : T.t3,
+                backgroundColor: selected && !disabled ? T.white : T.hoverBg,
+                fontFamily: T.font,
+                cursor: disabled ? 'not-allowed' : 'pointer',
+              }}
+            >
+              <option value="" disabled>Nivel</option>
+              {NIVELES_IDIOMA.map(level => (
+                <option key={level} value={level}>{level}</option>
+              ))}
+            </select>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function TabPerfil({ offers = [] }) {
+  const { cv, dispatch } = useCv();
+  const preferences = cv.preferences || {};
+  const [prefsOpen, setPrefsOpen] = useState(true);
+  const [editingPrefs, setEditingPrefs] = useState(false);
+  const locationOptions = [
+    ...new Set([
+      ...offers.map(offer => offer.location).filter(Boolean),
+      ...(preferences.locations || []),
+    ]),
+  ].sort((a, b) => a.localeCompare(b, 'es'));
+
+  function updatePreference(key, value) {
+    dispatch({ type: 'UPDATE_PREFERENCES', payload: { [key]: value } });
+  }
+
+  const completionItems = [
+    preferences.locations?.length,
+    preferences.modalities?.length,
+    preferences.workdays?.length,
+    preferences.sectors?.length,
+    preferences.durations?.length,
+    preferences.startDate,
+    preferences.schedules?.length,
+    preferences.languages?.length,
+    preferences.technologies?.length,
+    preferences.keywords?.length,
+  ];
+  const completed = completionItems.filter(Boolean).length;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: T.t1, fontFamily: T.font, margin: 0 }}>Mi perfil</h1>
+        <p style={{ fontSize: 14, color: T.t2, marginTop: 8, lineHeight: 1.5, fontFamily: T.font }}>
+          Gestiona tus preferencias de prácticas para recibir mejores ofertas en base a tu perfil.
+        </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 20 }}>
+        <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard, border: `1px solid ${T.border}`, padding: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+            <div>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: T.t1, margin: 0, fontFamily: T.font }}>
+                Preferencias de prácticas
+              </h2>
+              <p style={{ fontSize: 13, color: T.t2, marginTop: 5, fontFamily: T.font }}>
+                Completa tus opciones y guarda tus preferencias para que el sistema te recomiende mejor.
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => setPrefsOpen(open => !open)}
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: T.radiusPill,
+                  border: `1px solid ${T.border}`,
+                  backgroundColor: T.white,
+                  color: T.t1,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: T.font,
+                }}
+              >
+                {prefsOpen ? 'Plegar preferencias' : 'Desplegar preferencias'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditingPrefs(editing => !editing)}
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: T.radiusPill,
+                  border: 'none',
+                  backgroundColor: editingPrefs ? T.orange : '#2563EB',
+                  color: '#fff',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: T.font,
+                }}
+              >
+                {editingPrefs ? 'Guardar' : 'Editar'}
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 18, flexWrap: 'wrap' }}>
+            <span style={{ color: T.t2, fontSize: 13, fontFamily: T.font }}>
+              Completado: {completed}/10 campos
+            </span>
+            <span style={{ color: completed >= 7 ? '#15803D' : '#B45309', fontWeight: 700, fontFamily: T.font }}>
+              {completed >= 7 ? 'Perfil suficientemente completo' : 'Completa más campos para mejorar tu match'}
+            </span>
+          </div>
+
+          {prefsOpen && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 22, alignItems: 'start', marginTop: 18 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                <PreferenceField label="Ubicación deseada">
+                  <MultiSelectDropdown
+                    label="Selecciona ubicaciones"
+                    options={locationOptions}
+                    value={preferences.locations || []}
+                    onChange={value => updatePreference('locations', value)}
+                    disabled={!editingPrefs}
+                  />
+                </PreferenceField>
+
+                <PreferenceField label="Modalidad">
+                  <ToggleGroup
+                    options={MODALIDADES}
+                    value={preferences.modalities || []}
+                    onChange={value => updatePreference('modalities', value)}
+                    disabled={!editingPrefs}
+                  />
+                </PreferenceField>
+                <PreferenceField label="Jornada">
+                  <ToggleGroup
+                    options={JORNADAS}
+                    value={preferences.workdays || []}
+                    onChange={value => updatePreference('workdays', value)}
+                    disabled={!editingPrefs}
+                  />
+                </PreferenceField>
+
+                <PreferenceField label="Sector de interés">
+                  <ToggleGroup
+                    options={SECTORES}
+                    value={preferences.sectors || []}
+                    onChange={value => updatePreference('sectors', value)}
+                    disabled={!editingPrefs}
+                  />
+                </PreferenceField>
+
+                <PreferenceField label="Duración">
+                  <ToggleGroup
+                    options={DURACIONES}
+                    value={preferences.durations || []}
+                    onChange={value => updatePreference('durations', value)}
+                    disabled={!editingPrefs}
+                  />
+                </PreferenceField>
+
+                <PreferenceField label="Disponibilidad para inicio">
+                  <TextInput
+                    type="date"
+                    value={preferences.startDate || ''}
+                    onChange={value => updatePreference('startDate', value)}
+                    disabled={!editingPrefs}
+                  />
+                </PreferenceField>
+
+                <PreferenceField label="Añadir áreas o keywords propias">
+                  <TextInput
+                    value={commaText(preferences.keywords || [])}
+                    onChange={value => updatePreference('keywords', parseCommaText(value))}
+                    placeholder="Ej. renovables, estrategia, datos"
+                    disabled={!editingPrefs}
+                  />
+                </PreferenceField>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                <PreferenceField label="Horario">
+                  <ToggleGroup
+                    options={HORARIOS}
+                    value={preferences.schedules || []}
+                    onChange={value => updatePreference('schedules', value)}
+                    disabled={!editingPrefs}
+                  />
+                </PreferenceField>
+
+                <PreferenceField label="Idiomas">
+                  <LanguagePreferences
+                    value={preferences.languages || []}
+                    onChange={value => updatePreference('languages', value)}
+                    disabled={!editingPrefs}
+                  />
+                </PreferenceField>
+                <PreferenceField label="Tecnologías">
+                  <ToggleGroup
+                    options={TECNOLOGIAS}
+                    value={preferences.technologies || []}
+                    onChange={value => updatePreference('technologies', value)}
+                    disabled={!editingPrefs}
+                  />
+                </PreferenceField>
+
+                <PreferenceField label="Añadir tecnologías propias">
+                  <TextInput
+                    value={commaText(preferences.technologies || [])}
+                    onChange={value => updatePreference('technologies', parseCommaText(value))}
+                    placeholder="Ej. Python, SQL, Power BI"
+                    disabled={!editingPrefs}
+                  />
+                </PreferenceField>
+
+                <PreferenceField label="Áreas de interés">
+                  <ToggleGroup
+                    options={AREAS_INTERES}
+                    value={preferences.keywords || []}
+                    onChange={value => updatePreference('keywords', value)}
+                    disabled={!editingPrefs}
+                  />
+                </PreferenceField>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TabPlaceholder({ title }) {
   return (
     <>
@@ -1105,7 +1607,7 @@ export default function OpePortalPage({
       case 'orientacion':
         return <TabPlaceholder title="Orientación" />;
       case 'perfil':
-        return <TabPlaceholder title="Mi perfil" />;
+        return <TabPerfil offers={filteredOffers} />;
       case 'ajustes':
         return <TabPlaceholder title="Ajustes" />;
       default:

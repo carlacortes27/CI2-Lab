@@ -12,6 +12,18 @@ export const exampleCv = {
     fontSize: 'medium',
     accentColor: '#f5b21b',
   },
+  preferences: {
+    locations: ['Madrid'],
+    modalities: ['hibrido'],
+    workdays: ['completa'],
+    sectors: ['Energia', 'Tecnologia'],
+    durations: ['6 meses'],
+    startDate: '',
+    schedules: ['manana'],
+    languages: [{ name: 'Inglés', level: 'C1' }],
+    technologies: ['Python', 'SQL', 'Power BI'],
+    keywords: ['datos', 'renovables', 'eficiencia energetica'],
+  },
   personal: {
     fullName: 'Marta Saldana Buil',
     headline: 'Estudiante de Ingenieria en Tecnologias Industriales',

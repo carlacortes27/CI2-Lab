@@ -23,6 +23,7 @@ function normalizeCv(cv) {
     ...exampleCv,
     ...cv,
     personal: { ...exampleCv.personal, ...(cv.personal || {}) },
+    preferences: { ...exampleCv.preferences, ...(cv.preferences || {}) },
     style: { ...exampleCv.style, ...(cv.style || {}) },
     sections: mergedSections,
     layout: { ...exampleCv.layout, ...(cv.layout || {}), order },
@@ -191,6 +192,12 @@ function cvReducer(cv, action) {
 
     case 'UPDATE_STYLE':
       return withUpdated({ ...cv, style: { ...cv.style, ...action.payload } });
+
+    case 'UPDATE_PREFERENCES':
+      return withUpdated({
+        ...cv,
+        preferences: { ...(cv.preferences || {}), ...action.payload },
+      });
 
     case 'UPDATE_SECTION':
       return withUpdated({
