@@ -3,14 +3,14 @@ import { isValidEmail, isValidPhone } from '../../../utils/validators.js';
 import { Field, Select, SectionCard } from './FormControls.jsx';
 
 const countries = ['+34', '+44', '+1', '+49', '+33', '+39', '+351'];
-const photoTemplates = new Set(['moderna', 'profesional']);
+const acceptedPhotoTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const maxPhotoSizeMb = 2;
 
 export default function PersonalInfoForm() {
   const { cv, dispatch } = useCv();
   const p = cv.personal;
-  const showPhoto = photoTemplates.has(cv.style?.template);
-  const emailError = p.email && !isValidEmail(p.email) ? 'Email no válido' : '';
-  const phoneError = p.phoneNumber && !isValidPhone(p.phoneNumber) ? 'Teléfono no válido' : '';
+  const emailError = p.email && !isValidEmail(p.email) ? 'Email no valido' : '';
+  const phoneError = p.phoneNumber && !isValidPhone(p.phoneNumber) ? 'Telefono no valido' : '';
 
   function update(data) {
     const next = { ...p, ...data };
@@ -25,8 +25,12 @@ export default function PersonalInfoForm() {
 
   function updatePhoto(file) {
     if (!file) return;
-    if (!['image/jpeg', 'image/jpg'].includes(file.type)) {
-      window.alert('La foto debe ser un archivo .jpg');
+    if (!acceptedPhotoTypes.includes(file.type)) {
+      window.alert('La imagen debe ser JPG, PNG o WebP');
+      return;
+    }
+    if (file.size > maxPhotoSizeMb * 1024 * 1024) {
+      window.alert(`La imagen no puede superar ${maxPhotoSizeMb} MB`);
       return;
     }
     const reader = new FileReader();
@@ -34,31 +38,58 @@ export default function PersonalInfoForm() {
     reader.readAsDataURL(file);
   }
 
+  function removePhoto() {
+    dispatch({ type: 'UPDATE_PERSONAL', payload: { photoUrl: '' } });
+  }
+
   return (
     <SectionCard title="Datos personales">
       <div className="form-grid two">
         <Field label="Nombre completo" value={p.fullName} onChange={fullName => update({ fullName })} />
-        <Field label="Ubicación" value={p.location} onChange={location => update({ location })} />
+        <Field label="Ubicacion" value={p.location} onChange={location => update({ location })} />
         <Field label="Email personal" value={p.email} onChange={email => update({ email })} type="email" error={emailError} />
         <div className="phone-row">
-          <Select label="País" value={p.phoneCountry || ''} onChange={phoneCountry => update({ phoneCountry })}>
+          <Select label="Pais" value={p.phoneCountry || ''} onChange={phoneCountry => update({ phoneCountry })}>
             <option value="">Selecciona</option>
             {countries.map(country => <option key={country}>{country}</option>)}
           </Select>
-          <Field label="Teléfono" value={p.phoneNumber || p.phone?.replace(/^\+\d+\s*/, '')} onChange={phoneNumber => update({ phoneNumber })} error={phoneError} />
+          <Field label="Telefono" value={p.phoneNumber || p.phone?.replace(/^\+\d+\s*/, '')} onChange={phoneNumber => update({ phoneNumber })} error={phoneError} />
         </div>
         <Field
           label="LinkedIn"
           value={(p.links || []).find(link => link.label === 'LinkedIn')?.url}
           onChange={url => updateLink('LinkedIn', url)}
         />
-        {showPhoto && (
-          <label className="form-field">
-            <span>Foto JPG (plantilla con imagen)</span>
-            <input type="file" accept="image/jpeg,.jpg" onChange={event => updatePhoto(event.target.files?.[0])} />
-          </label>
-        )}
+        <div className="form-field photo-field">
+          <span>Imagen de perfil</span>
+          <div className="photo-upload-row">
+            <div className="photo-upload-preview">
+              {p.photoUrl ? (
+                <img src={p.photoUrl} alt="Vista previa de la imagen de perfil" />
+              ) : (
+                <span>{initials(p.fullName)}</span>
+              )}
+            </div>
+            <div className="photo-upload-controls">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                onChange={event => updatePhoto(event.target.files?.[0])}
+              />
+              {p.photoUrl && (
+                <button type="button" className="outline-button" onClick={removePhoto}>
+                  Quitar imagen
+                </button>
+              )}
+            </div>
+          </div>
+          <small className="field-hint">JPG, PNG o WebP. Maximo 2 MB.</small>
+        </div>
       </div>
     </SectionCard>
   );
+}
+
+function initials(name = '') {
+  return name.split(' ').filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'CV';
 }
