@@ -6,6 +6,7 @@ import authRouter from './routes/auth.js';
 import offersRouter from './routes/offers.js';
 import eventsRouter from './routes/events.js';
 import cvRouter from './routes/cv.js';
+import advisorsRouter from './routes/advisors.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { initDatabase } from './db/h2Client.js';
 
@@ -27,6 +28,7 @@ app.use('/api/offers', offersRouter);
 app.use('/api/events', eventsRouter);
 app.use('/api/cv', cvRouter);
 app.use('/api/auth', authRouter);
+app.use('/api', advisorsRouter);
 
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(clientDistPath));
