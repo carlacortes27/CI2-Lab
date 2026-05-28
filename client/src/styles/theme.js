@@ -42,7 +42,9 @@ export const T = {
     entrevista: { bg: '#DBEAFE', color: '#1D4ED8', label: 'Entrevista'  },
     enviada:    { bg: '#F3F4F6', color: '#4B5563', label: 'Aplicada'    },
     aceptada:   { bg: '#DCFCE7', color: '#15803D', label: 'Aceptada'    },
+    finalizada: { bg: '#E0F2FE', color: '#0369A1', label: 'Finalizada'  },
     rechazada:  { bg: '#FEE2E2', color: '#B91C1C', label: 'Rechazada'   },
+    guardada:   { bg: '#F3F4F6', color: '#6B7280', label: 'Guardada'    },
   },
 };
 

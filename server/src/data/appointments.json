@@ -1,0 +1,41 @@
+[
+  {
+    "id": "apt_001",
+    "userId": "mock_user",
+    "advisorId": "adv_001",
+    "advisorName": "María López",
+    "advisorRole": "CV y empleabilidad",
+    "date": "2025-06-12",
+    "time": "10:30",
+    "reason": "Revisión de CV",
+    "modality": "Online",
+    "status": "Confirmada",
+    "notes": ""
+  },
+  {
+    "id": "apt_002",
+    "userId": "mock_user",
+    "advisorId": "adv_002",
+    "advisorName": "Javier Martín",
+    "advisorRole": "Preparación de entrevistas y selección",
+    "date": "2025-06-20",
+    "time": "12:00",
+    "reason": "Preparación de entrevistas",
+    "modality": "Presencial",
+    "status": "Confirmada",
+    "notes": ""
+  },
+  {
+    "id": "apt_003",
+    "userId": "mock_user",
+    "advisorId": "adv_003",
+    "advisorName": "Lucía Fernández",
+    "advisorRole": "Prácticas y primer empleo",
+    "date": "2025-07-03",
+    "time": "11:00",
+    "reason": "Búsqueda de prácticas",
+    "modality": "Online",
+    "status": "Pendiente",
+    "notes": ""
+  }
+]

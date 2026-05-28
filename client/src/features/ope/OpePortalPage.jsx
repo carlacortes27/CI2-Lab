@@ -6,10 +6,11 @@
  */
 import { useState, useEffect, useMemo } from 'react';
 import { flushSync } from 'react-dom';
-import { getOffers, getEvents } from '../../lib/api.js';
+import { advanceApplication, applyToOffer, getApplications, getOffers, getEvents, saveOffer } from '../../lib/api.js';
 import { useAuth } from '../../context/useAuth.js';
 import OfferDetail        from './OfferDetail.jsx';
 import EventDetail        from './EventDetail.jsx';
+import OrientacionPanel  from './OrientacionPanel.jsx';
 import PortalLayout       from '../../layouts/PortalLayout.jsx';
 import { T }              from '../../styles/theme.js';
 import {
@@ -18,7 +19,6 @@ import {
   StatBox,
   FilterDropdown,
   Button,
-  Card,
   Pill,
   TrophyIcon,
   CalendarIcon,
@@ -26,18 +26,10 @@ import {
   FilterIcon,
   PinIcon,
   ClockIcon,
-  UserIcon,
   ChevronRightIcon,
 } from '../../components/ui/index.js';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
-const MOCK_CANDIDATURAS = [
-  { id: 1, title: 'Prácticas en Operación de Activos',  company: 'Iberdrola',      location: 'Madrid', modality: 'Híbrido',    status: 'revision',   date: '12/06/2025' },
-  { id: 2, title: 'Prácticas en Gestión de Proyectos',  company: 'Naturgy',        location: 'Madrid', modality: 'Presencial', status: 'entrevista', date: '08/06/2025' },
-  { id: 3, title: 'Prácticas en Advisory – Energía',    company: 'EY',             location: 'Madrid', modality: 'Híbrido',    status: 'enviada',    date: '02/06/2025' },
-  { id: 4, title: 'Prácticas en Análisis de Datos',     company: 'ACCIONA Energía',location: 'Madrid', modality: 'Híbrido',    status: 'aceptada',   date: '20/05/2025' },
-];
-
 const MOCK_EVENTOS = [
   { id: 1, day: '17', month: 'JUN', title: 'Jornada de Empleo Comillas',     time: '10:00 - 14:00', place: 'Campus Cantoblanco' },
   { id: 2, day: '24', month: 'JUN', title: 'Workshop: Prepara tu CV con IA', time: '16:00 - 18:00', place: 'Sala Magna, ICAI'  },
@@ -52,6 +44,21 @@ const SECTORES    = ['Consultoría', 'Energía', 'Finanzas', 'Tecnología', 'Leg
 const MODALIDADES = [{ value: 'presencial', label: 'Presencial' }, { value: 'hibrido', label: 'Híbrido' }, { value: 'remoto', label: 'Remoto' }];
 const UBICACIONES = ['Madrid', 'Barcelona', 'Bilbao', 'Sevilla', 'Remoto'];
 const DURACIONES  = ['3 meses', '6 meses', '12 meses'];
+
+function applicationToCard(application) {
+  const offer = application.offer || {};
+  return {
+    id: application.id,
+    title: offer.title,
+    company: offer.company,
+    location: offer.location,
+    modality: offer.modality,
+    status: application.status,
+    date: application.createdAt,
+    offer,
+    application,
+  };
+}
 
 function eventDateTime(event) {
   return new Date(`${event.date}T${event.startTime || '00:00'}`);
@@ -131,12 +138,13 @@ function buildCalendarWeeks(monthDate, events) {
 }
 
 // ── Panel Mis Candidaturas ────────────────────────────────────────────────────
-function CandidaturasPanel({ onSection, vtActive = false }) {
+function CandidaturasPanel({ applications = [], onSection, onApplicationClick, vtActive = false }) {
+  const cards = applications.map(applicationToCard).slice(0, 4);
   const counts = {
-    enviadas:   8,
-    revision:   MOCK_CANDIDATURAS.filter(c => c.status === 'revision').length,
-    entrevista: MOCK_CANDIDATURAS.filter(c => c.status === 'entrevista').length,
-    aceptada:   MOCK_CANDIDATURAS.filter(c => c.status === 'aceptada').length,
+    enviadas:   applications.filter(c => c.status === 'enviada').length,
+    revision:   applications.filter(c => c.status === 'revision').length,
+    entrevista: applications.filter(c => c.status === 'entrevista').length,
+    aceptada:   applications.filter(c => c.status === 'aceptada' || c.status === 'finalizada').length,
   };
 
   return (
@@ -161,13 +169,20 @@ function CandidaturasPanel({ onSection, vtActive = false }) {
       </div>
 
       {/* Lista de candidaturas */}
-      {MOCK_CANDIDATURAS.map((c, i) => (
-        <ApplicationCard
-          key={c.id}
-          candidatura={c}
-          isLast={i === MOCK_CANDIDATURAS.length - 1}
-        />
-      ))}
+      {cards.length === 0 ? (
+        <p style={{ padding: '20px', fontSize: 13, color: T.t3, textAlign: 'center', fontFamily: T.font }}>
+          Aún no te has inscrito en ninguna oferta.
+        </p>
+      ) : (
+        cards.map((c, i) => (
+          <ApplicationCard
+            key={c.id}
+            candidatura={c}
+            onClick={() => onApplicationClick?.(c.application)}
+            isLast={i === cards.length - 1}
+          />
+        ))
+      )}
 
       {/* Consejo para destacar */}
       <div style={{ margin: '0 16px 16px', borderRadius: 12, padding: 16, backgroundColor: '#FEF9EF', border: `1px solid ${T.orangeBg}`, display: 'flex', gap: 12 }}>
@@ -402,35 +417,126 @@ function TabOfertas({ offers, loading, error, showAll, setShowAll, filters, setF
 }
 
 // ── Pestaña: Mis Candidaturas (vista ampliada) ────────────────────────────────
-function TabCandidaturas() {
+const CAND_FILTERS = [
+  { key: 'todas',      label: 'Todas'       },
+  { key: 'guardada',   label: 'Guardadas'   },
+  { key: 'enviada',    label: 'Solicitadas' },
+  { key: 'revision',   label: 'En revisión' },
+  { key: 'entrevista', label: 'Entrevistas' },
+  { key: 'aceptada',   label: 'Aceptadas'   },
+  { key: 'finalizada', label: 'Finalizadas'  },
+];
+
+function TabCandidaturas({ applications, loading, error, onApplicationClick }) {
+  const [activeFilter, setActiveFilter] = useState('todas');
+  const cards = applications.map(applicationToCard);
+
   const counts = {
-    enviadas:   8,
-    revision:   MOCK_CANDIDATURAS.filter(c => c.status === 'revision').length,
-    entrevista: MOCK_CANDIDATURAS.filter(c => c.status === 'entrevista').length,
-    aceptada:   MOCK_CANDIDATURAS.filter(c => c.status === 'aceptada').length,
+    enviadas:   cards.filter(c => c.status === 'enviada').length,
+    guardadas:  cards.filter(c => c.status === 'guardada').length,
+    revision:   cards.filter(c => c.status === 'revision').length,
+    entrevista: cards.filter(c => c.status === 'entrevista').length,
+    aceptada:   cards.filter(c => c.status === 'aceptada').length,
+    finalizada: cards.filter(c => c.status === 'finalizada').length,
   };
+
+  const STAT_BOXES = [
+    { value: counts.enviadas,   label: 'Enviadas',    color: T.t2       },
+    { value: counts.guardadas,  label: 'Guardadas',   color: T.t2       },
+    { value: counts.revision,   label: 'En revisión', color: '#F5A623'  },
+    { value: counts.entrevista, label: 'Entrevista',  color: '#2563EB'  },
+    { value: counts.aceptada,   label: 'Aceptadas',   color: '#16A34A'  },
+    { value: counts.finalizada, label: 'Finalizadas',  color: '#0369A1'  },
+  ];
+
+  const filtered = activeFilter === 'todas'
+    ? cards
+    : cards.filter(c => c.status === activeFilter);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24, viewTransitionName: 'cand-card' }}>
-      <h1 style={{ fontSize: 28, fontWeight: 700, color: T.t1, fontFamily: T.font }}>Mis candidaturas</h1>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
-        <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard, textAlign: 'center', padding: '20px 8px' }}>
-          <StatBox value={counts.enviadas}   label="Enviadas"    color={T.t2} />
-        </div>
-        <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard }}>
-          <StatBox value={counts.revision}   label="En revisión" color="#F5A623" />
-        </div>
-        <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard }}>
-          <StatBox value={counts.entrevista} label="Entrevista"  color="#2563EB" />
-        </div>
-        <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard }}>
-          <StatBox value={counts.aceptada}   label="Aceptadas"   color="#16A34A" />
-        </div>
+      {/* Cabecera */}
+      <div>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: T.t1, fontFamily: T.font, margin: 0 }}>Mis candidaturas</h1>
+        <p style={{ fontSize: 14, color: T.t2, marginTop: 8, fontFamily: T.font }}>
+          Consulta el estado de las ofertas en las que te has inscrito.
+        </p>
       </div>
-      <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard }}>
-        {MOCK_CANDIDATURAS.map((c, i) => (
-          <ApplicationCard key={c.id} candidatura={c} isLast={i === MOCK_CANDIDATURAS.length - 1} />
+
+      {/* 6 stat boxes */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 12 }}>
+        {STAT_BOXES.map(s => (
+          <div key={s.label} style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard }}>
+            <StatBox value={s.value} label={s.label} color={s.color} />
+          </div>
         ))}
+      </div>
+
+      {/* Filtros + ordenación */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {CAND_FILTERS.map(f => (
+            <button
+              key={f.key}
+              type="button"
+              onClick={() => setActiveFilter(f.key)}
+              style={{
+                padding: '7px 14px',
+                borderRadius: T.radiusPill,
+                border: activeFilter === f.key ? 'none' : `1px solid ${T.border}`,
+                backgroundColor: activeFilter === f.key ? T.orange : T.white,
+                color: activeFilter === f.key ? T.white : T.t2,
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: 'pointer',
+                fontFamily: T.font,
+                transition: 'all 0.15s',
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <select
+          style={{
+            padding: '7px 12px',
+            borderRadius: T.radiusPill,
+            border: `1px solid ${T.border}`,
+            backgroundColor: T.white,
+            color: T.t2,
+            fontSize: 13,
+            fontFamily: T.font,
+            cursor: 'pointer',
+            outline: 'none',
+          }}
+        >
+          <option>Más recientes</option>
+          <option>Más antiguos</option>
+        </select>
+      </div>
+
+      {/* Lista */}
+      <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard }}>
+        {loading ? (
+          <LoadingSkeleton />
+        ) : error ? (
+          <p style={{ padding: 32, textAlign: 'center', fontSize: 14, color: '#B91C1C', fontFamily: T.font }}>
+            {error}
+          </p>
+        ) : filtered.length === 0 ? (
+          <p style={{ padding: 32, textAlign: 'center', fontSize: 14, color: T.t3, fontFamily: T.font }}>
+            No hay candidaturas en esta categoría.
+          </p>
+        ) : (
+          filtered.map((c, i) => (
+            <ApplicationCard
+              key={c.id}
+              candidatura={c}
+              onClick={() => onApplicationClick(c.application)}
+              isLast={i === filtered.length - 1}
+            />
+          ))
+        )}
       </div>
     </div>
   );
@@ -866,7 +972,7 @@ export default function OpePortalPage({
   userName,
   userDegree,
 }) {
-  const { user } = useAuth();
+  const { token, user } = useAuth();
   const displayName = user?.name?.trim() || userName?.trim() || 'Usuario';
   const displayDetail = user?.email || userDegree || '';
   const firstName = displayName.split(' ')[0];
@@ -880,45 +986,110 @@ export default function OpePortalPage({
   const [eventsError,   setEventsError]   = useState(null);
   const [eventScope,    setEventScope]    = useState('proximos');
   const [selectedOffer, setSelectedOffer] = useState(null);
+  const [selectedApplication, setSelectedApplication] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [applications, setApplications] = useState([]);
+  const [applicationsLoading, setApplicationsLoading] = useState(false);
+  const [applicationsError, setApplicationsError] = useState(null);
+  const [applyingOfferId, setApplyingOfferId] = useState(null);
+  const [savingOfferId, setSavingOfferId] = useState(null);
+  const [advancingApplicationId, setAdvancingApplicationId] = useState(null);
+  const [applyError, setApplyError] = useState(null);
   const [showAll,       setShowAll]       = useState(false);
   const [filters,     setFilters]     = useState({ sector: '', location: '', modality: '' });
   const [searchQuery, setSearchQuery] = useState('');
 
   function changeSection(key) {
     if (!document.startViewTransition) {
+      setSelectedOffer(null);
+      setSelectedApplication(null);
+      setSelectedEvent(null);
       setActiveSection(key);
       return;
     }
     document.startViewTransition(() => {
-      flushSync(() => setActiveSection(key));
+      flushSync(() => {
+        setSelectedOffer(null);
+        setSelectedApplication(null);
+        setSelectedEvent(null);
+        setActiveSection(key);
+      });
     });
   }
 
   // Carga de ofertas según filtros
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    setShowAll(false);
+    let active = true;
+    Promise.resolve().then(() => {
+      if (!active) return;
+      setLoading(true);
+      setError(null);
+      setShowAll(false);
     getOffers({
       type: 'practicas',
       ...(filters.sector   && { sector:   filters.sector }),
       ...(filters.location && { location: filters.location }),
       ...(filters.modality && { modality: filters.modality }),
     })
-      .then(data => setOffers(data))
-      .catch(() => setError('No se pudo conectar con el servidor. Asegúrate de que está activo en el puerto 3001.'))
-      .finally(() => setLoading(false));
+      .then(data => { if (active) setOffers(data); })
+      .catch(() => { if (active) setError('No se pudo conectar con el servidor. Asegúrate de que está activo en el puerto 3001.'); })
+      .finally(() => { if (active) setLoading(false); });
+    });
+    return () => {
+      active = false;
+    };
   }, [filters]);
 
   useEffect(() => {
-    setEventsLoading(true);
-    setEventsError(null);
+    let active = true;
+    Promise.resolve().then(() => {
+      if (!active) return;
+      setEventsLoading(true);
+      setEventsError(null);
     getEvents()
-      .then(data => setEvents(data))
-      .catch(() => setEventsError('No se pudieron cargar los eventos. Asegúrate de que el servidor está activo en el puerto 3001.'))
-      .finally(() => setEventsLoading(false));
+      .then(data => { if (active) setEvents(data); })
+      .catch(() => { if (active) setEventsError('No se pudieron cargar los eventos. Asegúrate de que el servidor está activo en el puerto 3001.'); })
+      .finally(() => { if (active) setEventsLoading(false); });
+    });
+    return () => {
+      active = false;
+    };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    if (!token) {
+      Promise.resolve().then(() => {
+        if (!active) return;
+        setApplications([]);
+        setApplicationsLoading(false);
+      });
+      return () => {
+        active = false;
+      };
+    }
+
+    Promise.resolve().then(() => {
+      if (!active) return;
+      setApplicationsLoading(true);
+      setApplicationsError(null);
+      getApplications(token)
+        .then(data => {
+          if (active) setApplications(data);
+        })
+        .catch(() => {
+          if (active) setApplicationsError('No se pudieron cargar tus candidaturas.');
+        })
+        .finally(() => {
+          if (active) setApplicationsLoading(false);
+        });
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [token]);
 
   const filteredOffers = useMemo(() => {
     if (!searchQuery.trim()) return offers;
@@ -948,8 +1119,68 @@ export default function OpePortalPage({
     setSearchQuery(q);
   }
 
+  function findApplicationForOffer(offerId) {
+    return applications.find(application => application.offerId === offerId);
+  }
+
+  async function handleApplyToOffer(offer) {
+    if (!token || !offer?.id || applyingOfferId) return;
+    setApplyingOfferId(offer.id);
+    setApplyError(null);
+    try {
+      const application = await applyToOffer(offer.id, token);
+      setApplications(current => {
+        const exists = current.some(item => item.id === application.id);
+        return exists
+          ? current.map(item => item.id === application.id ? application : item)
+          : [application, ...current];
+      });
+      setSelectedApplication(application);
+    } catch (err) {
+      setApplyError(err.message || 'No se pudo crear la candidatura.');
+    } finally {
+      setApplyingOfferId(null);
+    }
+  }
+
+  async function handleSaveOffer(offer) {
+    if (!token || !offer?.id || savingOfferId) return;
+    setSavingOfferId(offer.id);
+    setApplyError(null);
+    try {
+      const application = await saveOffer(offer.id, token);
+      setApplications(current => {
+        const exists = current.some(item => item.id === application.id);
+        return exists
+          ? current.map(item => item.id === application.id ? application : item)
+          : [application, ...current];
+      });
+      setSelectedApplication(application);
+    } catch (err) {
+      setApplyError(err.message || 'No se pudo guardar la oferta.');
+    } finally {
+      setSavingOfferId(null);
+    }
+  }
+
+  async function handleAdvanceApplication(application) {
+    if (!token || !application?.id || advancingApplicationId) return;
+    setAdvancingApplicationId(application.id);
+    try {
+      const updated = await advanceApplication(application.id, token);
+      setApplications(current => current.map(item => item.id === updated.id ? updated : item));
+      setSelectedApplication(updated);
+    } finally {
+      setAdvancingApplicationId(null);
+    }
+  }
+
   // Vista de detalle de una oferta
   if (selectedOffer) {
+    const offerApplication = selectedApplication?.offerId === selectedOffer.id
+      ? selectedApplication
+      : findApplicationForOffer(selectedOffer.id);
+
     return (
       <PortalLayout
         activeSection="ofertas"
@@ -960,7 +1191,50 @@ export default function OpePortalPage({
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
       >
-        <OfferDetail offer={selectedOffer} onBack={() => setSelectedOffer(null)} />
+        <OfferDetail
+          offer={selectedOffer}
+          application={offerApplication}
+          applying={applyingOfferId === selectedOffer.id}
+          saving={savingOfferId === selectedOffer.id}
+          advancing={advancingApplicationId === offerApplication?.id}
+          applyError={applyError}
+          onApply={() => handleApplyToOffer(selectedOffer)}
+          onSave={() => handleSaveOffer(selectedOffer)}
+          onAdvanceApplication={() => handleAdvanceApplication(offerApplication)}
+          onBack={() => {
+            setSelectedOffer(null);
+            setSelectedApplication(null);
+            setApplyError(null);
+          }}
+        />
+      </PortalLayout>
+    );
+  }
+
+  if (selectedApplication) {
+    return (
+      <PortalLayout
+        activeSection="candidaturas"
+        onSection={changeSection}
+        onNavigate={onNavigate}
+        userName={displayName}
+        userDegree={displayDetail}
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+      >
+        <OfferDetail
+          offer={selectedApplication.offer}
+          application={selectedApplication}
+          applying={applyingOfferId === selectedApplication.offerId}
+          advancing={advancingApplicationId === selectedApplication.id}
+          applyError={applyError}
+          onApply={() => handleApplyToOffer(selectedApplication.offer)}
+          onAdvanceApplication={() => handleAdvanceApplication(selectedApplication)}
+          onBack={() => {
+            setSelectedApplication(null);
+            setApplyError(null);
+          }}
+        />
       </PortalLayout>
     );
   }
@@ -1086,7 +1360,14 @@ export default function OpePortalPage({
           />
         );
       case 'candidaturas':
-        return <TabCandidaturas />;
+        return (
+          <TabCandidaturas
+            applications={applications}
+            loading={applicationsLoading}
+            error={applicationsError}
+            onApplicationClick={setSelectedApplication}
+          />
+        );
       case 'empresas':
         return <TabPlaceholder title="Empresas" />;
       case 'eventos':
@@ -1103,7 +1384,7 @@ export default function OpePortalPage({
       case 'recursos':
         return <TabPlaceholder title="Recursos" />;
       case 'orientacion':
-        return <TabPlaceholder title="Orientación" />;
+        return <OrientacionPanel />;
       case 'perfil':
         return <TabPlaceholder title="Mi perfil" />;
       case 'ajustes':
@@ -1120,7 +1401,14 @@ export default function OpePortalPage({
       onNavigate={onNavigate}
       userName={displayName}
       userDegree={displayDetail}
-      rightPanel={<CandidaturasPanel onSection={changeSection} vtActive={activeSection === 'inicio'} />}
+      rightPanel={(
+        <CandidaturasPanel
+          applications={applications}
+          onSection={changeSection}
+          onApplicationClick={setSelectedApplication}
+          vtActive={activeSection === 'inicio'}
+        />
+      )}
       rightPanelVisible={activeSection === 'inicio'}
       searchQuery={searchQuery}
       onSearchChange={handleSearchChange}

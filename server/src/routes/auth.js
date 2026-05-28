@@ -29,7 +29,7 @@ function validateCredentials({ email, password }) {
   return null;
 }
 
-function getBearerToken(req) {
+export function getBearerToken(req) {
   const header = req.get('authorization') || '';
   return header.startsWith('Bearer ') ? header.slice(7) : null;
 }
@@ -48,7 +48,7 @@ function createSessionToken(userId) {
   return `${payload}.${signTokenPayload(payload)}`;
 }
 
-function getUserIdFromToken(token) {
+export function getUserIdFromToken(token) {
   if (!token) return null;
 
   const inMemoryUserId = sessions.get(token);
@@ -73,6 +73,28 @@ function getUserIdFromToken(token) {
   }
 
   return parsedUserId;
+}
+
+export async function requireAuth(req, res, next) {
+  try {
+    const token = getBearerToken(req);
+    const userId = getUserIdFromToken(token);
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Sesion no iniciada' });
+    }
+
+    const user = await findUserById(userId);
+    if (!user) {
+      if (token) sessions.delete(token);
+      return res.status(401).json({ error: 'Sesion no valida' });
+    }
+
+    req.user = cleanUser(user);
+    next();
+  } catch (err) {
+    next(err);
+  }
 }
 
 function maskHash(passwordHash) {
