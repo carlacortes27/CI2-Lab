@@ -83,6 +83,8 @@ export default function OfferListItem({ offer, rank = 0, onClick }) {
   const isDestacada = score >= 90;
   const brandColor  = getBrandColor(offer.company);
   const initials    = getInitials(offer.company);
+  void brandColor;
+  void initials;
   const tags        = offer.requirements?.hardSkills?.slice(0, 3) ?? [];
 
   return (

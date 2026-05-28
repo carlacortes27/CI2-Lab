@@ -6,7 +6,7 @@
  */
 import { useState, useEffect, useMemo } from 'react';
 import { flushSync } from 'react-dom';
-import { advanceApplication, applyToOffer, getApplications, getOffers, getEvents, saveOffer } from '../../lib/api.js';
+import { advanceApplication, applyToOffer, getApplications, getOffers, getEvents, rejectApplication, saveOffer } from '../../lib/api.js';
 import { useAuth } from '../../context/useAuth.js';
 import OfferDetail        from './OfferDetail.jsx';
 import EventDetail        from './EventDetail.jsx';
@@ -139,12 +139,13 @@ function buildCalendarWeeks(monthDate, events) {
 
 // ── Panel Mis Candidaturas ────────────────────────────────────────────────────
 function CandidaturasPanel({ applications = [], onSection, onApplicationClick, vtActive = false }) {
-  const cards = applications.map(applicationToCard).slice(0, 4);
+  const visibleApplications = applications.filter(application => application.status !== 'guardada');
+  const cards = visibleApplications.map(applicationToCard).slice(0, 4);
   const counts = {
-    enviadas:   applications.filter(c => c.status === 'enviada').length,
-    revision:   applications.filter(c => c.status === 'revision').length,
-    entrevista: applications.filter(c => c.status === 'entrevista').length,
-    aceptada:   applications.filter(c => c.status === 'aceptada' || c.status === 'finalizada').length,
+    enviadas:   visibleApplications.filter(c => c.status === 'enviada').length,
+    revision:   visibleApplications.filter(c => c.status === 'revision').length,
+    entrevista: visibleApplications.filter(c => c.status === 'entrevista').length,
+    aceptada:   visibleApplications.filter(c => c.status === 'aceptada' || c.status === 'finalizada').length,
   };
 
   return (
@@ -180,6 +181,8 @@ function CandidaturasPanel({ applications = [], onSection, onApplicationClick, v
             candidatura={c}
             onClick={() => onApplicationClick?.(c.application)}
             isLast={i === cards.length - 1}
+            showTimelineLabels={false}
+            timelineFullWidth
           />
         ))
       )}
@@ -419,34 +422,36 @@ function TabOfertas({ offers, loading, error, showAll, setShowAll, filters, setF
 // ── Pestaña: Mis Candidaturas (vista ampliada) ────────────────────────────────
 const CAND_FILTERS = [
   { key: 'todas',      label: 'Todas'       },
-  { key: 'guardada',   label: 'Guardadas'   },
   { key: 'enviada',    label: 'Solicitadas' },
   { key: 'revision',   label: 'En revisión' },
   { key: 'entrevista', label: 'Entrevistas' },
   { key: 'aceptada',   label: 'Aceptadas'   },
   { key: 'finalizada', label: 'Finalizadas'  },
+  { key: 'rechazada',  label: 'Rechazadas'  },
 ];
 
 function TabCandidaturas({ applications, loading, error, onApplicationClick }) {
   const [activeFilter, setActiveFilter] = useState('todas');
-  const cards = applications.map(applicationToCard);
+  const cards = applications
+    .filter(application => application.status !== 'guardada')
+    .map(applicationToCard);
 
   const counts = {
     enviadas:   cards.filter(c => c.status === 'enviada').length,
-    guardadas:  cards.filter(c => c.status === 'guardada').length,
     revision:   cards.filter(c => c.status === 'revision').length,
     entrevista: cards.filter(c => c.status === 'entrevista').length,
     aceptada:   cards.filter(c => c.status === 'aceptada').length,
     finalizada: cards.filter(c => c.status === 'finalizada').length,
+    rechazada:  cards.filter(c => c.status === 'rechazada').length,
   };
 
   const STAT_BOXES = [
     { value: counts.enviadas,   label: 'Enviadas',    color: T.t2       },
-    { value: counts.guardadas,  label: 'Guardadas',   color: T.t2       },
     { value: counts.revision,   label: 'En revisión', color: '#F5A623'  },
     { value: counts.entrevista, label: 'Entrevista',  color: '#2563EB'  },
     { value: counts.aceptada,   label: 'Aceptadas',   color: '#16A34A'  },
     { value: counts.finalizada, label: 'Finalizadas',  color: '#0369A1'  },
+    { value: counts.rechazada,  label: 'Rechazadas',  color: '#DC2626'  },
   ];
 
   const filtered = activeFilter === 'todas'
@@ -994,6 +999,7 @@ export default function OpePortalPage({
   const [applyingOfferId, setApplyingOfferId] = useState(null);
   const [savingOfferId, setSavingOfferId] = useState(null);
   const [advancingApplicationId, setAdvancingApplicationId] = useState(null);
+  const [rejectingApplicationId, setRejectingApplicationId] = useState(null);
   const [applyError, setApplyError] = useState(null);
   const [showAll,       setShowAll]       = useState(false);
   const [filters,     setFilters]     = useState({ sector: '', location: '', modality: '' });
@@ -1143,6 +1149,18 @@ export default function OpePortalPage({
     }
   }
 
+  async function handleAdvanceApplication(application) {
+    if (!token || !application?.id || advancingApplicationId) return;
+    setAdvancingApplicationId(application.id);
+    try {
+      const updated = await advanceApplication(application.id, token);
+      setApplications(current => current.map(item => item.id === updated.id ? updated : item));
+      setSelectedApplication(updated);
+    } finally {
+      setAdvancingApplicationId(null);
+    }
+  }
+
   async function handleSaveOffer(offer) {
     if (!token || !offer?.id || savingOfferId) return;
     setSavingOfferId(offer.id);
@@ -1163,15 +1181,15 @@ export default function OpePortalPage({
     }
   }
 
-  async function handleAdvanceApplication(application) {
-    if (!token || !application?.id || advancingApplicationId) return;
-    setAdvancingApplicationId(application.id);
+  async function handleRejectApplication(application) {
+    if (!token || !application?.id || rejectingApplicationId) return;
+    setRejectingApplicationId(application.id);
     try {
-      const updated = await advanceApplication(application.id, token);
+      const updated = await rejectApplication(application.id, token);
       setApplications(current => current.map(item => item.id === updated.id ? updated : item));
       setSelectedApplication(updated);
     } finally {
-      setAdvancingApplicationId(null);
+      setRejectingApplicationId(null);
     }
   }
 
@@ -1197,10 +1215,12 @@ export default function OpePortalPage({
           applying={applyingOfferId === selectedOffer.id}
           saving={savingOfferId === selectedOffer.id}
           advancing={advancingApplicationId === offerApplication?.id}
+          rejecting={rejectingApplicationId === offerApplication?.id}
           applyError={applyError}
           onApply={() => handleApplyToOffer(selectedOffer)}
           onSave={() => handleSaveOffer(selectedOffer)}
           onAdvanceApplication={() => handleAdvanceApplication(offerApplication)}
+          onRejectApplication={() => handleRejectApplication(offerApplication)}
           onBack={() => {
             setSelectedOffer(null);
             setSelectedApplication(null);
@@ -1227,9 +1247,11 @@ export default function OpePortalPage({
           application={selectedApplication}
           applying={applyingOfferId === selectedApplication.offerId}
           advancing={advancingApplicationId === selectedApplication.id}
+          rejecting={rejectingApplicationId === selectedApplication.id}
           applyError={applyError}
           onApply={() => handleApplyToOffer(selectedApplication.offer)}
           onAdvanceApplication={() => handleAdvanceApplication(selectedApplication)}
+          onRejectApplication={() => handleRejectApplication(selectedApplication)}
           onBack={() => {
             setSelectedApplication(null);
             setApplyError(null);

@@ -52,6 +52,7 @@ public class H2AuthBridge {
         case "createApplication" -> createApplication(conn, Long.parseLong(args[2]), args[3]);
         case "saveApplication" -> saveApplication(conn, Long.parseLong(args[2]), args[3]);
         case "advanceApplication" -> advanceApplication(conn, Long.parseLong(args[2]), Long.parseLong(args[3]));
+        case "rejectApplication" -> rejectApplication(conn, Long.parseLong(args[2]), Long.parseLong(args[3]));
         default -> throw new IllegalArgumentException("Unknown command: " + command);
       }
     }
@@ -164,6 +165,20 @@ public class H2AuthBridge {
       stmt.setLong(2, applicationId);
       stmt.setLong(3, userId);
       stmt.executeUpdate();
+    }
+    findApplicationById(conn, applicationId, userId);
+  }
+
+  private static void rejectApplication(Connection conn, long applicationId, long userId) throws Exception {
+    try (PreparedStatement stmt = conn.prepareStatement(
+        "UPDATE APPLICATIONS SET STATUS = 'rechazada', UPDATED_AT = CURRENT_TIMESTAMP WHERE ID = ? AND USER_ID = ?")) {
+      stmt.setLong(1, applicationId);
+      stmt.setLong(2, userId);
+      int updated = stmt.executeUpdate();
+      if (updated == 0) {
+        System.out.println("null");
+        return;
+      }
     }
     findApplicationById(conn, applicationId, userId);
   }

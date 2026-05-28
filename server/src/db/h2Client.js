@@ -207,3 +207,17 @@ export async function advanceApplication({ userId, applicationId }) {
   }
   return runBridge('advanceApplication', [String(applicationId), String(userId)]);
 }
+
+export async function rejectApplication({ userId, applicationId }) {
+  await initDatabase();
+  if (useJsonFallback) {
+    const db = await readJsonDb();
+    const application = db.applications.find(app => app.userId === Number(userId) && app.id === Number(applicationId));
+    if (!application) return null;
+    application.status = 'rechazada';
+    application.updatedAt = new Date().toISOString();
+    await writeJsonDb(db);
+    return application;
+  }
+  return runBridge('rejectApplication', [String(applicationId), String(userId)]);
+}
