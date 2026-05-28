@@ -1,3 +1,5 @@
+import CompanyLogo from '../../components/ui/CompanyLogo.jsx';
+
 // ── Tokens de diseño (idénticos a OpePortalPage) ─────────────────────────────
 const T = {
   white:      '#FFFFFF',
@@ -274,18 +276,7 @@ export default function OfferDetail({ offer, onBack }) {
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24 }}>
 
           {/* Logo empresa */}
-          <div style={{
-            width: 80, height: 80, minWidth: 80,
-            backgroundColor: T.white,
-            border: `1px solid ${T.border}`,
-            borderRadius: 16,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <span style={{ fontSize: 18, fontWeight: 800, color: brandColor, userSelect: 'none', letterSpacing: '-0.5px' }}>
-              {initials}
-            </span>
-          </div>
+          <CompanyLogo company={offer.company} size={80} style={{ borderRadius: 16 }} />
 
           {/* Título y metadatos */}
           <div style={{ flex: 1, minWidth: 0 }}>

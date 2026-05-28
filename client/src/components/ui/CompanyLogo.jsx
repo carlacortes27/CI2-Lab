@@ -2,21 +2,65 @@
  * CompanyLogo.jsx — Logo de empresa
  *
  * Recuadro 64×64px (o tamaño configurable), fondo blanco, borde #E5E7EB, radius 12px.
- * Si hay logo real (src): mostrar imagen centrada.
- * Si no: iniciales en color corporativo sobre fondo blanco.
+ * Si hay logo real (src o mapa interno): mostrar imagen centrada.
+ * Si no (o si la imagen falla): iniciales en color corporativo sobre fondo blanco.
  *
  * PROHIBIDO: círculos de color con iniciales.
  */
+import { useState } from 'react';
 import { T, brandColor, initials } from '../../styles/theme.js';
 
+// Mapa de nombre de empresa → dominio para Clearbit Logo API
+const COMPANY_DOMAINS = {
+  'mckinsey':            'mckinsey.com',
+  'mckinsey & company':  'mckinsey.com',
+  'iberdrola':           'iberdrola.com',
+  'deloitte':            'deloitte.com',
+  'ferrovial':           'ferrovial.com',
+  'banco santander':     'santander.com',
+  'santander':           'santander.com',
+  'telefónica':          'telefonica.com',
+  'telefonica':          'telefonica.com',
+  'kpmg':                'kpmg.com',
+  'repsol':              'repsol.com',
+  'bcg':                 'bcg.com',
+  'boston consulting':   'bcg.com',
+  'indra':               'indracompany.com',
+  'bbva':                'bbva.com',
+  'acciona':             'acciona.com',
+  'caixabank':           'caixabank.com',
+  'amazon web services': 'amazonaws.com',
+  'aws':                 'amazonaws.com',
+  'amazon':              'amazon.com',
+  'ey':                  'ey.com',
+  'ernst & young':       'ey.com',
+  'endesa':              'endesa.com',
+  'google':              'google.com',
+  'airbus':              'airbus.com',
+  'accenture':           'accenture.com',
+  'acs':                 'grupoacs.com',
+  'siemens':             'siemens.com',
+  'schneider electric':  'se.com',
+  'schneider':           'se.com',
+  'aura':                'aura-energy.com',
+};
+
+function getLogoUrl(company) {
+  const key = company.trim().toLowerCase();
+  const domain = COMPANY_DOMAINS[key];
+  return domain ? `https://logo.clearbit.com/${domain}` : null;
+}
+
 export default function CompanyLogo({
-  src,         // URL del logo real (opcional)
-  company = '', // Nombre de la empresa (para derivar color e iniciales)
+  src,
+  company = '',
   size = 64,
   style,
 }) {
-  const color  = brandColor(company);
-  const inits  = initials(company);
+  const logoUrl = src || getLogoUrl(company);
+  const color   = brandColor(company);
+  const inits   = initials(company);
+  const [imgFailed, setImgFailed] = useState(false);
 
   const base = {
     width:           size,
@@ -33,13 +77,14 @@ export default function CompanyLogo({
     ...style,
   };
 
-  if (src) {
+  if (logoUrl && !imgFailed) {
     return (
       <div style={base}>
         <img
-          src={src}
+          src={logoUrl}
           alt={company}
           style={{ width: '72%', height: '72%', objectFit: 'contain' }}
+          onError={() => setImgFailed(true)}
         />
       </div>
     );

@@ -1,3 +1,5 @@
+import CompanyLogo from '../../components/ui/CompanyLogo.jsx';
+
 // Tokens de diseño (deben coincidir con OpePortalPage)
 const T = {
   white:      '#FFFFFF',
@@ -113,18 +115,7 @@ export default function OfferListItem({ offer, rank = 0, onClick }) {
           Iniciales de la empresa en color corporativo sobre fondo blanco.
           NO círculos de color.
         */}
-        <div style={{
-          width: 64, height: 64, minWidth: 64,
-          backgroundColor: T.white,
-          border: `1px solid ${T.border}`,
-          borderRadius: 12,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0,
-        }}>
-          <span style={{ fontSize: 16, fontWeight: 700, color: brandColor, userSelect: 'none' }}>
-            {initials}
-          </span>
-        </div>
+        <CompanyLogo company={offer.company} size={64} />
 
         {/* Contenido central */}
         <div style={{ flex: 1, minWidth: 0 }}>
