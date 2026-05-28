@@ -1,15 +1,28 @@
 import { useCv } from '../../../context/CvContext.jsx';
 
-const labels = {
-  summary: 'Sobre mí',
-  education: 'Educación',
-  experience: 'Experiencia laboral',
-  projects: 'Proyectos destacados',
-  technicalSkills: 'Competencias técnicas',
-  personalSkills: 'Competencias personales',
-  languages: 'Idiomas',
-  certifications: 'Certificaciones',
-  volunteering: 'Voluntariados',
+const labelsByLang = {
+  es: {
+    summary:        'Sobre mí',
+    education:      'Educación',
+    experience:     'Experiencia laboral',
+    projects:       'Proyectos destacados',
+    technicalSkills:'Competencias técnicas',
+    personalSkills: 'Competencias personales',
+    languages:      'Idiomas',
+    certifications: 'Certificaciones',
+    volunteering:   'Voluntariados',
+  },
+  en: {
+    summary:        'About me',
+    education:      'Education',
+    experience:     'Work experience',
+    projects:       'Projects',
+    technicalSkills:'Technical skills',
+    personalSkills: 'Personal skills',
+    languages:      'Languages',
+    certifications: 'Certifications',
+    volunteering:   'Volunteering',
+  },
 };
 
 const photoTemplates = new Set(['moderna', 'profesional']);
@@ -20,6 +33,7 @@ export default function CVPreview() {
   const s = cv.sections;
   const accent = cv.style.accentColor;
   const showPhoto = photoTemplates.has(cv.style.template) && p.photoUrl;
+  const labels = labelsByLang[cv.meta?.language] || labelsByLang.es;
 
   return (
     <article
@@ -41,13 +55,13 @@ export default function CVPreview() {
 
       {cv.layout.order.map(key => {
         if (!s[key]?.visible) return null;
-        return <PreviewSection key={key} sectionKey={key} data={s[key]} />;
+        return <PreviewSection key={key} sectionKey={key} data={s[key]} labels={labels} />;
       })}
     </article>
   );
 }
 
-function PreviewSection({ sectionKey, data }) {
+function PreviewSection({ sectionKey, data, labels }) {
   return (
     <section className="cv-section">
       <h2>{labels[sectionKey]}</h2>
