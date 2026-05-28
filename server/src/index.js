@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'node:path';
@@ -7,7 +8,7 @@ import offersRouter from './routes/offers.js';
 import eventsRouter from './routes/events.js';
 import cvRouter from './routes/cv.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import { initDatabase } from './db/h2Client.js';
+import { initDatabase } from './db/postgresClient.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -49,6 +50,6 @@ initDatabase()
     });
   })
   .catch((err) => {
-    console.error('No se pudo inicializar H2:', err);
+    console.error('No se pudo inicializar la base de datos:', err);
     process.exit(1);
   });

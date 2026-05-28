@@ -1130,6 +1130,13 @@ body:has([data-shell]) .back-button {
   font-size: 20px;
 }
 
+.part-selected {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .part-editor-head button {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -1150,6 +1157,24 @@ body:has([data-shell]) .back-button {
   display: flex;
   flex-wrap: wrap;
   gap: 12px 18px;
+}
+
+.cv-editable-text {
+  border-radius: 4px;
+  cursor: text;
+  outline: 1px dashed transparent;
+  outline-offset: 2px;
+}
+
+.cv-editable-text:hover,
+.cv-editable-text.selected {
+  outline-color: color-mix(in srgb, var(--accent), white 25%);
+  background: color-mix(in srgb, var(--accent), white 90%);
+}
+
+.cv-editable-text:focus {
+  outline: 2px solid var(--accent);
+  background: #fffdf5;
 }
 
 .preview-center {
