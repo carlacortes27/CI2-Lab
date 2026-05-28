@@ -85,7 +85,7 @@ export async function downloadAsPDF(cvName = 'cv-comillas') {
     const imgData = canvas.toDataURL('image/jpeg', 0.93);
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
-    pdf.save(`${slugify(cvName)}.pdf`);
+    await pdf.save(`${slugify(cvName)}.pdf`, { returnPromise: true });
   } finally {
     if (document.body.contains(clone)) document.body.removeChild(clone);
   }
