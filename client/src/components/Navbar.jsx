@@ -1,13 +1,16 @@
-import comillasLogo from '../assets/comillas-logo.svg';
+import icaiLogo from '../assets/imagen comillas.jpg';
 import { useAuth } from '../context/useAuth.js';
 
-export default function Navbar({ onNavigate }) {
+export default function Navbar({ currentPage, onNavigate }) {
   const { user, logout } = useAuth();
+  const hiddenForShell = currentPage === 'create' || currentPage === 'ope';
+
+  if (hiddenForShell) return null;
 
   return (
     <header className="topbar">
       <button className="brand" type="button" onClick={() => onNavigate('home')}>
-        <img className="brand-logo" src={comillasLogo} alt="Comillas Universidad Pontificia" />
+        <img className="brand-logo" src={icaiLogo} alt="ICAI Universidad Pontificia Comillas" />
         <span>
           <strong>CV Comillas</strong>
           <small>Comillas Career</small>

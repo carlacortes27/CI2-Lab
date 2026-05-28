@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import authRouter from './routes/auth.js';
 import offersRouter from './routes/offers.js';
 import eventsRouter from './routes/events.js';
@@ -8,10 +10,12 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { initDatabase } from './db/h2Client.js';
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const clientDistPath = path.resolve(__dirname, '..', '..', '..', 'client', 'dist');
 
 // Middleware base
-app.use(cors({ origin: 'http://localhost:3000' }));
+app.use(cors({ origin: process.env.CORS_ORIGIN || true }));
 app.use(express.json({ limit: '5mb' }));
 
 // Rutas
@@ -23,6 +27,14 @@ app.use('/api/offers', offersRouter);
 app.use('/api/events', eventsRouter);
 app.use('/api/cv', cvRouter);
 app.use('/api/auth', authRouter);
+
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(clientDistPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    return res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
 
 // WS3 registrará su router aquí: app.use('/api/pdf', pdfRouter)
 // WS5 registrará su router aquí para la generación de PDF

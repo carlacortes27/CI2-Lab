@@ -14,12 +14,12 @@ export default function PersonalInfoForm() {
 
   function update(data) {
     const next = { ...p, ...data };
-    next.phone = `${next.phoneCountry || '+34'} ${next.phoneNumber || ''}`.trim();
+    next.phone = `${next.phoneCountry || ''} ${next.phoneNumber || ''}`.trim();
     dispatch({ type: 'UPDATE_PERSONAL', payload: next });
   }
 
   function updateLink(label, url) {
-    const rest = p.links.filter(link => link.label !== label);
+    const rest = (p.links || []).filter(link => link.label !== label);
     dispatch({ type: 'UPDATE_PERSONAL', payload: { links: [...rest, { id: label.toLowerCase(), label, url }] } });
   }
 
@@ -41,14 +41,15 @@ export default function PersonalInfoForm() {
         <Field label="Ubicación" value={p.location} onChange={location => update({ location })} />
         <Field label="Email personal" value={p.email} onChange={email => update({ email })} type="email" error={emailError} />
         <div className="phone-row">
-          <Select label="País" value={p.phoneCountry || '+34'} onChange={phoneCountry => update({ phoneCountry })}>
+          <Select label="País" value={p.phoneCountry || ''} onChange={phoneCountry => update({ phoneCountry })}>
+            <option value="">Selecciona</option>
             {countries.map(country => <option key={country}>{country}</option>)}
           </Select>
           <Field label="Teléfono" value={p.phoneNumber || p.phone?.replace(/^\+\d+\s*/, '')} onChange={phoneNumber => update({ phoneNumber })} error={phoneError} />
         </div>
         <Field
           label="LinkedIn"
-          value={p.links.find(link => link.label === 'LinkedIn')?.url}
+          value={(p.links || []).find(link => link.label === 'LinkedIn')?.url}
           onChange={url => updateLink('LinkedIn', url)}
         />
         {showPhoto && (

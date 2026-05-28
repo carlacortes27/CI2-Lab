@@ -1,8 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 import { exampleCv } from '../data/example-cv.js';
+import { createBlankCv } from '../data/blank-cv.js';
 import {
-  saveCv, loadCv, getIndex, getActiveCvId, setActiveCvId, setSchemaVersion,
+  saveCv, setActiveCvId, setSchemaVersion,
 } from '../lib/storage.js';
 
 const CvContext = createContext(null);
@@ -33,6 +34,9 @@ function cvReducer(cv, action) {
     case 'LOAD_CV':
     case 'SET_CV':
       return action.payload;
+
+    case 'RESET_CV':
+      return createBlankCv();
 
     case 'UPDATE_PERSONAL':
       return withUpdated({ ...cv, personal: { ...cv.personal, ...action.payload } });
@@ -217,17 +221,7 @@ function cvReducer(cv, action) {
 
 export function CvProvider({ children }) {
   const initialCv = (() => {
-    const index = getIndex();
-    const activeId = getActiveCvId();
-    if (activeId) {
-      const saved = loadCv(activeId);
-      if (saved) return normalizeCv(saved);
-    }
-    if (index.length > 0) {
-      const saved = loadCv(index[0]);
-      if (saved) return normalizeCv(saved);
-    }
-    return normalizeCv(exampleCv);
+    return normalizeCv(createBlankCv());
   })();
 
   const [cv, dispatch] = useReducer(cvReducer, initialCv);

@@ -36,7 +36,7 @@ export default function CreateCVPage({ onNavigate }) {
     setStatus('');
     setLoading('pdf');
     try {
-      await downloadAsPDF(cv.personal?.fullName || 'cv-comillas');
+      await downloadAsPDF(cv);
       setStatus('PDF descargado correctamente.');
     } catch (err) {
       setStatus(`Error al generar PDF: ${err.message}`);
@@ -51,8 +51,17 @@ export default function CreateCVPage({ onNavigate }) {
     // 'create' no hace nada (ya estamos aquí)
   }
 
+  function handleClearForm() {
+    dispatch({ type: 'RESET_CV' });
+    setStatus('Formulario limpio.');
+  }
+
   // Acciones del toolbar del header
   const toolbarActions = [
+    {
+      label: 'Limpiar formulario',
+      onClick: handleClearForm,
+    },
     {
       label:   loading === 'spell' ? 'Corrigiendo' : 'Corrección ortográfica',
       loading: loading === 'spell',

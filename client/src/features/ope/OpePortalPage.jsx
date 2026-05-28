@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { flushSync } from 'react-dom';
 import { getOffers, getEvents } from '../../lib/api.js';
+import { useAuth } from '../../context/useAuth.js';
 import OfferDetail        from './OfferDetail.jsx';
 import PortalLayout       from '../../layouts/PortalLayout.jsx';
 import { T }              from '../../styles/theme.js';
@@ -857,10 +858,13 @@ function TabPlaceholder({ title }) {
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function OpePortalPage({
   onNavigate,
-  userName   = 'Jaime Puente Sánchez',
-  userDegree = '4º ICAI',
+  userName,
+  userDegree,
 }) {
-  const firstName = userName.split(' ')[0];
+  const { user } = useAuth();
+  const displayName = user?.name?.trim() || userName?.trim() || 'Usuario';
+  const displayDetail = user?.email || userDegree || '';
+  const firstName = displayName.split(' ')[0];
 
   const [activeSection, setActiveSection] = useState('inicio');
   const [offers,        setOffers]        = useState([]);
@@ -916,8 +920,8 @@ export default function OpePortalPage({
         activeSection="ofertas"
         onSection={changeSection}
         onNavigate={onNavigate}
-        userName={userName}
-        userDegree={userDegree}
+        userName={displayName}
+        userDegree={displayDetail}
       >
         <OfferDetail offer={selectedOffer} onBack={() => setSelectedOffer(null)} />
       </PortalLayout>
@@ -987,8 +991,8 @@ export default function OpePortalPage({
       activeSection={activeSection}
       onSection={changeSection}
       onNavigate={onNavigate}
-      userName={userName}
-      userDegree={userDegree}
+      userName={displayName}
+      userDegree={displayDetail}
       rightPanel={<CandidaturasPanel onSection={changeSection} vtActive={activeSection === 'inicio'} />}
       rightPanelVisible={activeSection === 'inicio'}
     >
