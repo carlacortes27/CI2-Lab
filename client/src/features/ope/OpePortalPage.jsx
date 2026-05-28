@@ -415,18 +415,16 @@ function TabCandidaturas() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24, viewTransitionName: 'cand-card' }}>
       <h1 style={{ fontSize: 28, fontWeight: 700, color: T.t1, fontFamily: T.font }}>Mis candidaturas</h1>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
-        <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard, textAlign: 'center', padding: '20px 8px' }}>
-          <StatBox value={counts.enviadas}   label="Enviadas"    color={T.t2} />
-        </div>
-        <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard }}>
-          <StatBox value={counts.revision}   label="En revisión" color="#F5A623" />
-        </div>
-        <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard }}>
-          <StatBox value={counts.entrevista} label="Entrevista"  color="#2563EB" />
-        </div>
-        <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard }}>
-          <StatBox value={counts.aceptada}   label="Aceptadas"   color="#16A34A" />
-        </div>
+        {[
+          { value: counts.enviadas,   label: 'Enviadas',    color: T.t2       },
+          { value: counts.revision,   label: 'En revisión', color: '#F5A623'  },
+          { value: counts.entrevista, label: 'Entrevista',  color: '#2563EB'  },
+          { value: counts.aceptada,   label: 'Aceptadas',   color: '#16A34A'  },
+        ].map(({ value, label, color }) => (
+          <div key={label} style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
+            <StatBox value={value} label={label} color={color} />
+          </div>
+        ))}
       </div>
       <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard }}>
         {MOCK_CANDIDATURAS.map((c, i) => (
