@@ -55,13 +55,23 @@ async function runBridge(command, args = []) {
   return output ? JSON.parse(output) : null;
 }
 
+let h2Available = true;
+
 export function initDatabase() {
   if (!jdbcUrlLogged) {
     console.log(`JDBC URL usada por backend: ${jdbcUrl}`);
     jdbcUrlLogged = true;
   }
-  readyPromise ??= runBridge('init');
+  readyPromise ??= runBridge('init').catch(err => {
+    h2Available = false;
+    console.warn('H2 no disponible (requiere Java). Auth deshabilitado:', err.message);
+    return null;
+  });
   return readyPromise;
+}
+
+function requireH2() {
+  if (!h2Available) throw new Error('Base de datos no disponible (requiere Java instalado)');
 }
 
 export function getJdbcUrl() {
@@ -70,20 +80,24 @@ export function getJdbcUrl() {
 
 export async function findUserByEmail(email) {
   await initDatabase();
+  requireH2();
   return runBridge('findByEmail', [email]);
 }
 
 export async function findUserById(id) {
   await initDatabase();
+  requireH2();
   return runBridge('findById', [String(id)]);
 }
 
 export async function createUser({ name, email, passwordHash }) {
   await initDatabase();
+  requireH2();
   return runBridge('createUser', [name, email, passwordHash]);
 }
 
 export async function listUsers() {
   await initDatabase();
+  requireH2();
   return runBridge('listUsers');
 }
