@@ -12,6 +12,7 @@ export default function UploadCVPage({ onNavigate }) {
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
   const [converted, setConverted] = useState(false);
+  const [selectedBlockId, setSelectedBlockId] = useState('summary');
 
   function pickFile(selected) {
     const next = selected?.[0];
@@ -25,12 +26,14 @@ export default function UploadCVPage({ onNavigate }) {
 
     setFile(next);
     setConverted(false);
+    setSelectedBlockId('summary');
     setStatus(`PDF seleccionado: ${next.name}. Ahora puedes elegir plantilla y extraer la informacion.`);
   }
 
   function resetUpload() {
     setFile(null);
     setConverted(false);
+    setSelectedBlockId('summary');
     setStatus('');
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
@@ -45,6 +48,7 @@ export default function UploadCVPage({ onNavigate }) {
         const cvWithStyle = { ...result.cvData, style: { ...result.cvData.style, ...cv.style } };
         dispatch({ type: 'SET_CV', payload: cvWithStyle });
         setConverted(true);
+        setSelectedBlockId('summary');
         setStatus('Informacion extraida. Elige una plantilla para reorganizar el CV.');
       }
     } catch (error) {
@@ -140,7 +144,7 @@ export default function UploadCVPage({ onNavigate }) {
           </div>
         )}
 
-        {converted && <CVPartEditor />}
+        {converted && <CVPartEditor selectedBlockId={selectedBlockId} />}
       </section>
 
       <section className="upload-side">
@@ -152,7 +156,11 @@ export default function UploadCVPage({ onNavigate }) {
               <>
                 <h2 className="preview-title">Preview del nuevo CV</h2>
                 <div className="preview-mini">
-                  <CVPreview />
+                  <CVPreview
+                    editable
+                    selectedBlockId={selectedBlockId}
+                    onSelectBlock={setSelectedBlockId}
+                  />
                 </div>
               </>
             ) : (

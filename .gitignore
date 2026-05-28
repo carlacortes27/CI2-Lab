@@ -2,4 +2,8 @@ node_modules/
 client/dist/
 server/data/
 server/src/db/*.class
+.env
+.env.*
+!.env.example
+!server/.env.example
 *.log
