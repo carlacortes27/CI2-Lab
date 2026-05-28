@@ -47,7 +47,7 @@ export default function UploadCVPage({ onNavigate }) {
     setLoading(true);
     setStatus('Generando PDF…');
     try {
-      await downloadAsPDF(cv.personal?.fullName || 'cv-comillas');
+      await downloadAsPDF(cv);
       setStatus('PDF descargado.');
     } catch (error) {
       setStatus(`Error: ${error.message}`);

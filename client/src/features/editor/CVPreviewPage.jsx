@@ -13,7 +13,7 @@ export default function CVPreviewPage({ onNavigate }) {
     setStatus('');
     setLoading(true);
     try {
-      await downloadAsPDF(cv.personal?.fullName || 'cv-comillas');
+      await downloadAsPDF(cv);
       setStatus('PDF descargado correctamente.');
     } catch (error) {
       setStatus(`Error: ${error.message}`);
