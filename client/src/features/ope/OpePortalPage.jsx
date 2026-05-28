@@ -887,11 +887,17 @@ export default function OpePortalPage({
 
   function changeSection(key) {
     if (!document.startViewTransition) {
+      setSelectedOffer(null);
+      setSelectedEvent(null);
       setActiveSection(key);
       return;
     }
     document.startViewTransition(() => {
-      flushSync(() => setActiveSection(key));
+      flushSync(() => {
+        setSelectedOffer(null);
+        setSelectedEvent(null);
+        setActiveSection(key);
+      });
     });
   }
 
