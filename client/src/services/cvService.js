@@ -73,6 +73,7 @@ export async function downloadAsPDF(cvName = 'cv-comillas') {
   document.body.appendChild(clone);
 
   try {
+    console.log('[PDF] Iniciando html2canvas...');
     const canvas = await html2canvas(clone, {
       scale: 2,
       useCORS: true,
@@ -81,12 +82,17 @@ export async function downloadAsPDF(cvName = 'cv-comillas') {
       width: 794,
       height: 1123,
     });
+    console.log('[PDF] Canvas generado:', canvas.width, 'x', canvas.height);
 
     const imgData = canvas.toDataURL('image/jpeg', 0.93);
+    console.log('[PDF] imgData length:', imgData.length);
+
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+    console.log('[PDF] Imagen añadida al PDF, descargando...');
 
     const blob = pdf.output('blob');
+    console.log('[PDF] Blob size:', blob.size);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -94,7 +100,8 @@ export async function downloadAsPDF(cvName = 'cv-comillas') {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    console.log('[PDF] Descarga disparada.');
   } finally {
     if (document.body.contains(clone)) document.body.removeChild(clone);
   }
