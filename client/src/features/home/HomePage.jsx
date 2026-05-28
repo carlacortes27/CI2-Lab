@@ -123,7 +123,16 @@ export default function HomePage({ onNavigate }) {
               <p>{card.text}</p>
             )}
             {!card.isContact && (
-              <button type="button" onClick={() => onNavigate(card.page)}>
+              <button 
+                type="button" 
+                onClick={() => {
+                  if (!user && ['create', 'upload', 'ope'].includes(card.page)) {
+                    onNavigate('login');
+                  } else {
+                    onNavigate(card.page);
+                  }
+                }}
+              >
                 {card.action}
               </button>
             )}
