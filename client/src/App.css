@@ -525,6 +525,56 @@ body:has([data-shell]) .back-button {
   padding: 11px 12px;
 }
 
+.photo-field {
+  grid-column: 1 / -1;
+}
+
+.photo-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.photo-upload-preview {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--gold-soft);
+  color: #7c2d12;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.photo-upload-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-upload-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.photo-upload-controls input[type='file'] {
+  width: min(100%, 320px);
+}
+
+.field-hint {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .form-field input:disabled {
   background: #f3f4f6;
   color: #9ca3af;
