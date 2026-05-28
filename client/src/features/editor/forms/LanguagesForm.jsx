@@ -5,7 +5,7 @@ const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Nativo'];
 const SECTION = 'languages';
 
 function emptyItem() {
-  return { id: crypto.randomUUID(), name: '', level: 'B2', certificate: '', note: '' };
+  return { id: crypto.randomUUID(), name: '', level: '', certificate: '', note: '' };
 }
 
 export default function LanguagesForm() {
@@ -23,6 +23,7 @@ export default function LanguagesForm() {
           <div className="form-grid four">
             <Field label="Idioma" value={item.name} onChange={name => update(item.id, { name })} />
             <Select label="Nivel" value={String(item.level)} onChange={level => update(item.id, { level })}>
+              <option value="">Selecciona</option>
               {levels.map(level => <option key={level}>{level}</option>)}
             </Select>
             <Field label="Certificado opcional" value={item.certificate} onChange={certificate => update(item.id, { certificate })} placeholder="Cambridge, IELTS, TOEFL..." />

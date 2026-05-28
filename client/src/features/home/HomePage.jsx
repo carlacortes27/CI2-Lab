@@ -79,7 +79,7 @@ export default function HomePage({ onNavigate }) {
             <div className="panel-grid">
               <div className="panel-sidebar" />
               <div className="panel-main">
-                <strong>Hola, Marta</strong>
+                <strong>{user ? `Hola, ${user.name}` : 'CV Comillas'}</strong>
                 <div className="panel-stats">
                   <span>5</span>
                   <span>12</span>
