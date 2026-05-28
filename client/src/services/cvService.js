@@ -77,10 +77,20 @@ export async function downloadAsPDF(cvName = 'cv-comillas') {
     const canvas = await html2canvas(clone, {
       scale: 2,
       useCORS: true,
+      allowTaint: true,
       logging: false,
       backgroundColor: '#ffffff',
       width: 794,
       height: 1123,
+      onclone: (clonedDoc) => {
+        // Eliminar Google Fonts para que html2canvas no se quede bloqueado esperando la fuente
+        clonedDoc.querySelectorAll('style').forEach(s => {
+          s.textContent = s.textContent.replace(
+            /@import\s+url\([^)]*fonts\.googleapis\.com[^)]*\)[^;]*;/g, ''
+          );
+        });
+        clonedDoc.querySelectorAll('link[href*="fonts.googleapis.com"]').forEach(l => l.remove());
+      },
     });
     console.log('[PDF] Canvas generado:', canvas.width, 'x', canvas.height);
 
