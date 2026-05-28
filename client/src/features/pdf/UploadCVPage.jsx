@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import CVPreview from '../editor/forms/CVPreview.jsx';
 import TemplateSelector from '../editor/forms/TemplateSelector.jsx';
 import { downloadAsPDF, improveUploadedCV } from '../../services/cvService.js';
@@ -6,6 +6,7 @@ import { useCv } from '../../context/CvContext.jsx';
 
 export default function UploadCVPage({ onNavigate }) {
   const { cv, dispatch } = useCv();
+  const fileInputRef = useRef(null);
   const [file, setFile] = useState(null);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
@@ -14,29 +15,39 @@ export default function UploadCVPage({ onNavigate }) {
   function pickFile(selected) {
     const next = selected?.[0];
     if (!next) return;
+
     if (next.type !== 'application/pdf') {
       setStatus('Solo se aceptan archivos PDF.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
+
     setFile(next);
     setConverted(false);
-    setStatus(`Archivo cargado: ${next.name}`);
+    setStatus(`PDF seleccionado: ${next.name}. Ahora puedes elegir plantilla y extraer la informacion.`);
   }
 
-  async function convertToTemplate() {
-    if (!file) return;
+  function resetUpload() {
+    setFile(null);
+    setConverted(false);
+    setStatus('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  async function extractPdfData(pdfFile) {
     setLoading(true);
-    setStatus('Extrayendo contenido del PDF… puede tardar unos segundos.');
+    setStatus(`Leyendo ${pdfFile.name} y extrayendo la informacion del CV...`);
+
     try {
-      const result = await improveUploadedCV(file);
+      const result = await improveUploadedCV(pdfFile);
       if (result?.cvData) {
-        // Preservar la plantilla que el usuario haya elegido
         const cvWithStyle = { ...result.cvData, style: { ...result.cvData.style, ...cv.style } };
         dispatch({ type: 'SET_CV', payload: cvWithStyle });
         setConverted(true);
-        setStatus('CV extraído correctamente. Elige una plantilla y descarga tu PDF.');
+        setStatus('Informacion extraida. Elige una plantilla para reorganizar el CV.');
       }
     } catch (error) {
+      setConverted(false);
       setStatus(`Error: ${error.message}`);
     } finally {
       setLoading(false);
@@ -45,7 +56,7 @@ export default function UploadCVPage({ onNavigate }) {
 
   async function handleDownload() {
     setLoading(true);
-    setStatus('Generando PDF…');
+    setStatus('Generando PDF...');
     try {
       await downloadAsPDF(cv);
       setStatus('PDF descargado.');
@@ -60,8 +71,18 @@ export default function UploadCVPage({ onNavigate }) {
     <main className="upload-page">
       <section className="upload-card">
         <p className="eyebrow">CV Comillas</p>
-        <h1>Mejorar CV existente</h1>
-        <p>Sube tu CV en PDF, elige una plantilla y descarga tu CV renovado con el nuevo diseño.</p>
+        <h1>Subir o mejorar CV</h1>
+        <p>
+          Sube un PDF con tu CV. La aplicacion extrae sus datos y genera un CV nuevo
+          con la plantilla que elijas.
+        </p>
+
+        <ol className="upload-steps" aria-label="Flujo de conversion">
+          <li className={file ? 'done' : 'active'}>Subir PDF</li>
+          <li className={file ? 'active' : ''}>Elegir plantilla</li>
+          <li className={converted ? 'active' : ''}>Preview</li>
+          <li className={converted ? 'active' : ''}>Descargar PDF</li>
+        </ol>
 
         <label
           className="dropzone"
@@ -71,49 +92,81 @@ export default function UploadCVPage({ onNavigate }) {
             pickFile(event.dataTransfer.files);
           }}
         >
-          <input type="file" accept="application/pdf" onChange={event => pickFile(event.target.files)} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/pdf"
+            onChange={event => pickFile(event.target.files)}
+          />
           <span className="drop-icon">PDF</span>
-          <strong>{file ? file.name : 'Arrastra aquí tu CV en PDF'}</strong>
-          <small>{file ? `${Math.round(file.size / 1024)} KB` : 'o pulsa para seleccionar archivo'}</small>
+          <strong>{file ? file.name : 'Arrastra aqui tu CV en PDF'}</strong>
+          <small>
+            {file
+              ? `${Math.round(file.size / 1024)} KB. Pulsa aqui para elegir otro PDF.`
+              : 'o pulsa para seleccionar archivo'}
+          </small>
         </label>
 
+        {loading && <p className="status-message">Procesando el PDF...</p>}
         {status && <p className="status-message">{status}</p>}
 
-        <div className="upload-actions">
-          <button
-            type="button"
-            className="primary-button"
-            disabled={!file || loading}
-            onClick={convertToTemplate}
-          >
-            {loading && !converted ? 'Procesando…' : 'Convertir a plantilla'}
-          </button>
-
-          {converted && (
-            <>
-              <button type="button" disabled={loading} onClick={handleDownload}>
-                {loading ? 'Generando PDF…' : 'Descargar PDF'}
+        {file && (
+          <div className="upload-actions">
+            <button
+              type="button"
+              className={converted ? undefined : 'primary-button'}
+              disabled={loading}
+              onClick={() => extractPdfData(file)}
+            >
+              {loading ? 'Extrayendo...' : converted ? 'Volver a extraer informacion' : 'Extraer informacion del PDF'}
+            </button>
+            {converted && (
+              <button type="button" className="primary-button" disabled={loading} onClick={handleDownload}>
+                {loading ? 'Generando PDF...' : 'Descargar PDF'}
               </button>
+            )}
+            <button type="button" disabled={loading} onClick={() => fileInputRef.current?.click()}>
+              Subir otro PDF
+            </button>
+            <button type="button" disabled={loading} onClick={resetUpload}>
+              Empezar de nuevo
+            </button>
+            {converted && (
               <button type="button" onClick={() => onNavigate('create')}>
-                Editar en el editor
+                Editar datos extraidos
               </button>
-            </>
-          )}
-        </div>
-
-        {converted && (
-          <p style={{ marginTop: 12, fontSize: 13, color: '#6b7280' }}>
-            Cambia la plantilla en el panel derecho para ver diferentes estilos.
-          </p>
+            )}
+          </div>
         )}
       </section>
 
       <section className="upload-side">
-        <h2>Elige tu plantilla</h2>
-        <TemplateSelector />
-        <div className="preview-mini">
-          <CVPreview />
-        </div>
+        {file ? (
+          <>
+            <h2>Elige una plantilla</h2>
+            <TemplateSelector />
+            {converted ? (
+              <>
+                <h2 className="preview-title">Preview del nuevo CV</h2>
+                <div className="preview-mini">
+                  <CVPreview />
+                </div>
+              </>
+            ) : (
+              <div className="upload-empty-preview compact">
+                <span className="drop-icon">PDF</span>
+                <h2>Extrae los datos</h2>
+                <p>Despues de elegir plantilla, pulsa "Extraer informacion del PDF" para generar la preview.</p>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="upload-empty-preview">
+            <span className="drop-icon">CV</span>
+            <h2>Preview pendiente</h2>
+            <p>Cuando subas el PDF, aqui veras el nuevo CV generado con la informacion extraida.</p>
+          </div>
+        )}
       </section>
     </main>
   );
