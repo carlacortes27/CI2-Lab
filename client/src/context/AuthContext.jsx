@@ -6,8 +6,14 @@ const TOKEN_KEY = 'cvcomillas.authToken';
 const USER_KEY = 'cvcomillas.authUser';
 
 function loadStoredUser() {
-  const raw = localStorage.getItem(USER_KEY);
-  return raw ? JSON.parse(raw) : null;
+  try {
+    const raw = localStorage.getItem(USER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+    return null;
+  }
 }
 
 export function AuthProvider({ children }) {
@@ -17,6 +23,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!token) {
+      setCheckingSession(false);
       return;
     }
 

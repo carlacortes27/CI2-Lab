@@ -6,6 +6,8 @@ import { createUser, findUserByEmail, findUserById, getJdbcUrl, listUsers } from
 const router = express.Router();
 const sessions = new Map();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const TOKEN_SECRET = process.env.AUTH_TOKEN_SECRET || 'cvcomillas-local-auth-secret';
+const TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 7;
 
 function cleanUser(user) {
   if (!user) return null;
@@ -30,6 +32,47 @@ function validateCredentials({ email, password }) {
 function getBearerToken(req) {
   const header = req.get('authorization') || '';
   return header.startsWith('Bearer ') ? header.slice(7) : null;
+}
+
+function signTokenPayload(payload) {
+  return crypto
+    .createHmac('sha256', TOKEN_SECRET)
+    .update(payload)
+    .digest('base64url');
+}
+
+function createSessionToken(userId) {
+  const expiresAt = Date.now() + TOKEN_TTL_MS;
+  const nonce = crypto.randomBytes(16).toString('hex');
+  const payload = `${userId}.${expiresAt}.${nonce}`;
+  return `${payload}.${signTokenPayload(payload)}`;
+}
+
+function getUserIdFromToken(token) {
+  if (!token) return null;
+
+  const inMemoryUserId = sessions.get(token);
+  if (inMemoryUserId) return inMemoryUserId;
+
+  const parts = token.split('.');
+  if (parts.length !== 4) return null;
+
+  const [userId, expiresAt, nonce, signature] = parts;
+  const payload = `${userId}.${expiresAt}.${nonce}`;
+  const expectedSignature = signTokenPayload(payload);
+  if (signature.length !== expectedSignature.length) return null;
+
+  const validSignature = crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature)
+  );
+
+  const parsedUserId = Number(userId);
+  if (!validSignature || Number(expiresAt) < Date.now() || !Number.isInteger(parsedUserId)) {
+    return null;
+  }
+
+  return parsedUserId;
 }
 
 function maskHash(passwordHash) {
@@ -76,7 +119,7 @@ router.post('/register', async (req, res, next) => {
       throw insertError;
     }
 
-    const token = crypto.randomBytes(32).toString('hex');
+    const token = createSessionToken(user.id);
     sessions.set(token, user.id);
 
     res.status(201).json({ token, user: cleanUser(user) });
@@ -106,7 +149,7 @@ router.post('/login', async (req, res, next) => {
       return res.status(401).json({ error: 'La contrasena es incorrecta' });
     }
 
-    const token = crypto.randomBytes(32).toString('hex');
+    const token = createSessionToken(user.id);
     sessions.set(token, user.id);
 
     res.json({ token, user: cleanUser(user) });
@@ -118,7 +161,7 @@ router.post('/login', async (req, res, next) => {
 router.get('/me', async (req, res, next) => {
   try {
     const token = getBearerToken(req);
-    const userId = token ? sessions.get(token) : null;
+    const userId = getUserIdFromToken(token);
 
     if (!userId) {
       return res.status(401).json({ error: 'Sesion no iniciada' });
