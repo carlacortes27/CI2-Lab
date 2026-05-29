@@ -110,12 +110,14 @@ export default function CreateCVPage({ onNavigate }) {
       {/* Workspace: dos columnas scrollables */}
       <div style={{
         flex:               1,
+        minHeight:          0,
         overflow:           'hidden',
         display:            'grid',
         gridTemplateColumns: '1fr 1fr',
       }}>
         {/* Columna izquierda: selector de plantilla + formulario */}
         <div style={{
+          minHeight: 0,
           overflowY: 'auto',
           padding:   '28px 28px 40px',
           borderRight: `1px solid ${T.border}`,
@@ -139,6 +141,7 @@ export default function CreateCVPage({ onNavigate }) {
 
         {/* Columna derecha: vista previa A4 */}
         <div style={{
+          minHeight:       0,
           overflowY:       'auto',
           padding:         '28px 28px 40px',
           backgroundColor: T.bg,
@@ -162,7 +165,8 @@ export default function CreateCVPage({ onNavigate }) {
             backgroundColor: T.white,
             borderRadius:    T.radiusCard,
             boxShadow:       T.shadowElevated,
-            overflow:        'hidden',
+            overflow:        'visible',
+            flexShrink:      0,
           }}>
             <CVPreview />
           </div>

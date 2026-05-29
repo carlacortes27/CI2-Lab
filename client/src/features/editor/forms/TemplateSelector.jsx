@@ -9,11 +9,7 @@ const templates = [
 ];
 
 const fonts = ['Arial', 'Georgia', 'Times New Roman', 'Inter'];
-const fontSizes = [
-  ['compact', 'Compacto'],
-  ['medium', 'Medio'],
-  ['large', 'Grande'],
-];
+const fontSizes = ['8', '10', '11', '12', '14', '16', '18', '20', '22', '24'];
 
 export default function TemplateSelector() {
   const { cv, dispatch } = useCv();
@@ -50,10 +46,10 @@ export default function TemplateSelector() {
         <label>
           <span>Tamaño</span>
           <select
-            value={cv.style.fontSize || 'medium'}
+            value={cv.style.fontSize || '11'}
             onChange={event => dispatch({ type: 'UPDATE_STYLE', payload: { fontSize: event.target.value } })}
           >
-            {fontSizes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            {fontSizes.map(size => <option key={size} value={size}>{size}</option>)}
           </select>
         </label>
       </div>

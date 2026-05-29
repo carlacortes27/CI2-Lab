@@ -36,7 +36,7 @@ export default function CVPreview({ editable = false, selectedBlockId = '', onSe
   return (
     <article
       className={`cv-sheet template-${cv.style.template} font-${cv.style.fontSize || 'medium'}`}
-      style={{ '--accent': accent, fontFamily: cv.style.fontFamily }}
+      style={{ '--accent': accent, fontFamily: cv.style.fontFamily, ...sheetFontSize(cv.style.fontSize) }}
     >
       <header className="cv-head">
         {showPhoto ? <img className="cv-photo" src={p.photoUrl} alt="" /> : <div className="cv-avatar">{initials(p.fullName)}</div>}
@@ -70,6 +70,10 @@ export default function CVPreview({ editable = false, selectedBlockId = '', onSe
       })}
     </article>
   );
+}
+
+function sheetFontSize(size) {
+  return /^\d+$/.test(String(size || '')) ? { fontSize: `${size}px` } : {};
 }
 
 function PreviewSection({ sectionKey, data, labels, blockStyles, editable, selectedBlockId, onSelectBlock, dispatch }) {

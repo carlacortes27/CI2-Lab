@@ -283,6 +283,7 @@ export default function CVToolLayout({
       {/* GRID: Sidebar | Workspace */}
       <div style={{
         flex:               1,
+        minHeight:          0,
         overflow:           'hidden',
         display:            'flex',
       }}>
@@ -294,7 +295,7 @@ export default function CVToolLayout({
         />
 
         {/* Workspace: área principal */}
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           {children}
         </div>
       </div>

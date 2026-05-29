@@ -29,14 +29,7 @@ const sectionTabs = [
 ];
 
 const fonts = ['Arial', 'Georgia', 'Times New Roman', 'Inter'];
-const sizes = [
-  ['', 'Normal'],
-  ['9', 'Muy pequeno'],
-  ['10', 'Pequeno'],
-  ['11', 'Medio'],
-  ['12', 'Grande'],
-  ['14', 'Muy grande'],
-];
+const sizes = ['', '8', '10', '11', '12', '14', '16', '18', '20', '22', '24'];
 const languageLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Nativo'];
 const technicalGroups = [
   ['lenguajes', 'Lenguajes'],
@@ -144,7 +137,7 @@ export default function CVPartEditor({ selectedBlockId, onSelectBlock }) {
               disabled={!selected}
               onChange={event => updateStyle('fontSize', event.target.value)}
             >
-              {sizes.map(([value, label]) => <option key={value || 'default'} value={value}>{label}</option>)}
+              {sizes.map(size => <option key={size || 'default'} value={size}>{size || 'Plantilla'}</option>)}
             </select>
           </label>
         </div>
