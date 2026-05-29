@@ -1117,6 +1117,33 @@ body:has([data-shell]) .back-button {
   color: var(--muted);
 }
 
+.upload-photo-panel {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 16px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+}
+
+.upload-photo-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.upload-photo-copy strong {
+  color: var(--ink);
+}
+
+.upload-photo-copy small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .upload-actions button:disabled {
   cursor: not-allowed;
   opacity: 0.45;

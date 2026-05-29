@@ -219,13 +219,15 @@ function sectionHasContent(sectionKey, data) {
   if (sectionKey === 'summary') return hasText(data.text);
   if (sectionKey === 'technicalSkills') return Object.values(data.groups || {}).some(group => group.some(hasText));
   if (sectionKey === 'personalSkills') return (data.items || []).some(hasText);
+  if (sectionKey === 'skills') return (data.items || []).some(item => itemHasContent(item, ['name', 'category']));
+  if (sectionKey === 'interests') return (data.items || []).some(hasText);
   if (sectionKey === 'languages') return (data.items || []).some(item => itemHasContent(item, ['name', 'level', 'certificate', 'note']));
   if (sectionKey === 'certifications') return (data.items || []).some(item => itemHasContent(item, ['name', 'issuer', 'level', 'date']));
   if (sectionKey === 'volunteering') return (data.items || []).some(item => itemHasContent(item, ['organization', 'date', 'description']));
   if (sectionKey === 'education') return (data.items || []).some(item => itemHasContent(item, ['degree', 'institution', 'location', 'duration', 'startDate', 'endDate']));
   if (sectionKey === 'experience') return (data.items || []).some(item => itemHasContent(item, ['role', 'company', 'duration', 'startDate', 'endDate']));
   if (sectionKey === 'projects') return (data.items || []).some(item => itemHasContent(item, ['name', 'description', 'technologies', 'link']));
-  return true;
+  return hasNestedContent(data);
 }
 
 function itemHasContent(item, fields) {
@@ -234,6 +236,17 @@ function itemHasContent(item, fields) {
 
 function hasText(value) {
   return String(value || '').trim().length > 0;
+}
+
+function hasNestedContent(value) {
+  if (Array.isArray(value)) return value.some(hasNestedContent);
+  if (value && typeof value === 'object') {
+    return Object.entries(value)
+      .filter(([key]) => !['id', 'visible'].includes(key))
+      .some(([, entry]) => hasNestedContent(entry));
+  }
+  if (typeof value === 'boolean') return false;
+  return hasText(value);
 }
 
 function textStyle(style = {}) {

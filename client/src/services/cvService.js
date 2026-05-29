@@ -109,6 +109,9 @@ function buildCVPdf(pdf, cv) {
   const black  = { r: 30,  g: 30,  b: 30  };
   const gray   = { r: 90,  g: 90,  b: 90  };
   const light  = { r: 150, g: 150, b: 150 };
+  const hasPhoto = isImageDataUrl(p.photoUrl);
+  const photoSize = 24;
+  const headerTextW = hasPhoto ? contentW - photoSize - 10 : contentW;
 
   let y = 46; // cursor vertical
 
@@ -121,22 +124,26 @@ function buildCVPdf(pdf, cv) {
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(20);
   const name = p.fullName || 'Nombre completo';
-  pdf.text(name, marginL, 15);
+  pdf.text(name, marginL, 15, { maxWidth: headerTextW });
 
   // Titular
   if (p.headline) {
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(10);
-    pdf.text(p.headline, marginL, 23);
+    pdf.text(p.headline, marginL, 23, { maxWidth: headerTextW });
   }
 
   // Contacto
-  const contactItems = [p.phone, p.email, p.location, ...(p.links || []).map(l => l.url)].filter(Boolean);
+  const contactItems = [p.phone, p.email, p.location, ...(p.links || []).map(l => l.url)].filter(hasText);
   if (contactItems.length) {
     pdf.setFontSize(8);
     pdf.setTextColor(220, 220, 220);
     const contactLine = contactItems.join('  ·  ');
-    pdf.text(contactLine, marginL, 31, { maxWidth: contentW });
+    pdf.text(contactLine, marginL, 31, { maxWidth: headerTextW });
+  }
+
+  if (hasPhoto) {
+    addHeaderPhoto(pdf, p.photoUrl, marginL + contentW - photoSize, 7, photoSize);
   }
 
   // ── Secciones ─────────────────────────────────────────────────────────────
@@ -220,13 +227,13 @@ function buildCVPdf(pdf, cv) {
         break;
 
       case 'technicalSkills': {
-        const allSkills = Object.values(sec.groups || {}).flat().filter(Boolean);
+        const allSkills = Object.values(sec.groups || {}).flat().filter(hasText);
         y = addBulletList(pdf, allSkills, marginL, y, contentW, 9, black);
         break;
       }
 
       case 'personalSkills':
-        y = addBulletList(pdf, sec.items || [], marginL, y, contentW, 9, black);
+        y = addBulletList(pdf, (sec.items || []).filter(hasText), marginL, y, contentW, 9, black);
         break;
 
       case 'languages':
@@ -331,14 +338,28 @@ function addTimelineItem(pdf, { sectionKey, item, title, titleField, subtitle, d
 }
 
 function addBulletList(pdf, items, x, y, maxW, fontSize, color) {
+  const visibleItems = (items || []).filter(hasText);
+  if (!visibleItems.length) return y;
+
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(fontSize);
   pdf.setTextColor(color.r, color.g, color.b);
 
   // Mostrar como lista inline separada por comas para ahorrar espacio
-  const line = items.join('  ·  ');
+  const line = visibleItems.join('  ·  ');
   y = addWrappedText(pdf, line, x, y, maxW, fontSize, color, 'normal', 4.5);
   return y;
+}
+
+function addHeaderPhoto(pdf, photoUrl, x, y, size) {
+  try {
+    const format = photoUrl.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+    pdf.setFillColor(255, 255, 255);
+    pdf.rect(x - 1, y - 1, size + 2, size + 2, 'F');
+    pdf.addImage(photoUrl, format, x, y, size, size);
+  } catch (error) {
+    console.warn('[PDF] No se pudo insertar la imagen del CV.', error);
+  }
 }
 
 function addWrappedText(pdf, text, x, y, maxW, fontSizeOrColor, colorOrOptions, style, lineH) {
@@ -410,13 +431,15 @@ function sectionHasContent(sectionKey, data) {
   if (sectionKey === 'summary') return hasText(data.text);
   if (sectionKey === 'technicalSkills') return Object.values(data.groups || {}).some(group => group.some(hasText));
   if (sectionKey === 'personalSkills') return (data.items || []).some(hasText);
+  if (sectionKey === 'skills') return (data.items || []).some(item => itemHasContent(item, ['name', 'category']));
+  if (sectionKey === 'interests') return (data.items || []).some(hasText);
   if (sectionKey === 'languages') return (data.items || []).some(item => itemHasContent(item, ['name', 'level', 'certificate', 'note']));
   if (sectionKey === 'certifications') return (data.items || []).some(item => itemHasContent(item, ['name', 'issuer', 'level', 'date']));
   if (sectionKey === 'volunteering') return (data.items || []).some(item => itemHasContent(item, ['organization', 'date', 'description']));
   if (sectionKey === 'education') return (data.items || []).some(item => itemHasContent(item, ['degree', 'institution', 'location', 'duration', 'startDate', 'endDate']));
   if (sectionKey === 'experience') return (data.items || []).some(item => itemHasContent(item, ['role', 'company', 'duration', 'startDate', 'endDate']));
   if (sectionKey === 'projects') return (data.items || []).some(item => itemHasContent(item, ['name', 'description', 'technologies', 'link']));
-  return true;
+  return hasNestedContent(data);
 }
 
 function itemHasContent(item, fields) {
@@ -425,6 +448,21 @@ function itemHasContent(item, fields) {
 
 function hasText(value) {
   return String(value || '').trim().length > 0;
+}
+
+function isImageDataUrl(value) {
+  return /^data:image\/(jpeg|jpg|png);base64,/i.test(String(value || ''));
+}
+
+function hasNestedContent(value) {
+  if (Array.isArray(value)) return value.some(hasNestedContent);
+  if (value && typeof value === 'object') {
+    return Object.entries(value)
+      .filter(([key]) => !['id', 'visible'].includes(key))
+      .some(([, entry]) => hasNestedContent(entry));
+  }
+  if (typeof value === 'boolean') return false;
+  return hasText(value);
 }
 
 function dateRange(item) {
