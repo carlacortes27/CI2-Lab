@@ -27,6 +27,10 @@ export function checkHealth() {
 export function getOffers(filters = {}) {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([k, v]) => {
+    if (Array.isArray(v)) {
+      v.filter(Boolean).forEach(item => params.append(k, item));
+      return;
+    }
     if (v !== undefined && v !== null && v !== '') params.append(k, v);
   });
   const qs = params.toString();

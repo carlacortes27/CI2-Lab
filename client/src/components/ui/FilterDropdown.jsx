@@ -6,9 +6,9 @@
  */
 import { useState } from 'react';
 import { T } from '../../styles/theme.js';
-import { ChevronDownIcon } from './Icons.jsx';
+import { CheckIcon, ChevronDownIcon } from './Icons.jsx';
 
-export default function FilterDropdown({ label, options = [], value = '', onChange }) {
+export default function FilterDropdown({ label, options = [], value = '', onChange, multiple = false }) {
   const [open, setOpen] = useState(false);
 
   // options puede ser array de strings o array de {value, label}
@@ -17,12 +17,43 @@ export default function FilterDropdown({ label, options = [], value = '', onChan
     : { value: o.value ?? o, label: o.label ?? o };
 
   const opts = options.map(normalize);
+  const values = multiple ? (Array.isArray(value) ? value : value ? [value] : []) : [];
   const selected = opts.find(o => o.value === value);
-  const displayLabel = selected ? selected.label : label;
-  const active = Boolean(value);
+  const selectedLabels = opts.filter(o => values.includes(o.value)).map(o => o.label);
+  const displayLabel = multiple
+    ? selectedLabels.length === 0
+      ? label
+      : selectedLabels.length === 1
+        ? selectedLabels[0]
+        : `${label} (${selectedLabels.length})`
+    : selected ? selected.label : label;
+  const active = multiple ? values.length > 0 : Boolean(value);
+
+  function isSelected(optionValue) {
+    return multiple ? values.includes(optionValue) : value === optionValue;
+  }
+
+  function handleSelect(optionValue) {
+    if (!multiple) {
+      onChange(optionValue);
+      setOpen(false);
+      return;
+    }
+
+    if (!optionValue) {
+      onChange([]);
+      return;
+    }
+
+    onChange(
+      values.includes(optionValue)
+        ? values.filter(item => item !== optionValue)
+        : [...values, optionValue]
+    );
+  }
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', zIndex: open ? 1000 : 1 }}>
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
@@ -53,14 +84,14 @@ export default function FilterDropdown({ label, options = [], value = '', onChan
         <>
           {/* overlay para cerrar */}
           <div
-            style={{ position: 'fixed', inset: 0, zIndex: 20 }}
+            style={{ position: 'fixed', inset: 0, zIndex: 999 }}
             onClick={() => setOpen(false)}
           />
           <div style={{
             position:        'absolute',
             top:             'calc(100% + 8px)',
             left:            0,
-            zIndex:          30,
+            zIndex:          1001,
             backgroundColor: T.white,
             border:          `1px solid ${T.border}`,
             borderRadius:    T.radiusInput,
@@ -73,15 +104,18 @@ export default function FilterDropdown({ label, options = [], value = '', onChan
               <button
                 key={v}
                 type="button"
-                onClick={() => { onChange(v); setOpen(false); }}
+                onClick={() => handleSelect(v)}
                 style={{
-                  display:         'block',
+                  display:         'flex',
+                  alignItems:      'center',
+                  justifyContent:  'space-between',
+                  gap:             12,
                   width:           '100%',
                   textAlign:       'left',
                   padding:         '10px 16px',
                   fontSize:        13,
-                  fontWeight:      value === v ? 600 : 400,
-                  color:           value === v ? T.orange : T.t1,
+                  fontWeight:      isSelected(v) ? 600 : 400,
+                  color:           isSelected(v) ? T.orange : T.t1,
                   backgroundColor: 'transparent',
                   border:          'none',
                   borderBottom:    `1px solid ${T.border}`,
@@ -91,7 +125,8 @@ export default function FilterDropdown({ label, options = [], value = '', onChan
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = T.hoverBg}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                {l}
+                <span>{l}</span>
+                {isSelected(v) && <CheckIcon size={14} color={T.orange} />}
               </button>
             ))}
           </div>
