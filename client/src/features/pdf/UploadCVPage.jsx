@@ -45,7 +45,11 @@ export default function UploadCVPage({ onNavigate }) {
     try {
       const result = await improveUploadedCV(pdfFile);
       if (result?.cvData) {
-        const cvWithStyle = { ...result.cvData, style: { ...result.cvData.style, ...cv.style } };
+        const cvWithStyle = {
+          ...result.cvData,
+          style: { ...result.cvData.style, ...cv.style },
+          preferences: { ...(result.cvData.preferences || {}), ...(cv.preferences || {}) },
+        };
         dispatch({ type: 'SET_CV', payload: cvWithStyle });
         setConverted(true);
         setSelectedBlockId('summary');

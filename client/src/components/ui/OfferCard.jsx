@@ -2,6 +2,8 @@ import { T } from '../../styles/theme.js';
 import Button from './Button.jsx';
 import CompanyLogo from './CompanyLogo.jsx';
 import { PinIcon, MonitorIcon, ClockIcon } from './Icons.jsx';
+import { useCv } from '../../context/CvContext.jsx';
+import { calculateMatchScore } from '../../features/ope/matchScore.js';
 
 const MODALITY_LABEL = { presencial: 'Presencial', hibrido: 'Híbrido', remoto: 'Remoto' };
 
@@ -18,14 +20,10 @@ function sectorStyle(sector) {
   return SECTOR_STYLES[sector] ?? { bg: T.orangeBg, color: '#B45309' };
 }
 
-function mockScore(offerId, rank) {
-  const base  = Math.max(78, 97 - rank * 5);
-  const tweak = (offerId.charCodeAt(offerId.length - 1) % 5) - 2;
-  return Math.min(99, Math.max(72, base + tweak));
-}
-
-export default function OfferCard({ offer, rank = 0, onClick }) {
-  const score       = mockScore(offer.id, rank);
+export default function OfferCard({ offer, onClick }) {
+  const { cv } = useCv();
+  const match = calculateMatchScore(cv, offer);
+  const score = match.percentage;
   const isDestacada = score >= 90;
   const tags        = offer.requirements?.hardSkills?.slice(0, 3) ?? [];
   const sector      = offer.sector || 'Prácticas';
@@ -129,7 +127,7 @@ export default function OfferCard({ offer, rank = 0, onClick }) {
             fontSize:        11,
             fontWeight:      700,
             fontFamily:      T.font,
-          }}>
+          }} title={match.explanation}>
             {score}% match
           </span>
           {tags.map(tag => (
