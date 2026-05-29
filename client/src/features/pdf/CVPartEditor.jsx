@@ -91,13 +91,6 @@ export default function CVPartEditor({ selectedBlockId, onSelectBlock }) {
             {selected ? selected.label : 'Elige una seccion para empezar'}
           </p>
         </div>
-        <button
-          type="button"
-          disabled={!selected || !cv.style?.blockStyles?.[selected.id]}
-          onClick={() => dispatch({ type: 'RESET_BLOCK_STYLE', payload: { blockId: selected.id } })}
-        >
-          Quitar estilo
-        </button>
       </div>
 
       <div className="part-section-tabs" aria-label="Secciones editables">
