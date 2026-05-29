@@ -4,9 +4,10 @@
  * Usa PortalLayout para la estructura de shells (header + sidebar + grid).
  * Gestiona las pestañas y el estado de datos.
  */
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { advanceApplication, applyToOffer, getApplications, getOffers, getEvents, rejectApplication, saveOffer } from '../../lib/api.js';
+import { improveUploadedCV } from '../../services/cvService.js';
 import { useAuth } from '../../context/useAuth.js';
 import { useCv } from '../../context/CvContext.jsx';
 import OfferDetail        from './OfferDetail.jsx';
@@ -51,6 +52,8 @@ const IDIOMAS     = ['Inglés', 'Francés', 'Alemán', 'Español'];
 const NIVELES_IDIOMA = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Nativo'];
 const TECNOLOGIAS = ['Excel', 'PowerPoint', 'Python', 'SQL', 'Power BI', 'AutoCAD', 'MATLAB', 'AWS', 'Java', 'Git', 'C/C++', 'R Studio'];
 const AREAS_INTERES = ['datos', 'consultoría', 'energía', 'renovables', 'finanzas', 'sostenibilidad', 'cloud', 'operaciones', 'estrategia', 'ingeniería'];
+const ACCEPTED_PHOTO_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const MAX_PHOTO_SIZE_MB = 2;
 
 function applicationToCard(application) {
   const offer = application.offer || {};
@@ -1233,6 +1236,347 @@ function LanguagePreferences({ value = [], onChange, disabled = false }) {
   );
 }
 
+function profileInitials(name = '') {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase() || '')
+    .join('') || 'CV';
+}
+
+function calculateProfileCompletion(cv, preferences) {
+  const sections = cv.sections || {};
+  const checks = [
+    cv.personal?.fullName,
+    cv.personal?.email,
+    cv.personal?.location,
+    cv.personal?.photoUrl,
+    sections.summary?.text,
+    sections.education?.items?.length,
+    sections.projects?.items?.length,
+    sections.languages?.items?.length,
+    preferences.locations?.length,
+    preferences.startDate,
+  ];
+
+  return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+}
+
+function ProfileOverview({ cv, preferences, dispatch }) {
+  const cvUploadRef = useRef(null);
+  const [profileFieldsOpen, setProfileFieldsOpen] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState('');
+  const [uploadingCv, setUploadingCv] = useState(false);
+  const personal = cv.personal || {};
+  const sections = cv.sections || {};
+  const education = sections.education?.items?.find(item => item.current) || sections.education?.items?.[0];
+  const fullName = personal.fullName || 'Nombre del usuario';
+  const degree = personal.headline || education?.degree || 'Estudios pendientes de completar';
+  const university = education?.institution || 'Universidad pendiente de completar';
+  const course = education?.course || education?.year || (education?.current ? 'En curso' : '');
+  const email = personal.email || 'Correo pendiente';
+  const location = personal.location || 'Residencia pendiente';
+  const summary = sections.summary?.text || 'Completa tu resumen profesional en el CV para mejorar el match con las ofertas.';
+  const completion = calculateProfileCompletion(cv, preferences);
+  const recommendations = [
+    { done: Boolean(sections.projects?.items?.length), label: 'Añade tus proyectos académicos' },
+    { done: Boolean(sections.languages?.items?.length), label: 'Completa tus idiomas' },
+    { done: Boolean(preferences.startDate), label: 'Especifica tu disponibilidad' },
+  ];
+
+  async function importCvFromPdf(file) {
+    if (!file) return;
+
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    if (!isPdf) {
+      setUploadStatus('Solo se aceptan archivos PDF.');
+      return;
+    }
+
+    setUploadingCv(true);
+    setUploadStatus(`Leyendo ${file.name} y actualizando tu perfil...`);
+
+    try {
+      const result = await improveUploadedCV(file);
+      if (!result?.cvData) {
+        setUploadStatus('No se pudo extraer informacion del CV.');
+        return;
+      }
+
+      const importedCv = result.cvData;
+      dispatch({
+        type: 'SET_CV',
+        payload: {
+          ...importedCv,
+          personal: {
+            ...(importedCv.personal || {}),
+            photoUrl: importedCv.personal?.photoUrl || cv.personal?.photoUrl || '',
+          },
+          style: { ...(importedCv.style || {}), ...(cv.style || {}) },
+          preferences: { ...(importedCv.preferences || {}), ...(cv.preferences || {}) },
+        },
+      });
+      setProfileFieldsOpen(true);
+      setUploadStatus('Informacion extraida del CV. Revisa los campos editables antes de aplicar a ofertas.');
+    } catch (error) {
+      setUploadStatus(`Error: ${error.message}`);
+    } finally {
+      setUploadingCv(false);
+      if (cvUploadRef.current) cvUploadRef.current.value = '';
+    }
+  }
+
+  function updatePersonal(data) {
+    dispatch({ type: 'UPDATE_PERSONAL', payload: { ...personal, ...data } });
+  }
+
+  function updateEducation(data) {
+    if (education?.id) {
+      dispatch({ type: 'UPDATE_ITEM', payload: { section: 'education', id: education.id, data } });
+      return;
+    }
+
+    dispatch({
+      type: 'ADD_ITEM',
+      payload: {
+        section: 'education',
+        item: {
+          id: crypto.randomUUID(),
+          institution: data.institution || '',
+          location: '',
+          degree: data.degree || '',
+          field: '',
+          startDate: '',
+          endDate: '',
+          current: true,
+          course: data.course || '',
+          bullets: [],
+        },
+      },
+    });
+  }
+
+  function updatePhoto(file) {
+    if (!file) return;
+    if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) {
+      window.alert('La imagen debe ser JPG, PNG o WebP');
+      return;
+    }
+    if (file.size > MAX_PHOTO_SIZE_MB * 1024 * 1024) {
+      window.alert(`La imagen no puede superar ${MAX_PHOTO_SIZE_MB} MB`);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => updatePersonal({ photoUrl: reader.result });
+    reader.readAsDataURL(file);
+  }
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.7fr) minmax(280px, 0.9fr)', gap: 18, alignItems: 'stretch' }}>
+      <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard, border: `1px solid ${T.border}`, padding: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '112px minmax(0, 1fr)', gap: 22, alignItems: 'start' }}>
+          <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column', gap: 10 }}>
+            {personal.photoUrl ? (
+              <img
+                src={personal.photoUrl}
+                alt={fullName}
+                style={{ width: 96, height: 96, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${T.border}` }}
+              />
+            ) : (
+              <div style={{
+                width: 96,
+                height: 96,
+                borderRadius: '50%',
+                border: `1px solid ${T.border}`,
+                backgroundColor: T.orangeBg,
+                color: '#B45309',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 28,
+                fontWeight: 800,
+                fontFamily: T.font,
+              }}>
+                {profileInitials(fullName)}
+              </div>
+            )}
+            <label style={{
+              padding: '7px 10px',
+              borderRadius: T.radiusPill,
+              backgroundColor: T.hoverBg,
+              color: T.t2,
+              fontSize: 11,
+              fontWeight: 700,
+              fontFamily: T.font,
+              cursor: 'pointer',
+              textAlign: 'center',
+            }}>
+              Cambiar foto
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                onChange={event => updatePhoto(event.target.files?.[0])}
+                style={{ display: 'none' }}
+              />
+            </label>
+            {personal.photoUrl && (
+              <button
+                type="button"
+                onClick={() => updatePersonal({ photoUrl: '' })}
+                style={{
+                  border: 'none',
+                  background: 'none',
+                  color: T.t3,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: T.font,
+                }}
+              >
+                Quitar foto
+              </button>
+            )}
+          </div>
+
+          <div style={{ minWidth: 0 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: T.t1, margin: 0, lineHeight: 1.2, fontFamily: T.font }}>
+              {fullName}
+            </h2>
+            <p style={{ fontSize: 13, color: T.t1, fontWeight: 700, marginTop: 10, marginBottom: 0, fontFamily: T.font }}>
+              {university}
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginTop: 8 }}>
+              <span style={{ fontSize: 13, color: T.t2, fontFamily: T.font }}>{degree}</span>
+              {course && (
+                <span style={{ padding: '3px 8px', borderRadius: T.radiusPill, backgroundColor: T.hoverBg, color: T.t2, fontSize: 11, fontWeight: 700, fontFamily: T.font }}>
+                  {course}
+                </span>
+              )}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 12, color: T.t2, fontSize: 12, fontFamily: T.font }}>
+              <span>{email}</span>
+              <span>{location}</span>
+            </div>
+            <p style={{ fontSize: 13, color: T.t2, lineHeight: 1.55, marginTop: 14, marginBottom: 0, fontFamily: T.font }}>
+              {summary}
+            </p>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginTop: 18 }}>
+              <button
+                type="button"
+                onClick={() => cvUploadRef.current?.click()}
+                disabled={uploadingCv}
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: T.radiusPill,
+                  border: 'none',
+                  backgroundColor: uploadingCv ? T.hoverBg : '#2563EB',
+                  color: uploadingCv ? T.t3 : '#fff',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: uploadingCv ? 'not-allowed' : 'pointer',
+                  fontFamily: T.font,
+                }}
+              >
+                {uploadingCv ? 'Extrayendo CV...' : 'Subir CV'}
+              </button>
+              <input
+                ref={cvUploadRef}
+                type="file"
+                accept="application/pdf,.pdf"
+                onChange={event => importCvFromPdf(event.target.files?.[0])}
+                style={{ display: 'none' }}
+              />
+              <button
+                type="button"
+                onClick={() => setProfileFieldsOpen(open => !open)}
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: T.radiusPill,
+                  border: `1px solid ${T.border}`,
+                  backgroundColor: T.white,
+                  color: T.t1,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: T.font,
+                }}
+              >
+                {profileFieldsOpen ? 'Plegar edicion' : 'Desplegar edicion'}
+              </button>
+              {uploadStatus && (
+                <span style={{ flexBasis: '100%', color: uploadStatus.startsWith('Error') ? '#B91C1C' : T.t2, fontSize: 12, fontWeight: 600, fontFamily: T.font }}>
+                  {uploadStatus}
+                </span>
+              )}
+            </div>
+
+            {profileFieldsOpen && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, marginTop: 18 }}>
+              <PreferenceField label="Nombre">
+                <TextInput value={personal.fullName || ''} onChange={fullNameValue => updatePersonal({ fullName: fullNameValue })} placeholder="Nombre completo" />
+              </PreferenceField>
+              <PreferenceField label="Correo">
+                <TextInput value={personal.email || ''} onChange={emailValue => updatePersonal({ email: emailValue })} type="email" placeholder="correo@universidad.edu" />
+              </PreferenceField>
+              <PreferenceField label="Estudios">
+                <TextInput value={education?.degree || ''} onChange={degreeValue => updateEducation({ degree: degreeValue })} placeholder="Titulación o programa" />
+              </PreferenceField>
+              <PreferenceField label="Curso actual">
+                <TextInput value={course} onChange={courseValue => updateEducation({ course: courseValue })} placeholder="Ej. 3º curso" />
+              </PreferenceField>
+              <PreferenceField label="Universidad">
+                <TextInput value={education?.institution || ''} onChange={institutionValue => updateEducation({ institution: institutionValue })} placeholder="Universidad / centro" />
+              </PreferenceField>
+              <PreferenceField label="Residencia actual">
+                <TextInput value={personal.location || ''} onChange={locationValue => updatePersonal({ location: locationValue })} placeholder="Ciudad, país" />
+              </PreferenceField>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div style={{ marginTop: 18, borderRadius: T.radiusInput, backgroundColor: '#EFF6FF', color: '#1D4ED8', padding: '10px 12px', fontSize: 12, fontWeight: 600, fontFamily: T.font }}>
+          La información de tu perfil y CV se utiliza para calcular el match con las ofertas y mejorar tus recomendaciones.
+        </div>
+      </div>
+
+      <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard, border: `1px solid ${T.border}`, padding: 24 }}>
+        <p style={{ fontSize: 14, fontWeight: 800, color: T.t1, margin: 0, fontFamily: T.font }}>
+          Perfil completado al <span style={{ color: T.orange }}>{completion}%</span>
+        </p>
+        <div style={{ height: 8, borderRadius: T.radiusPill, backgroundColor: T.hoverBg, overflow: 'hidden', marginTop: 14 }}>
+          <div style={{ width: `${completion}%`, height: '100%', borderRadius: T.radiusPill, backgroundColor: T.orange }} />
+        </div>
+
+        <p style={{ fontSize: 13, fontWeight: 800, color: T.t1, marginTop: 24, marginBottom: 12, fontFamily: T.font }}>
+          Recomendaciones para llegar al 100%
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {recommendations.map(item => (
+            <div key={item.label} style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 10,
+              padding: '10px 0',
+              borderBottom: `1px solid ${T.border}`,
+              color: item.done ? T.t3 : T.t2,
+              fontSize: 12,
+              fontWeight: 600,
+              fontFamily: T.font,
+            }}>
+              <span>{item.label}</span>
+              <span>{item.done ? 'Completado' : 'Pendiente'}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TabPerfil({ offers = [] }) {
   const { cv, dispatch } = useCv();
   const preferences = cv.preferences || {};
@@ -1271,6 +1615,8 @@ function TabPerfil({ offers = [] }) {
           Gestiona tus preferencias de prácticas para recibir mejores ofertas en base a tu perfil.
         </p>
       </div>
+
+      <ProfileOverview cv={cv} preferences={preferences} dispatch={dispatch} />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 20 }}>
         <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard, border: `1px solid ${T.border}`, padding: 24 }}>
@@ -1471,7 +1817,6 @@ export default function OpePortalPage({
   const { token, user } = useAuth();
   const displayName = user?.name?.trim() || userName?.trim() || 'Usuario';
   const displayDetail = user?.email || userDegree || '';
-  const firstName = displayName.split(' ')[0];
 
   const [activeSection, setActiveSection] = useState('inicio');
   const [offers,        setOffers]        = useState([]);
