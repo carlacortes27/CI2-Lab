@@ -7,6 +7,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { advanceApplication, applyToOffer, getApplications, getOffers, getEvents, rejectApplication, saveOffer } from '../../lib/api.js';
+import { calcProfileCompletion } from '../../lib/profileCompletion.js';
 import { improveUploadedCV } from '../../services/cvService.js';
 import { useAuth } from '../../context/useAuth.js';
 import { useCv } from '../../context/CvContext.jsx';
@@ -1246,23 +1247,6 @@ function profileInitials(name = '') {
     .join('') || 'CV';
 }
 
-function calculateProfileCompletion(cv, preferences) {
-  const sections = cv.sections || {};
-  const checks = [
-    cv.personal?.fullName,
-    cv.personal?.email,
-    cv.personal?.location,
-    cv.personal?.photoUrl,
-    sections.summary?.text,
-    sections.education?.items?.length,
-    sections.projects?.items?.length,
-    sections.languages?.items?.length,
-    preferences.locations?.length,
-    preferences.startDate,
-  ];
-
-  return Math.round((checks.filter(Boolean).length / checks.length) * 100);
-}
 
 function ProfileOverview({ cv, preferences, dispatch }) {
   const cvUploadRef = useRef(null);
@@ -1279,7 +1263,7 @@ function ProfileOverview({ cv, preferences, dispatch }) {
   const email = personal.email || 'Correo pendiente';
   const location = personal.location || 'Residencia pendiente';
   const summary = sections.summary?.text || 'Completa tu resumen profesional en el CV para mejorar el match con las ofertas.';
-  const completion = calculateProfileCompletion(cv, preferences);
+  const completion = calcProfileCompletion(cv);
   const recommendations = [
     { done: Boolean(sections.projects?.items?.length), label: 'Añade tus proyectos académicos' },
     { done: Boolean(sections.languages?.items?.length), label: 'Completa tus idiomas' },
@@ -1673,7 +1657,7 @@ function TabPerfil({ offers = [] }) {
               Completado: {completed}/10 campos
             </span>
             <span style={{ color: completed >= 7 ? '#15803D' : '#B45309', fontWeight: 700, fontFamily: T.font }}>
-              {completed >= 7 ? 'Perfil suficientemente completo' : 'Completa más campos para mejorar tu match'}
+              {completed >= 7 ? 'Preferencias suficientemente completas' : 'Completa más campos para mejorar tu match'}
             </span>
           </div>
 

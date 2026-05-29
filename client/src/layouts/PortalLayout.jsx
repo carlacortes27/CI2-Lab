@@ -18,6 +18,7 @@ import { T } from '../styles/theme.js';
 import icaiLogo from '../assets/imagen comillas.jpg';
 import { useAuth } from '../context/useAuth.js';
 import { useCv } from '../context/CvContext.jsx';
+import { calcProfileCompletion } from '../lib/profileCompletion.js';
 import {
   HomeIcon, BriefcaseIcon, ClipboardIcon,
   CalendarIcon, BookIcon, CompassIcon, UserIcon,
@@ -36,25 +37,6 @@ const NAV_ITEMS = [
   { key: 'orientacion',  label: 'Orientación',      Icon: CompassIcon   },
   { key: 'perfil',       label: 'Mi perfil',        Icon: UserIcon      },
 ];
-
-// ── Completitud del perfil ────────────────────────────────────────────────────
-function calcProfileCompletion(cv) {
-  if (!cv) return 0;
-  const p = cv.preferences ?? {};
-  const items = [
-    p.locations?.length,
-    p.modalities?.length,
-    p.workdays?.length,
-    p.sectors?.length,
-    p.durations?.length,
-    p.startDate,
-    p.schedules?.length,
-    p.languages?.length,
-    p.technologies?.length,
-    p.keywords?.length,
-  ];
-  return items.filter(Boolean).length * 10;
-}
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 function Sidebar({ active, onSection, onNavigate }) {
