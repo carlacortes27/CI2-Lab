@@ -8,6 +8,18 @@ const events = JSON.parse(
   readFileSync(join(__dirname, '../data/events.json'), 'utf-8')
 );
 
+export function addEvent(event) {
+  events.push(event);
+  return event;
+}
+
+export function updateEventByAppointment(appointmentId, updates) {
+  const index = events.findIndex(event => event.appointmentId === appointmentId);
+  if (index === -1) return null;
+  events[index] = { ...events[index], ...updates };
+  return events[index];
+}
+
 const router = Router();
 
 // GET /api/events - devuelve todos los eventos, ordenados por fecha.
