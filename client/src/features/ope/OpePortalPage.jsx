@@ -31,6 +31,7 @@ import {
   PinIcon,
   ClockIcon,
   ChevronRightIcon,
+  ChevronDownIcon,
 } from '../../components/ui/index.js';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
@@ -212,7 +213,7 @@ function CandidaturasPanel({ applications = [], onSection, onApplicationClick, v
           <p style={{ fontSize: 12, color: T.t2, lineHeight: 1.5, marginTop: 4, fontFamily: T.font }}>
             Completa tu perfil al 100% y añade tus proyectos para mejorar tus opciones.
           </p>
-          <button type="button" style={{ fontSize: 12, fontWeight: 600, color: T.orange, background: 'none', border: 'none', cursor: 'pointer', marginTop: 6, fontFamily: T.font }}
+          <button type="button" onClick={() => onSection?.('perfil')} style={{ fontSize: 12, fontWeight: 600, color: T.orange, background: 'none', border: 'none', cursor: 'pointer', marginTop: 6, fontFamily: T.font }}
             onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
             onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
             Ir a mi perfil →
@@ -266,7 +267,7 @@ function ProximosEventos({ onSection }) {
 }
 
 // ── Recursos para ti ──────────────────────────────────────────────────────────
-function RecursosParaTi() {
+function RecursosParaTi({ onSection }) {
   return (
     <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard }}>
       <div style={{ padding: '20px 20px 16px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -274,7 +275,7 @@ function RecursosParaTi() {
           <BookIcon size={15} color={T.orange} />
           Recursos para ti
         </span>
-        <button type="button" style={{ fontSize: 13, fontWeight: 500, color: T.orange, background: 'none', border: 'none', cursor: 'pointer', fontFamily: T.font }}>
+        <button type="button" onClick={() => onSection?.('recursos')} style={{ fontSize: 13, fontWeight: 500, color: T.orange, background: 'none', border: 'none', cursor: 'pointer', fontFamily: T.font }}>
           Ver todos →
         </button>
       </div>
@@ -324,7 +325,7 @@ function TabInicio({ offers, loading, error, filters, setFilters, onOfferClick, 
       {/* Próximos eventos y recursos */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
         <ProximosEventos onSection={onSection} />
-        <RecursosParaTi />
+        <RecursosParaTi onSection={onSection} />
       </div>
 
       {/* Ofertas */}
@@ -557,10 +558,10 @@ function TabCandidaturas({ applications, loading, error, onApplicationClick }) {
 }
 
 // ── Pestaña: Eventos ──────────────────────────────────────────────────────────
-function EventCard({ event, compact = false, onClick }) {
+function EventCard({ event, compact = false, onClick, onRegister, registered = false }) {
   const date = formatEventDate(event);
   const isOpen = event.registrationStatus === 'Abierta';
-  const actionLabel = isOpen ? 'Inscribirme' : event.registrationStatus;
+  const actionLabel = registered ? 'Inscrito ✓' : isOpen ? 'Inscribirme' : event.registrationStatus;
   const category = getEventCategory(event);
   const categoryStyle = eventCategoryStyle(category);
 
@@ -655,17 +656,18 @@ function EventCard({ event, compact = false, onClick }) {
       </div>
 
       <Button
-        variant={compact ? 'secondary' : isOpen ? 'primary' : 'secondary'}
-        disabled={!isOpen}
+        variant={registered ? 'secondary' : compact ? 'secondary' : isOpen ? 'primary' : 'secondary'}
+        disabled={!isOpen || registered}
+        onClick={e => { e.stopPropagation(); if (isOpen && !registered) onRegister?.(event); }}
         style={{
           alignSelf: 'center',
           padding: compact ? '8px 16px' : undefined,
           fontSize: compact ? 12 : undefined,
-          color: compact && isOpen ? T.orange : undefined,
-          borderColor: compact && isOpen ? T.orange : undefined,
+          color: compact && isOpen && !registered ? T.orange : undefined,
+          borderColor: compact && isOpen && !registered ? T.orange : undefined,
         }}
       >
-        {compact && isOpen ? 'Apuntarme' : actionLabel}
+        {compact && isOpen && !registered ? 'Apuntarme' : actionLabel}
       </Button>
     </div>
   );
@@ -782,6 +784,10 @@ function EventsCalendar({
 }
 
 function TabEventos({ events, loading, error, scope, setScope, onEventClick }) {
+  const [registeredIds, setRegisteredIds] = useState(() => new Set());
+  function handleRegister(event) {
+    setRegisteredIds(prev => new Set([...prev, event.id]));
+  }
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -893,7 +899,7 @@ function TabEventos({ events, loading, error, scope, setScope, onEventClick }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {visibleEvents.map(event => (
-            <EventCard key={event.id} event={event} compact onClick={onEventClick} />
+            <EventCard key={event.id} event={event} compact onClick={onEventClick} onRegister={handleRegister} registered={registeredIds.has(event.id)} />
           ))}
         </div>
       )}
@@ -1485,19 +1491,19 @@ function ProfileOverview({ cv, preferences, dispatch }) {
               <button
                 type="button"
                 onClick={() => setProfileFieldsOpen(open => !open)}
+                title={profileFieldsOpen ? 'Plegar' : 'Desplegar'}
                 style={{
-                  padding: '8px 14px',
+                  width: 32, height: 32,
                   borderRadius: T.radiusPill,
                   border: `1px solid ${T.border}`,
                   backgroundColor: T.white,
                   color: T.t1,
-                  fontSize: 13,
-                  fontWeight: 700,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: 'pointer',
-                  fontFamily: T.font,
+                  flexShrink: 0,
                 }}
               >
-                {profileFieldsOpen ? 'Plegar edicion' : 'Desplegar edicion'}
+                <ChevronDownIcon size={16} style={{ transform: profileFieldsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
               </button>
               {uploadStatus && (
                 <span style={{ flexBasis: '100%', color: uploadStatus.startsWith('Error') ? '#B91C1C' : T.t2, fontSize: 12, fontWeight: 600, fontFamily: T.font }}>
@@ -1627,19 +1633,19 @@ function TabPerfil({ offers = [] }) {
               <button
                 type="button"
                 onClick={() => setPrefsOpen(open => !open)}
+                title={prefsOpen ? 'Plegar' : 'Desplegar'}
                 style={{
-                  padding: '8px 14px',
+                  width: 32, height: 32,
                   borderRadius: T.radiusPill,
                   border: `1px solid ${T.border}`,
                   backgroundColor: T.white,
                   color: T.t1,
-                  fontSize: 13,
-                  fontWeight: 600,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: 'pointer',
-                  fontFamily: T.font,
+                  flexShrink: 0,
                 }}
               >
-                {prefsOpen ? 'Plegar preferencias' : 'Desplegar preferencias'}
+                <ChevronDownIcon size={16} style={{ transform: prefsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
               </button>
               <button
                 type="button"
