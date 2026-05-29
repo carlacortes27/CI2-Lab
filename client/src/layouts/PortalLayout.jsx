@@ -21,7 +21,7 @@ import { useCv } from '../context/CvContext.jsx';
 import {
   HomeIcon, BriefcaseIcon, ClipboardIcon,
   CalendarIcon, BookIcon, CompassIcon, UserIcon,
-  SearchIcon, BellIcon, MailIcon, ChevronDownIcon,
+  SearchIcon, BellIcon, ChevronDownIcon,
   ArrowLeftIcon,
 } from '../components/ui/Icons.jsx';
 import Avatar from '../components/ui/Avatar.jsx';
@@ -430,27 +430,6 @@ function PortalHeader({ userName, userDegree, searchQuery = '', onSearchChange, 
             2
           </span>
         </div>
-
-        {/* Correo */}
-        <button
-          type="button"
-          style={{
-            width:           40,
-            height:          40,
-            borderRadius:    T.radiusPill,
-            display:         'flex',
-            alignItems:      'center',
-            justifyContent:  'center',
-            color:           T.t2,
-            background:      'none',
-            border:          'none',
-            cursor:          'pointer',
-          }}
-          onMouseEnter={e => e.currentTarget.style.backgroundColor = T.hoverBg}
-          onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
-        >
-          <MailIcon size={20} />
-        </button>
 
         {/* Divisor */}
         <div style={{ width: 1, height: 28, backgroundColor: T.border, margin: '0 8px' }} />

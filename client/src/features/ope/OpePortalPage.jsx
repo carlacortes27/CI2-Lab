@@ -324,30 +324,34 @@ function TabInicio({ offers, loading, error, filters, setFilters, onOfferClick, 
 
       {/* Ofertas */}
       <h2 style={{ fontSize: 20, fontWeight: 700, color: T.t1, fontFamily: T.font, margin: 0, viewTransitionName: 'ofertas-heading' }}>Ofertas</h2>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, viewTransitionName: 'ofertas-filters' }}>
+      <div style={{ position: 'relative', zIndex: 20, display: 'flex', flexWrap: 'wrap', gap: 10, viewTransitionName: 'ofertas-filters' }}>
         <FilterDropdown
           label="Área profesional"
           options={SECTORES}
           value={filters.sector}
           onChange={v => setFilters(f => ({ ...f, sector: v }))}
+          multiple
         />
         <FilterDropdown
           label="Ubicación"
           options={UBICACIONES}
           value={filters.location}
           onChange={v => setFilters(f => ({ ...f, location: v }))}
+          multiple
         />
         <FilterDropdown
           label="Modalidad"
           options={MODALIDADES}
           value={filters.modality}
           onChange={v => setFilters(f => ({ ...f, modality: v }))}
+          multiple
         />
         <FilterDropdown
           label="Duración"
           options={DURACIONES}
-          value=""
-          onChange={() => {}}
+          value={filters.duration}
+          onChange={v => setFilters(f => ({ ...f, duration: v }))}
+          multiple
         />
       </div>
 
@@ -395,11 +399,11 @@ function TabOfertas({ offers, loading, error, showAll, setShowAll, filters, setF
   return (
     <>
       <h1 style={{ fontSize: 28, fontWeight: 700, color: T.t1, fontFamily: T.font, viewTransitionName: 'ofertas-heading' }}>Ofertas</h1>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, viewTransitionName: 'ofertas-filters' }}>
-        <FilterDropdown label="Área profesional" options={SECTORES}    value={filters.sector}   onChange={v => setFilters(f => ({ ...f, sector: v }))} />
-        <FilterDropdown label="Ubicación"         options={UBICACIONES} value={filters.location} onChange={v => setFilters(f => ({ ...f, location: v }))} />
-        <FilterDropdown label="Modalidad"         options={MODALIDADES} value={filters.modality} onChange={v => setFilters(f => ({ ...f, modality: v }))} />
-        <FilterDropdown label="Duración"          options={DURACIONES}  value=""                 onChange={() => {}} />
+      <div style={{ position: 'relative', zIndex: 20, display: 'flex', flexWrap: 'wrap', gap: 10, viewTransitionName: 'ofertas-filters' }}>
+        <FilterDropdown label="Área profesional" options={SECTORES}    value={filters.sector}   onChange={v => setFilters(f => ({ ...f, sector: v }))} multiple />
+        <FilterDropdown label="Ubicación"         options={UBICACIONES} value={filters.location} onChange={v => setFilters(f => ({ ...f, location: v }))} multiple />
+        <FilterDropdown label="Modalidad"         options={MODALIDADES} value={filters.modality} onChange={v => setFilters(f => ({ ...f, modality: v }))} multiple />
+        <FilterDropdown label="Duración"          options={DURACIONES}  value={filters.duration} onChange={v => setFilters(f => ({ ...f, duration: v }))} multiple />
       </div>
       {loading && <LoadingSkeleton />}
       {error && <p style={{ color: '#B91C1C', fontFamily: T.font }}>{error}</p>}
@@ -1839,7 +1843,7 @@ export default function OpePortalPage({
   const [rejectingApplicationId, setRejectingApplicationId] = useState(null);
   const [applyError, setApplyError] = useState(null);
   const [showAll,       setShowAll]       = useState(false);
-  const [filters,     setFilters]     = useState({ sector: '', location: '', modality: '' });
+  const [filters,     setFilters]     = useState({ sector: [], location: [], modality: [], duration: [] });
   const [searchQuery, setSearchQuery] = useState('');
 
   function changeSection(key) {
@@ -1873,6 +1877,7 @@ export default function OpePortalPage({
       ...(filters.sector   && { sector:   filters.sector }),
       ...(filters.location && { location: filters.location }),
       ...(filters.modality && { modality: filters.modality }),
+      ...(filters.duration && { duration: filters.duration }),
     })
       .then(data => { if (active) setOffers(data); })
       .catch(() => { if (active) setError('No se pudo conectar con el servidor. Asegúrate de que está activo en el puerto 3001.'); })
