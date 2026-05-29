@@ -10,7 +10,7 @@ import eventsRouter from './routes/events.js';
 import cvRouter from './routes/cv.js';
 import advisorsRouter from './routes/advisors.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import { initDatabase } from './db/postgresClient.js';
+import { initDatabase } from './db/h2Client.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;

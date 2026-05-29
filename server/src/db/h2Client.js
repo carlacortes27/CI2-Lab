@@ -87,6 +87,13 @@ export function initDatabase() {
 
 export function getJdbcUrl() { return jdbcUrl; }
 
+export function getDatabaseInfo() {
+  return {
+    provider: useJsonFallback ? 'json-fallback' : 'h2',
+    jdbcUrl: useJsonFallback ? null : jdbcUrl,
+  };
+}
+
 export async function findUserByEmail(email) {
   await initDatabase();
   if (useJsonFallback) {
