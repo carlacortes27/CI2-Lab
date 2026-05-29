@@ -1780,6 +1780,262 @@ function TabPerfil({ offers = [] }) {
   );
 }
 
+// ── Dataset de recursos ───────────────────────────────────────────────────────
+const RECURSOS = [
+  { id: 'rc1',  title: 'Guía para entrevistas de prácticas',     desc: 'Preguntas habituales, estructura y consejos para responder con seguridad.',  fullDesc: 'Una guía completa que cubre los tipos de preguntas más frecuentes en entrevistas de prácticas: motivación, competencias, situacionales y técnicas. Incluye ejemplos de respuestas y errores comunes a evitar.',  category: 'entrevistas',      type: 'guia',      minutes: 8,  tags: ['entrevista', 'prácticas', 'consultoría', 'tecnología'], date: '2026-06-10', canRegister: false },
+  { id: 'rc2',  title: 'Checklist antes de aplicar',             desc: 'Revisa los puntos clave antes de enviar tu candidatura.',                    fullDesc: 'Lista de verificación con los 15 puntos que debes revisar antes de enviar cualquier candidatura: CV actualizado, carta de motivación, perfil LinkedIn alineado y coherencia de datos.',                      category: 'solicitudes',      type: 'checklist', minutes: 5,  tags: ['candidatura', 'solicitud', 'cv'],                       date: '2026-05-20', canRegister: false },
+  { id: 'rc3',  title: 'Cómo mejorar tu CV para consultoría',    desc: 'Ajusta tu perfil para sectores con alta demanda y procesos competitivos.',  fullDesc: 'Aprende a adaptar tu CV al lenguaje y criterios de las grandes consultoras: qué buscan, cómo ordenar tus experiencias, métricas y logros cuantificables. Incluye plantilla descargable.',               category: 'cv',               type: 'plantilla', minutes: 10, tags: ['cv', 'consultoría', 'finanzas'],                        date: '2026-05-15', canRegister: false },
+  { id: 'rc4',  title: 'Procesos de solicitud',                  desc: 'Cómo preparar una candidatura completa.',                                   fullDesc: 'Guía paso a paso para redactar y enviar tu candidatura: desde identificar la oferta adecuada hasta hacer seguimiento tras el envío. Cubre portales de empleo y candidaturas espontáneas.',               category: 'solicitudes',      type: 'guia',      minutes: 6,  tags: ['candidatura', 'solicitud'],                             date: '2026-05-10', canRegister: false },
+  { id: 'rc5',  title: 'Preparación de entrevistas',             desc: 'Entrevistas: estructura, preguntas y errores frecuentes.',                  fullDesc: 'Vídeo formativo de 12 minutos que repasa la estructura típica de una entrevista de selección, las preguntas más comunes y los errores que eliminan candidatos en las primeras fases.',                 category: 'entrevistas',      type: 'video',     minutes: 12, tags: ['entrevista', 'selección'],                              date: '2026-04-28', canRegister: false },
+  { id: 'rc6',  title: 'Creación y mejora de CV',                desc: 'Plantilla de CV universitario.',                                            fullDesc: 'Plantilla oficial de CV para estudiantes de Comillas. Formato limpio y profesional adaptado a prácticas y primer empleo. Incluye instrucciones de uso y ejemplos por titulación.',                         category: 'cv',               type: 'plantilla', minutes: 0,  tags: ['cv', 'plantilla'],                                      date: '2026-04-20', canRegister: false },
+  { id: 'rc7',  title: 'Cartas de motivación',                   desc: 'Cómo redactar una carta de motivación convincente.',                        fullDesc: 'Estructura, tono y contenido de una carta de motivación que destaca. Adaptación por sector: consultoría, tecnología, finanzas y energía. Incluye ejemplos reales de cartas que funcionaron.',           category: 'solicitudes',      type: 'guia',      minutes: 7,  tags: ['carta', 'motivación', 'solicitud'],                     date: '2026-04-15', canRegister: false },
+  { id: 'rc8',  title: 'Perfil de LinkedIn',                     desc: 'Optimiza tu perfil y gana visibilidad.',                                   fullDesc: 'Cómo completar cada sección de LinkedIn para aparecer en búsquedas de reclutadores. Fotografía profesional, titular, extracto, experiencias y recomendaciones. Estrategia de contenido básica.',          category: 'linkedin',         type: 'checklist', minutes: 4,  tags: ['linkedin', 'networking'],                               date: '2026-04-05', canRegister: false },
+  { id: 'rc9',  title: 'Assessment centers',                     desc: 'Dinámicas de grupo y pruebas más comunes.',                                 fullDesc: 'Todo sobre los assessment centers: dinámicas de grupo, role-plays, presentaciones y pruebas psicotécnicas. Cómo comportarse, qué evalúan los assessors y cómo prepararte en una semana.',              category: 'assessment center', type: 'guia',      minutes: 9,  tags: ['assessment', 'dinámicas', 'consultoría'],               date: '2026-03-25', canRegister: false },
+  { id: 'rc10', title: 'Networking efectivo',                    desc: 'Consejos para crear contactos de valor.',                                   fullDesc: 'Estrategia de networking para estudiantes: cómo contactar a profesionales de tu sector, qué escribir en un mensaje de LinkedIn, cómo preparar un coffee chat y cómo hacer seguimiento.',              category: 'networking',       type: 'guia',      minutes: 5,  tags: ['networking', 'linkedin', 'contactos'],                  date: '2026-03-15', canRegister: false },
+  { id: 'rc11', title: 'Búsqueda de prácticas',                  desc: 'Dónde buscar y cómo filtrar oportunidades.',                               fullDesc: 'Mapa completo de portales, ferias y canales para encontrar prácticas: OPE Comillas, LinkedIn, Infojobs, portales sectoriales y contacto directo. Incluye plantilla de seguimiento de candidaturas.', category: 'solicitudes',      type: 'guia',      minutes: 6,  tags: ['prácticas', 'búsqueda', 'portal'],                      date: '2026-03-05', canRegister: false },
+  { id: 'rc12', title: 'Búsqueda de primer empleo',              desc: 'Primer empleo: estrategia y seguimiento.',                                  fullDesc: 'Guía para la transición de estudiante a profesional: cuándo empezar a buscar, cómo negociar condiciones, qué esperar en los primeros meses y cómo construir tu marca profesional desde el inicio.',  category: 'solicitudes',      type: 'guia',      minutes: 8,  tags: ['empleo', 'primer empleo', 'estrategia'],                date: '2026-02-20', canRegister: false },
+  { id: 'rc13', title: 'Taller: CV para tecnología',             desc: 'Sesión en vivo para revisar tu CV con expertos del sector.',               fullDesc: 'Taller presencial en el campus donde expertos de empresas tecnológicas revisarán tu CV en directo, darán feedback personalizado y explicarán qué buscan en un perfil tech junior.',                     category: 'cv',               type: 'taller',    minutes: 90, tags: ['cv', 'tecnología', 'taller'],                           date: '2026-06-18', canRegister: true  },
+  { id: 'rc14', title: 'Taller: Simulacro de entrevista',        desc: 'Practica una entrevista real con feedback inmediato.',                      fullDesc: 'Sesión de simulacro de entrevista con un orientador de la OPE. Recibirás feedback sobre tu comunicación no verbal, estructura de respuestas y puntos de mejora antes de tus procesos reales.',        category: 'entrevistas',      type: 'taller',    minutes: 60, tags: ['entrevista', 'simulacro', 'feedback'],                  date: '2026-06-25', canRegister: true  },
+  { id: 'rc15', title: 'Webinar: LinkedIn para Comillas',        desc: 'Cómo posicionarte como estudiante de Comillas en LinkedIn.',               fullDesc: 'Webinar online con Alumni de Comillas que comparten cómo usaron LinkedIn para conseguir prácticas y empleo. Estrategias específicas para perfiles ICAI, ICADE y Derecho.',                               category: 'linkedin',         type: 'taller',    minutes: 45, tags: ['linkedin', 'alumni', 'networking'],                     date: '2026-07-02', canRegister: true  },
+];
+
+const CATEGORIAS_RECURSOS = [
+  { key: 'todos',          label: 'Todos'            },
+  { key: 'cv',             label: 'CV'               },
+  { key: 'entrevistas',    label: 'Entrevistas'      },
+  { key: 'solicitudes',    label: 'Solicitudes'      },
+  { key: 'linkedin',       label: 'LinkedIn'         },
+  { key: 'networking',     label: 'Networking'       },
+  { key: 'assessment center', label: 'Assessment Center' },
+];
+
+const TYPE_META = {
+  guia:      { label: 'Guía',      bg: '#DBEAFE', color: '#1D4ED8' },
+  video:     { label: 'Vídeo',     bg: '#EDE9FE', color: '#6D28D9' },
+  checklist: { label: 'Checklist', bg: '#DCFCE7', color: '#15803D' },
+  plantilla: { label: 'Plantilla', bg: '#FEF9C3', color: '#92400E' },
+  taller:    { label: 'Taller',    bg: T.orangeBg, color: '#B45309' },
+};
+
+function recursoMatchesProfile(recurso, preferences) {
+  if (!preferences) return false;
+  const profileTags = [
+    ...(preferences.sectors  || []).map(s => s.toLowerCase()),
+    ...(preferences.keywords || []).map(k => k.toLowerCase()),
+    ...(preferences.technologies || []).map(t => t.toLowerCase()),
+  ];
+  return recurso.tags.some(tag => profileTags.includes(tag.toLowerCase()));
+}
+
+function formatRecursoDate(iso) {
+  return new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso));
+}
+
+// ── Panel de detalle de recurso ───────────────────────────────────────────────
+function RecursoDetail({ recurso, onClose }) {
+  const [inscrito, setInscrito] = useState(false);
+  const meta = TYPE_META[recurso.type] || TYPE_META.guia;
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 200,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      backgroundColor: 'rgba(0,0,0,0.35)',
+    }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{
+        backgroundColor: T.white, borderRadius: T.radiusCard,
+        boxShadow: T.shadowElevated, width: '100%', maxWidth: 520,
+        padding: 32, margin: 16, position: 'relative',
+      }}>
+        <button
+          type="button"
+          onClick={onClose}
+          style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', cursor: 'pointer', color: T.t3, fontSize: 20, lineHeight: 1 }}
+        >
+          ×
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: T.radiusPill, backgroundColor: meta.bg, color: meta.color, fontFamily: T.font }}>
+            {meta.label}
+          </span>
+          {recurso.minutes > 0 && (
+            <span style={{ fontSize: 12, color: T.t3, fontFamily: T.font, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <ClockIcon size={13} color={T.t3} /> {recurso.minutes} min
+            </span>
+          )}
+        </div>
+
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: T.t1, fontFamily: T.font, margin: '0 0 12px' }}>
+          {recurso.title}
+        </h2>
+
+        <p style={{ fontSize: 14, color: T.t2, lineHeight: 1.65, fontFamily: T.font, margin: '0 0 20px' }}>
+          {recurso.fullDesc}
+        </p>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 24, color: T.t3, fontSize: 13, fontFamily: T.font }}>
+          <CalendarIcon size={14} color={T.t3} />
+          {recurso.canRegister ? `Fecha: ${formatRecursoDate(recurso.date)}` : `Publicado el ${formatRecursoDate(recurso.date)}`}
+        </div>
+
+        {recurso.canRegister ? (
+          inscrito ? (
+            <div style={{ padding: '12px 20px', borderRadius: T.radiusInput, backgroundColor: '#DCFCE7', color: '#15803D', fontSize: 14, fontWeight: 600, fontFamily: T.font, textAlign: 'center' }}>
+              ✓ Inscripción confirmada
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setInscrito(true)}
+              style={{ width: '100%', padding: '12px 20px', borderRadius: T.radiusInput, backgroundColor: T.orange, color: T.white, fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: T.font }}
+            >
+              Inscribirme
+            </button>
+          )
+        ) : (
+          <button
+            type="button"
+            style={{ width: '100%', padding: '12px 20px', borderRadius: T.radiusInput, backgroundColor: T.orange, color: T.white, fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: T.font }}
+          >
+            Ver recurso →
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Tarjeta de recurso (card vertical) ───────────────────────────────────────
+function RecursoCard({ recurso, onClick }) {
+  const meta = TYPE_META[recurso.type] || TYPE_META.guia;
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex', flexDirection: 'column',
+        backgroundColor: T.white, borderRadius: T.radiusCard,
+        border: `1px solid ${hovered ? T.orange : T.border}`,
+        boxShadow: hovered ? T.shadowElevated : T.shadowCard,
+        padding: 20, cursor: 'pointer',
+        transition: 'border-color 0.15s, box-shadow 0.15s',
+      }}
+    >
+      {/* Icono */}
+      <div style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: meta.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+        <BookIcon size={20} color={meta.color} />
+      </div>
+
+      {/* Texto */}
+      <p style={{ fontSize: 14, fontWeight: 700, color: T.t1, lineHeight: 1.35, fontFamily: T.font, margin: '0 0 6px', flex: 1 }}>{recurso.title}</p>
+      <p style={{ fontSize: 12, color: T.t3, lineHeight: 1.5, fontFamily: T.font, margin: '0 0 16px', flex: 1 }}>{recurso.desc}</p>
+
+      {/* Footer */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: T.radiusPill, backgroundColor: meta.bg, color: meta.color, fontFamily: T.font }}>
+            {meta.label}
+          </span>
+          {recurso.minutes > 0 && (
+            <span style={{ fontSize: 11, color: T.t3, fontFamily: T.font, display: 'flex', alignItems: 'center', gap: 3 }}>
+              <ClockIcon size={12} color={T.t3} /> {recurso.minutes} min
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={e => { e.stopPropagation(); onClick(); }}
+          style={{ fontSize: 12, fontWeight: 600, color: T.orange, background: 'none', border: `1px solid ${T.orange}`, borderRadius: T.radiusInput, padding: '4px 12px', cursor: 'pointer', fontFamily: T.font, whiteSpace: 'nowrap' }}
+        >
+          {recurso.canRegister ? 'Inscribirme' : 'Ver recurso'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Pestaña: Recursos ─────────────────────────────────────────────────────────
+function TabRecursos() {
+  const { cv } = useCv();
+  const preferences = cv?.preferences ?? {};
+  const [cat, setCat] = useState('todos');
+  const [selected, setSelected] = useState(null);
+
+  const recomendados = RECURSOS.filter(r => recursoMatchesProfile(r, preferences)).slice(0, 3);
+
+  const visibles = cat === 'todos'
+    ? RECURSOS
+    : RECURSOS.filter(r => r.category === cat);
+
+  return (
+    <>
+      {selected && <RecursoDetail recurso={selected} onClose={() => setSelected(null)} />}
+
+      <div>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: T.t1, fontFamily: T.font, margin: 0 }}>Recursos</h1>
+        <p style={{ fontSize: 14, color: T.t2, marginTop: 8, lineHeight: 1.5, fontFamily: T.font }}>
+          Prepárate para tus procesos de selección con guías, consejos y materiales prácticos.
+        </p>
+      </div>
+
+      {/* Filtros por categoría */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {CATEGORIAS_RECURSOS.map(c => (
+          <button
+            key={c.key}
+            type="button"
+            onClick={() => setCat(c.key)}
+            style={{
+              padding: '7px 16px', borderRadius: T.radiusPill, fontSize: 13, fontWeight: 500,
+              fontFamily: T.font, cursor: 'pointer', border: `1px solid ${cat === c.key ? T.orange : T.border}`,
+              backgroundColor: cat === c.key ? T.orange : T.white,
+              color: cat === c.key ? T.white : T.t2,
+              transition: 'all 0.15s',
+            }}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Recomendado para ti */}
+      {cat === 'todos' && recomendados.length > 0 && (
+        <div>
+          <p style={{ fontSize: 15, fontWeight: 700, color: T.t1, fontFamily: T.font, margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ color: T.orange }}>★</span> Recomendado para ti
+          </p>
+          <p style={{ fontSize: 12, color: T.t3, fontFamily: T.font, margin: '0 0 14px' }}>
+            Basado en tu perfil y preferencias
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+            {recomendados.map(r => (
+              <RecursoCard key={r.id} recurso={r} onClick={() => setSelected(r)} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Grid de recursos */}
+      {visibles.length === 0 ? (
+        <p style={{ textAlign: 'center', fontSize: 14, color: T.t3, fontFamily: T.font, padding: '32px 0' }}>
+          No hay recursos en esta categoría.
+        </p>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          {visibles.map(r => (
+            <RecursoCard key={r.id} recurso={r} onClick={() => setSelected(r)} />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
 function TabPlaceholder({ title }) {
   return (
     <>
@@ -2222,7 +2478,7 @@ export default function OpePortalPage({
           />
         );
       case 'recursos':
-        return <TabPlaceholder title="Recursos" />;
+        return <TabRecursos />;
       case 'orientacion':
         return (
           <OrientacionPanel
