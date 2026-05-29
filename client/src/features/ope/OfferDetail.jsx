@@ -407,12 +407,6 @@ export default function OfferDetail({
               onMouseLeave={e => { e.currentTarget.style.backgroundColor = isSaved ? T.greenBg : 'transparent'; }}>
               <BookmarkIco />
             </button>
-            <button type="button" title="Compartir oferta"
-              style={{ width: 38, height: 38, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: `1px solid ${T.border}`, cursor: 'pointer' }}
-              onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#F9FAFB'; }}
-              onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
-              <ShareIco />
-            </button>
           </div>
         </div>
       </div>
