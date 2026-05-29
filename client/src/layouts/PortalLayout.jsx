@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from 'react';
 import { T } from '../styles/theme.js';
 import icaiLogo from '../assets/imagen comillas.jpg';
 import { useAuth } from '../context/useAuth.js';
+import { useCv } from '../context/CvContext.jsx';
 import {
   HomeIcon, BriefcaseIcon, ClipboardIcon,
   CalendarIcon, BookIcon, CompassIcon, UserIcon,
@@ -36,8 +37,29 @@ const NAV_ITEMS = [
   { key: 'perfil',       label: 'Mi perfil',        Icon: UserIcon      },
 ];
 
+// ── Completitud del perfil ────────────────────────────────────────────────────
+function calcProfileCompletion(cv) {
+  if (!cv) return 0;
+  const p = cv.preferences ?? {};
+  const items = [
+    p.locations?.length,
+    p.modalities?.length,
+    p.workdays?.length,
+    p.sectors?.length,
+    p.durations?.length,
+    p.startDate,
+    p.schedules?.length,
+    p.languages?.length,
+    p.technologies?.length,
+    p.keywords?.length,
+  ];
+  return items.filter(Boolean).length * 10;
+}
+
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 function Sidebar({ active, onSection, onNavigate }) {
+  const { cv } = useCv();
+  const progress = calcProfileCompletion(cv);
   return (
     <aside style={{
       backgroundColor: T.white,
@@ -132,19 +154,21 @@ function Sidebar({ active, onSection, onNavigate }) {
             </div>
             <div>
               <p style={{ fontSize: 13, fontWeight: 700, color: T.white, lineHeight: 1.3, fontFamily: T.font }}>
-                Completa tu perfil
+                {progress === 100 ? 'Perfil completo' : 'Completa tu perfil'}
               </p>
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 3, lineHeight: 1.4, fontFamily: T.font }}>
-                y mejora tus recomendaciones
-              </p>
+              {progress < 100 && (
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 3, lineHeight: 1.4, fontFamily: T.font }}>
+                  y mejora tus recomendaciones
+                </p>
+              )}
             </div>
           </div>
           {/* Barra de progreso */}
           <div style={{ height: 6, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: T.radiusPill, overflow: 'hidden', marginBottom: 8 }}>
-            <div style={{ height: '100%', width: '80%', backgroundColor: T.white, borderRadius: T.radiusPill }} />
+            <div style={{ height: '100%', width: `${progress}%`, backgroundColor: T.white, borderRadius: T.radiusPill, transition: 'width 0.4s ease' }} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontFamily: T.font }}>80%</span>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontFamily: T.font }}>{progress}%</span>
             <button
               type="button"
               onClick={() => onSection('perfil')}

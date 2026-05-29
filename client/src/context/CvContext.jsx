@@ -3,7 +3,7 @@ import { createContext, useContext, useReducer, useEffect, useRef } from 'react'
 import { exampleCv } from '../data/example-cv.js';
 import { createBlankCv } from '../data/blank-cv.js';
 import {
-  saveCv, setActiveCvId, setSchemaVersion,
+  saveCv, loadCv, getActiveCvId, setActiveCvId, setSchemaVersion,
 } from '../lib/storage.js';
 
 const CvContext = createContext(null);
@@ -258,6 +258,11 @@ function cvReducer(cv, action) {
 
 export function CvProvider({ children }) {
   const initialCv = (() => {
+    const id = getActiveCvId();
+    if (id) {
+      const saved = loadCv(id);
+      if (saved) return normalizeCv(saved);
+    }
     return normalizeCv(createBlankCv());
   })();
 
