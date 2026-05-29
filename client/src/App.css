@@ -372,6 +372,15 @@ body:has([data-shell]) .back-button {
   font-weight: 900;
 }
 
+.card-icon svg {
+  width: 30px;
+  height: 30px;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .action-card h2,
 .builder-sidebar h1,
 .upload-card h1,
