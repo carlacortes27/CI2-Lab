@@ -399,12 +399,12 @@ export default function OfferDetail({
 
           {/* Acciones: guardar + compartir */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, marginTop: 4 }}>
-            <button type="button" title={application ? 'Oferta guardada' : 'Guardar oferta'}
-              disabled={Boolean(application) || saving}
+            <button type="button" title={isSaved ? 'Quitar de guardadas' : isApplied ? 'Ya inscrito' : 'Guardar oferta'}
+              disabled={isApplied || saving}
               onClick={onSave}
-              style={{ width: 38, height: 38, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: `1px solid ${T.border}`, cursor: application || saving ? 'default' : 'pointer', opacity: application ? 0.7 : 1 }}
-              onMouseEnter={e => { if (!application && !saving) e.currentTarget.style.backgroundColor = '#F9FAFB'; }}
-              onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
+              style={{ width: 38, height: 38, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: isSaved ? T.greenBg : 'none', border: `1px solid ${isSaved ? T.green : T.border}`, cursor: isApplied || saving ? 'default' : 'pointer', opacity: isApplied ? 0.7 : 1 }}
+              onMouseEnter={e => { if (!isApplied && !saving) e.currentTarget.style.backgroundColor = isSaved ? '#DCFCE7' : '#F9FAFB'; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = isSaved ? T.greenBg : 'transparent'; }}>
               <BookmarkIco />
             </button>
             <button type="button" title="Compartir oferta"
@@ -578,7 +578,7 @@ export default function OfferDetail({
 
         <button
           type="button"
-          disabled={Boolean(application) || saving}
+          disabled={isApplied || saving}
           onClick={onSave}
           style={{
             padding: '14px 28px',
@@ -588,23 +588,23 @@ export default function OfferDetail({
             fontSize: 15,
             fontWeight: 500,
             border: `1px solid ${isSaved ? T.green : T.border}`,
-            cursor: application || saving ? 'default' : 'pointer',
+            cursor: isApplied || saving ? 'default' : 'pointer',
             transition: 'border-color 0.15s, color 0.15s',
           }}
           onMouseEnter={e => {
-            if (!application && !saving) {
+            if (!isApplied && !saving) {
               e.currentTarget.style.borderColor = T.t2;
               e.currentTarget.style.color = T.t1;
             }
           }}
           onMouseLeave={e => {
-            if (!application && !saving) {
+            if (!isApplied && !saving) {
               e.currentTarget.style.borderColor = T.border;
               e.currentTarget.style.color = T.t2;
             }
           }}
         >
-          {isSaved ? 'Oferta guardada' : saving ? 'Guardando...' : 'Guardar oferta'}
+          {saving ? 'Guardando...' : isSaved ? 'Quitar de guardadas' : 'Guardar oferta'}
         </button>
       </div>
 

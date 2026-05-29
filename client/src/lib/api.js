@@ -57,12 +57,28 @@ export function saveOffer(offerId, token) {
   return request('/api/applications/saved', { method: 'POST', body: { offerId }, token });
 }
 
+export function unsaveOffer(offerId, token) {
+  return request(`/api/applications/saved/${offerId}`, { method: 'DELETE', token });
+}
+
 export function advanceApplication(applicationId, token) {
   return request(`/api/applications/${applicationId}/advance`, { method: 'POST', token });
 }
 
 export function rejectApplication(applicationId, token) {
   return request(`/api/applications/${applicationId}/reject`, { method: 'POST', token });
+}
+
+export function getNotifications(token) {
+  return request('/api/notifications?limit=10', { token });
+}
+
+export function markNotificationRead(notificationId, token) {
+  return request(`/api/notifications/${notificationId}/read`, { method: 'POST', token });
+}
+
+export function markAllNotificationsRead(token) {
+  return request('/api/notifications/read-all', { method: 'POST', token });
 }
 
 export function registerUser(data) {
