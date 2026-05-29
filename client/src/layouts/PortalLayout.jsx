@@ -540,7 +540,7 @@ function PortalHeader({ userName, userDegree, searchQuery = '', onSearchChange, 
             lineHeight:    1,
             fontFamily:    T.font,
           }}>
-            CV Comillas
+            OPE Comillas
           </p>
           <p style={{
             fontSize:   10,
