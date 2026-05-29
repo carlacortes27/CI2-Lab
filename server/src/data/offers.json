@@ -10,6 +10,7 @@
     "duration": "6 meses",
     "targetDegrees": ["Ingeniería Industrial", "ADE", "Doble Grado IE+ADE"],
     "publishedAt": "2026-05-01",
+    "deadlineAt": "2026-06-01",
     "description": "Buscamos estudiantes de últimos cursos para incorporarse al equipo de consultoría estratégica. Participarás en proyectos de transformación de grandes corporaciones nacionales e internacionales.",
     "requirements": {
       "hardSkills": ["Excel", "PowerPoint", "Análisis de datos"],
@@ -31,6 +32,7 @@
     "duration": "6 meses",
     "targetDegrees": ["Ingeniería Industrial", "Ingeniería de Telecomunicaciones"],
     "publishedAt": "2026-04-20",
+    "deadlineAt": "2026-05-31",
     "description": "Incorporación al equipo de desarrollo de proyectos de energía renovable (eólica y solar). Apoyo en análisis técnico y modelización de proyectos.",
     "requirements": {
       "hardSkills": ["Python", "Excel", "AutoCAD"],
@@ -52,6 +54,7 @@
     "duration": "6 meses",
     "targetDegrees": ["ADE", "Doble Grado IE+ADE"],
     "publishedAt": "2026-05-10",
+    "deadlineAt": "2026-05-30",
     "description": "Incorporación al departamento de auditoría financiera. Participación en proyectos de revisión de estados financieros de grandes empresas cotizadas.",
     "requirements": {
       "hardSkills": ["Excel", "Contabilidad", "Modelización financiera"],

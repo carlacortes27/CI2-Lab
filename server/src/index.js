@@ -9,8 +9,10 @@ import applicationsRouter from './routes/applications.js';
 import eventsRouter from './routes/events.js';
 import cvRouter from './routes/cv.js';
 import advisorsRouter from './routes/advisors.js';
+import notificationsRouter from './routes/notifications.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { initDatabase } from './db/h2Client.js';
+import { startNotificationScheduler } from './services/notificationService.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -31,6 +33,7 @@ app.use('/api/applications', applicationsRouter);
 app.use('/api/events', eventsRouter);
 app.use('/api/cv', cvRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/notifications', notificationsRouter);
 app.use('/api', advisorsRouter);
 
 if (process.env.NODE_ENV === 'production') {
@@ -49,6 +52,7 @@ app.use(errorHandler);
 
 initDatabase()
   .then(() => {
+    startNotificationScheduler(5 * 60 * 1000);
     app.listen(PORT, () => {
       console.log(`Servidor cvComillas en http://localhost:${PORT}`);
     });
