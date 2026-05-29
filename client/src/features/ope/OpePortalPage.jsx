@@ -2569,6 +2569,7 @@ export default function OpePortalPage({
       >
         <OfferDetail
           offer={selectedApplication.offer}
+          backLabel="Mis candidaturas"
           application={selectedApplication}
           applying={applyingOfferId === selectedApplication.offerId}
           saving={savingOfferId === selectedApplication.offerId}
@@ -2582,7 +2583,7 @@ export default function OpePortalPage({
           onBack={() => {
             setSelectedApplication(null);
             setApplyError(null);
-            changeSection('ofertas');
+            changeSection('candidaturas');
           }}
         />
       </PortalLayout>

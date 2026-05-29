@@ -279,6 +279,7 @@ function SectionHeader({ icon, title }) {
 export default function OfferDetail({
   offer,
   onBack,
+  backLabel = 'Ofertas',
   application,
   onApply,
   onSave,
@@ -319,7 +320,7 @@ export default function OfferDetail({
             onClick={onBack}
             onMouseEnter={e => { e.target.style.color = T.orange; }}
             onMouseLeave={e => { e.target.style.color = T.t3; }}>
-            Ofertas
+            {backLabel}
           </span>
           <span style={{ margin: '0 6px' }}>›</span>
           <span style={{ color: T.t1, fontWeight: 500 }}>{offer.title}</span>
@@ -339,7 +340,7 @@ export default function OfferDetail({
         onMouseLeave={e => { e.currentTarget.style.color = T.t2; }}
       >
         <ArrowLeft />
-        Volver a ofertas
+        Volver a {backLabel.toLowerCase()}
       </button>
 
       {/* ── Cabecera de la oferta ───────────────────────────────────────── */}
