@@ -17,7 +17,7 @@ export default function TemplateSelector() {
   return (
     <div className="template-selector">
       <div>
-        <p className="eyebrow">CV Comillas</p>
+        <p className="eyebrow">OPE Comillas</p>
         <h2>Plantilla y estilo</h2>
       </div>
       <div className="template-list">

@@ -82,7 +82,7 @@ function CVSidebar({ activeStep, onNavigate, onStep }) {
         paddingLeft:   4,
         marginBottom:  2,
       }}>
-        CV Comillas
+        OPE Comillas
       </p>
 
       {/* Título de la pantalla */}
@@ -189,7 +189,7 @@ function CVHeader({ toolbarActions }) {
             lineHeight:    1,
             fontFamily:    T.font,
           }}>
-            CV Comillas
+            OPE Comillas
           </p>
           <p style={{
             fontSize:   10,

@@ -10,7 +10,7 @@ export default function EditorPage({ onNavigateToOpe }) {
       {/* Barra superior */}
       <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-3">
-          <span className="font-bold text-blue-700 text-lg">cvComillas</span>
+          <span className="font-bold text-blue-700 text-lg">opeComillas</span>
           <span className="text-gray-300">|</span>
           <span className="text-sm text-gray-500">{cv.personal.fullName || 'Mi CV'}</span>
         </div>
