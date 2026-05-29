@@ -2,7 +2,15 @@ import { useCv } from '../../../context/CvContext.jsx';
 import { isValidEmail, isValidPhone } from '../../../utils/validators.js';
 import { Field, Select, SectionCard } from './FormControls.jsx';
 
-const countries = ['+34', '+44', '+1', '+49', '+33', '+39', '+351'];
+const countries = [
+  { code: '+34', flag: '🇪🇸' },
+  { code: '+44', flag: '🇬🇧' },
+  { code: '+1', flag: '🇺🇸' },
+  { code: '+49', flag: '🇩🇪' },
+  { code: '+33', flag: '🇫🇷' },
+  { code: '+39', flag: '🇮🇹' },
+  { code: '+351', flag: '🇵🇹' },
+];
 const acceptedPhotoTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 const maxPhotoSizeMb = 2;
 
@@ -51,7 +59,11 @@ export default function PersonalInfoForm() {
         <div className="phone-row">
           <Select label="Pais" value={p.phoneCountry || ''} onChange={phoneCountry => update({ phoneCountry })}>
             <option value="">Selecciona</option>
-            {countries.map(country => <option key={country}>{country}</option>)}
+            {countries.map(country => (
+              <option key={country.code} value={country.code}>
+                {country.flag} {country.code}
+              </option>
+            ))}
           </Select>
           <Field label="Telefono" value={p.phoneNumber || p.phone?.replace(/^\+\d+\s*/, '')} onChange={phoneNumber => update({ phoneNumber })} error={phoneError} />
         </div>

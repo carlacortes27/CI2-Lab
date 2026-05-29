@@ -331,7 +331,7 @@ function EditableItem({ section, item, dispatch, selectedBlockId, selectBlock, a
           <Field label="Titulacion" value={item.degree} onChange={degree => { selectBlock(`education:${item.id}:degree`, section); update({ degree }); }} />
           <div className="part-form-grid">
             <Field label="Centro" value={item.institution} onChange={institution => update({ institution })} />
-            <Field label="Ubicacion" value={item.location} onChange={location => update({ location })} />
+            <Field label="País" value={item.location} onChange={location => update({ location })} />
             <Field label="Periodo" value={item.duration} placeholder="2022 - Actualidad" onChange={duration => update({ duration })} />
           </div>
           <Bullets section={section} item={item} dispatch={dispatch} selectBlock={selectBlock} addBullet={addBullet} />

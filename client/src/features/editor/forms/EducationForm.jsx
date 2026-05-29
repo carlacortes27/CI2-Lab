@@ -44,7 +44,7 @@ export default function EducationForm() {
             </div>
             <div className="form-grid two">
               <Field label="Universidad / centro" value={item.institution} onChange={institution => update(item.id, { institution })} />
-              <Field label="Ciudad / país" value={item.location} onChange={location => update(item.id, { location })} />
+              <Field label="País" value={item.location} onChange={location => update(item.id, { location })} />
               <Field label="Titulación" value={item.degree} onChange={degree => update(item.id, { degree })} />
               <Field label="Fecha inicio" value={item.startDate} onChange={startDate => update(item.id, { startDate })} type="month" />
               <Field label="Fecha fin" value={item.endDate} onChange={endDate => update(item.id, { endDate })} type="month" disabled={item.current} error={dateError ? 'La fecha fin debe ser posterior' : ''} />
