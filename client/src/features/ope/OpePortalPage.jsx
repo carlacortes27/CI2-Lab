@@ -2474,6 +2474,7 @@ export default function OpePortalPage({
           onBack={() => {
             setSelectedApplication(null);
             setApplyError(null);
+            changeSection('ofertas');
           }}
         />
       </PortalLayout>
