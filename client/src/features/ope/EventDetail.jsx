@@ -101,6 +101,7 @@ function SectionHeader({ icon, title }) {
 // ── Mapa de estados de inscripción ────────────────────────────────────────────
 const STATUS_CONFIG = {
   'Abierta':       { label: 'Inscribirme',    disabled: false, bg: T.orange,    color: T.white   },
+  'Confirmada':    { label: 'Cita confirmada', disabled: true, bg: '#DCFCE7',   color: '#15803D' },
   'Próximamente':  { label: 'Próximamente',   disabled: true,  bg: T.hoverBg,   color: T.t3      },
   'Completo':      { label: 'Completo',        disabled: true,  bg: '#FEE2E2',   color: '#B91C1C' },
   'Cerrada':       { label: 'Inscripción cerrada', disabled: true, bg: T.hoverBg, color: T.t3    },

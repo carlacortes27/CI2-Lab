@@ -81,10 +81,14 @@ export function getAdvisorById(id) {
   return request(`/api/advisors/${id}`);
 }
 
-export function getAppointments() {
-  return request('/api/appointments');
+export function getAppointments(token) {
+  return request('/api/appointments', { token });
 }
 
-export function createAppointment(data) {
-  return request('/api/appointments', { method: 'POST', body: data });
+export function createAppointment(data, token) {
+  return request('/api/appointments', { method: 'POST', body: data, token });
+}
+
+export function cancelAppointment(id, token) {
+  return request(`/api/appointments/${id}/cancel`, { method: 'PATCH', token });
 }

@@ -1,28 +1,34 @@
 import { useState, useEffect } from 'react';
-import { T, cardStyle } from '../../styles/theme.js';
+import { T } from '../../styles/theme.js';
+import { useAuth } from '../../context/useAuth.js';
 import {
   CalendarIcon,
-  ClockIcon,
   UserIcon,
   MonitorIcon,
   BuildingIcon,
-  CompassIcon,
   CheckIcon,
   GlobeIcon,
+  TrashIcon,
   ChevronRightIcon,
   Button,
 } from '../../components/ui/index.js';
-import { getAdvisors, getAppointments, createAppointment } from '../../lib/api.js';
+import { getAdvisors, getAppointments, createAppointment, cancelAppointment } from '../../lib/api.js';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
 const REASONS = [
   'Revisión de CV',
+  'Búsqueda de empleo',
   'Preparación de entrevistas',
-  'Búsqueda de prácticas',
-  'Orientación académica',
-  'Otra consulta',
+  'Orientación profesional',
+  'Prácticas y becas',
+  'Emprendimiento',
+  'Otro',
 ];
+
+const WEEKDAY_DAYS = [1, 2, 3, 4, 5];
+const MONDAY_THURSDAY_SLOTS = ['11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+const FRIDAY_SLOTS = ['11:00', '12:00', '13:00', '14:00'];
 
 const MONTH_NAMES_ES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -71,6 +77,28 @@ function formatDateLong(iso) {
   const weekdays = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
   const wday = weekdays[date.getDay()];
   return `${wday.charAt(0).toUpperCase() + wday.slice(1)}, ${d} de ${MONTH_NAMES_ES[m - 1]} de ${y}`;
+}
+
+function getDayOfWeek(iso) {
+  if (!iso) return null;
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).getDay();
+}
+
+function getSlotsForDate(iso) {
+  const day = getDayOfWeek(iso);
+  if (day === 5) return FRIDAY_SLOTS;
+  if (day >= 1 && day <= 4) return MONDAY_THURSDAY_SLOTS;
+  return [];
+}
+
+function isAppointmentBooked(appointments, advisorId, date, time) {
+  return appointments.some(appointment =>
+    appointment.advisorId === advisorId
+    && appointment.date === date
+    && appointment.time === time
+    && appointment.status !== 'Cancelada'
+  );
 }
 
 // ── OrientacionCalendar — mismo estilo que EventsCalendar en TabEventos ───────
@@ -158,7 +186,7 @@ function OrientacionCalendar({
                     width: 5,
                     height: 5,
                     borderRadius: T.radiusPill,
-                    backgroundColor: T.orange,
+                    backgroundColor: '#22C55E',
                   }} />
                 )}
               </button>
@@ -170,7 +198,7 @@ function OrientacionCalendar({
       {/* Leyenda */}
       <div style={{ borderTop: `1px solid ${T.border}`, padding: '14px 24px 18px', display: 'flex', flexWrap: 'wrap', gap: 16 }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12, color: T.t2, fontFamily: T.font }}>
-          <span style={{ width: 7, height: 7, borderRadius: T.radiusPill, backgroundColor: T.orange }} />
+          <span style={{ width: 7, height: 7, borderRadius: T.radiusPill, backgroundColor: '#22C55E' }} />
           Disponible
         </span>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12, color: T.t2, fontFamily: T.font }}>
@@ -184,56 +212,33 @@ function OrientacionCalendar({
 
 // ── TimeSlots ─────────────────────────────────────────────────────────────────
 
-function TimeSlots({ slots, selected, onSelect }) {
-  if (!slots.length) {
-    return (
-      <p style={{ color: T.t3, fontSize: 13, fontStyle: 'italic', margin: 0, lineHeight: 1.6, fontFamily: T.font }}>
-        Selecciona una fecha con disponibilidad en el calendario para ver los horarios.
-      </p>
-    );
-  }
-
-  const half = Math.ceil(slots.length / 2);
-  const col1 = slots.slice(0, half);
-  const col2 = slots.slice(half);
-
-  function SlotBtn({ time }) {
-    const active = time === selected;
-    return (
-      <button
-        type="button"
-        onClick={() => onSelect(time)}
-        style={{
-          padding: '8px 12px',
-          border: `1.5px solid ${active ? T.orange : T.border}`,
-          borderRadius: 8,
-          background: active ? T.orangeBg : T.white,
-          color: active ? T.orange : T.t1,
-          fontSize: 13,
-          fontWeight: active ? 600 : 400,
-          cursor: 'pointer',
-          fontFamily: T.font,
-          textAlign: 'center',
-          width: '100%',
-          transition: 'border-color 0.12s, background 0.12s',
-        }}
-      >
-        {time}
-      </button>
-    );
-  }
-
+function TimeSlotSelect({ slots, selected, onSelect, bookedSlots, inputStyle }) {
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {col1.map(t => <SlotBtn key={t} time={t} />)}
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {col2.map(t => <SlotBtn key={t} time={t} />)}
-        </div>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 12 }}>
+      <select
+        value={selected}
+        onChange={e => onSelect(e.target.value)}
+        disabled={!slots.length}
+        style={{
+          ...inputStyle,
+          cursor: slots.length ? 'pointer' : 'not-allowed',
+          color: selected ? T.t1 : T.t3,
+          opacity: slots.length ? 1 : 0.7,
+        }}
+      >
+        <option value="">
+          {slots.length ? 'Selecciona una hora' : 'Selecciona una fecha primero'}
+        </option>
+        {slots.map(time => {
+          const booked = bookedSlots.includes(time);
+          return (
+            <option key={time} value={time} disabled={booked}>
+              {booked ? `${time} - Reservada` : time}
+            </option>
+          );
+        })}
+      </select>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 8 }}>
         <GlobeIcon size={12} color={T.t3} />
         <span style={{ fontSize: 11, color: T.t3, fontFamily: T.font }}>Zona horaria: Madrid (CET)</span>
       </div>
@@ -243,7 +248,7 @@ function TimeSlots({ slots, selected, onSelect }) {
 
 // ── HistoryTable ──────────────────────────────────────────────────────────────
 
-function HistoryTable({ appointments }) {
+function HistoryTable({ appointments, onCancel, cancellingId }) {
   const statusCfg = {
     Confirmada: { bg: '#DCFCE7', color: '#15803D' },
     Pendiente:  { bg: T.orangeBg, color: '#B45309' },
@@ -301,9 +306,37 @@ function HistoryTable({ appointments }) {
                   </div>
                 </td>
                 <td style={{ padding: '14px 20px' }}>
-                  <span style={{ background: st.bg, color: st.color, padding: '3px 10px', borderRadius: 9999, fontSize: 12, fontWeight: 500 }}>
-                    {apt.status}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ background: st.bg, color: st.color, padding: '3px 10px', borderRadius: 9999, fontSize: 12, fontWeight: 500 }}>
+                      {apt.status}
+                    </span>
+                    {apt.status === 'Confirmada' && (
+                      <button
+                        type="button"
+                        onClick={() => onCancel?.(apt.id)}
+                        disabled={cancellingId === apt.id}
+                        title="Cancelar cita"
+                        style={{
+                          border: `1px solid #FCA5A5`,
+                          borderRadius: T.radiusInput,
+                          background: '#FEF2F2',
+                          color: '#B91C1C',
+                          cursor: cancellingId === apt.id ? 'not-allowed' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 5,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          padding: '4px 8px',
+                          fontFamily: T.font,
+                          opacity: cancellingId === apt.id ? 0.65 : 1,
+                        }}
+                      >
+                        <TrashIcon size={13} />
+                        {cancellingId === apt.id ? 'Cancelando...' : 'Cancelar'}
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             );
@@ -316,7 +349,51 @@ function HistoryTable({ appointments }) {
 
 // ── OrientacionPanel (principal) ──────────────────────────────────────────────
 
-export default function OrientacionPanel() {
+function FullHistoryModal({ appointments, onClose, onCancel, cancellingId }) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Historial completo de citas"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 50,
+        background: 'rgba(15, 23, 42, 0.42)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+      }}
+    >
+      <div style={{ width: 'min(980px, 100%)', maxHeight: '86vh', background: T.white, borderRadius: T.radiusCard, boxShadow: '0 24px 70px rgba(15, 23, 42, 0.28)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '18px 24px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.t1, fontFamily: T.font }}>
+              Historial completo de citas
+            </h2>
+            <p style={{ margin: '5px 0 0', fontSize: 12, color: T.t3, fontFamily: T.font }}>
+              Consulta tus reservas y cancela las citas confirmadas.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{ border: `1px solid ${T.border}`, borderRadius: T.radiusInput, background: T.white, color: T.t2, cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: '8px 12px', fontFamily: T.font }}
+          >
+            Cerrar
+          </button>
+        </div>
+        <div style={{ overflow: 'auto' }}>
+          <HistoryTable appointments={appointments} onCancel={onCancel} cancellingId={cancellingId} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function OrientacionPanel({ onAppointmentCreated, onAppointmentUpdated }) {
+  const { token } = useAuth();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -327,35 +404,60 @@ export default function OrientacionPanel() {
   const [calMonth, setCalMonth]         = useState(homeMonth);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState('');
-  const [reason, setReason]             = useState(REASONS[0]);
-  const [modality, setModality]         = useState('Online');
+  const [reason, setReason]             = useState('');
+  const [modality, setModality]         = useState('');
   const [advisorId, setAdvisorId]       = useState('');
   const [comments, setComments]         = useState('');
   const [advisors, setAdvisors]         = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading]           = useState(true);
   const [submitting, setSubmitting]     = useState(false);
+  const [cancellingId, setCancellingId] = useState(null);
+  const [showFullHistory, setShowFullHistory] = useState(false);
   const [booked, setBooked]             = useState(false);
   const [bookError, setBookError]       = useState('');
+  const [cancelMessage, setCancelMessage] = useState('');
 
   useEffect(() => {
-    Promise.all([getAdvisors(), getAppointments()])
+    let active = true;
+
+    if (!token) {
+      Promise.resolve().then(() => {
+        if (!active) return;
+        setAppointments([]);
+        setLoading(false);
+      });
+      return () => {
+        active = false;
+      };
+    }
+
+    Promise.all([getAdvisors(), getAppointments(token)])
       .then(([advs, apts]) => {
+        if (!active) return;
         setAdvisors(advs);
-        if (advs.length) setAdvisorId(advs[0].id);
         setAppointments(apts);
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+      .catch(() => {
+        if (!active) return;
+        setAppointments([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [token]);
 
   const selectedAdvisor = advisors.find(a => a.id === advisorId);
-  const availableDays   = selectedAdvisor?.availableDays ?? [];
-  const slots           = selectedDate && selectedAdvisor ? selectedAdvisor.slots : [];
+  const availableDays   = WEEKDAY_DAYS;
+  const slots           = selectedDate ? getSlotsForDate(selectedDate) : [];
+  const bookedSlots     = slots.filter(time => isAppointmentBooked(appointments, advisorId, selectedDate, time));
 
   function handleAdvisorChange(id) {
     setAdvisorId(id);
-    setSelectedDate(null);
     setSelectedTime('');
   }
 
@@ -365,28 +467,57 @@ export default function OrientacionPanel() {
   }
 
   async function handleBook() {
-    if (!selectedDate || !selectedTime || !advisorId) return;
+    if (!reason || !modality || !selectedDate || !selectedTime || !advisorId) {
+      setBookError('Completa motivo, modalidad, fecha, hora y orientador para reservar.');
+      return;
+    }
     setSubmitting(true);
     setBookError('');
     try {
       const newApt = await createAppointment({
         advisorId, date: selectedDate, time: selectedTime,
         reason, modality, comments,
-      });
+      }, token);
       setAppointments(prev => [newApt, ...prev]);
+      onAppointmentCreated?.(newApt.event);
       setBooked(true);
       setTimeout(() => setBooked(false), 5000);
       setSelectedDate(null);
       setSelectedTime('');
       setComments('');
+      setReason('');
+      setModality('');
     } catch {
-      setBookError('No se pudo reservar la cita. Inténtalo de nuevo.');
+      setBookError('No se pudo reservar la cita. Puede que esa hora ya esté ocupada.');
     } finally {
       setSubmitting(false);
     }
   }
 
-  const canBook = Boolean(selectedDate && selectedTime && advisorId);
+  async function handleCancelAppointment(id) {
+    const confirmed = window.confirm('¿Seguro que quieres cancelar esta cita? La franja volverá a estar disponible.');
+    if (!confirmed) return;
+
+    setCancellingId(id);
+    setBookError('');
+    setCancelMessage('');
+    try {
+      const cancelled = await cancelAppointment(id, token);
+      setAppointments(prev => prev.map(appointment =>
+        appointment.id === cancelled.id ? { ...appointment, ...cancelled } : appointment
+      ));
+      onAppointmentUpdated?.(cancelled.event);
+      setCancelMessage('Cita cancelada correctamente.');
+      setTimeout(() => setCancelMessage(''), 5000);
+    } catch {
+      setBookError('No se pudo cancelar la cita. Inténtalo de nuevo.');
+    } finally {
+      setCancellingId(null);
+    }
+  }
+
+  const canBook = Boolean(reason && modality && selectedDate && selectedTime && advisorId);
+  const recentAppointments = appointments.slice(0, 3);
 
   if (loading) {
     return <div style={{ padding: 32, color: T.t3, fontFamily: T.font }}>Cargando orientación...</div>;
@@ -435,16 +566,25 @@ export default function OrientacionPanel() {
         </div>
       )}
 
+      {cancelMessage && (
+        <div style={{ background: '#FEF2F2', border: `1px solid #FECACA`, borderRadius: T.radiusCard, padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <TrashIcon size={16} color="#B91C1C" />
+          <span style={{ fontSize: 13, color: '#B91C1C', fontWeight: 500, fontFamily: T.font }}>
+            {cancelMessage}
+          </span>
+        </div>
+      )}
+
       {/* Layout de dos columnas: panel de reserva + calendario */}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.5fr) minmax(0,1fr)', gap: 24, alignItems: 'start' }}>
 
         {/* ── Panel izquierdo: horarios + formulario ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-          {/* Franjas horarias */}
+          {/* Resumen de disponibilidad */}
           <div style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard, padding: 24 }}>
             <h2 style={{ fontSize: 18, fontWeight: 600, color: T.t1, margin: '0 0 6px', fontFamily: T.font }}>
-              Selecciona un horario
+              Disponibilidad del día
             </h2>
             {selectedDate ? (
               <p style={{ fontSize: 13, color: T.t2, margin: '0 0 16px', fontFamily: T.font }}>
@@ -455,7 +595,11 @@ export default function OrientacionPanel() {
                 Selecciona una fecha disponible en el calendario →
               </p>
             )}
-            <TimeSlots slots={slots} selected={selectedTime} onSelect={setSelectedTime} />
+            <p style={{ color: selectedDate ? T.t2 : T.t3, fontSize: 13, margin: 0, lineHeight: 1.6, fontFamily: T.font }}>
+              {selectedDate
+                ? `${slots.length - bookedSlots.length} de ${slots.length} franjas disponibles. Elige la hora en Detalles de la cita.`
+                : 'Los horarios disponibles se actualizan al seleccionar una fecha.'}
+            </p>
           </div>
 
           {/* Formulario de reserva */}
@@ -468,6 +612,7 @@ export default function OrientacionPanel() {
             <div style={{ marginBottom: 14 }}>
               <label style={labelStyle}>Motivo de la consulta</label>
               <select value={reason} onChange={e => setReason(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
+                <option value="">Selecciona un motivo</option>
                 {REASONS.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
@@ -511,6 +656,11 @@ export default function OrientacionPanel() {
                   );
                 })}
               </div>
+              {modality === 'Presencial' && (
+                <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: T.radiusInput, background: T.orangeBg, border: `1px solid ${T.orange}`, color: '#92400E', fontSize: 12, fontWeight: 500, fontFamily: T.font }}>
+                  📍 Esta cita será en persona en: Alberto Aguilera 32, Madrid
+                </div>
+              )}
             </div>
 
             {/* Fecha + Hora */}
@@ -526,10 +676,13 @@ export default function OrientacionPanel() {
               </div>
               <div>
                 <label style={labelStyle}>Hora</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 12px', border: `1px solid ${T.border}`, borderRadius: T.radiusInput, fontSize: 13, color: selectedTime ? T.t1 : T.t3, background: T.white, minHeight: 38 }}>
-                  <ClockIcon size={13} color={T.t3} style={{ flexShrink: 0 }} />
-                  {selectedTime || '—'}
-                </div>
+                <TimeSlotSelect
+                  slots={slots}
+                  selected={selectedTime}
+                  onSelect={setSelectedTime}
+                  bookedSlots={bookedSlots}
+                  inputStyle={inputStyle}
+                />
               </div>
             </div>
 
@@ -541,6 +694,7 @@ export default function OrientacionPanel() {
                 onChange={e => handleAdvisorChange(e.target.value)}
                 style={{ ...inputStyle, cursor: 'pointer' }}
               >
+                <option value="">Selecciona un orientador</option>
                 {advisors.map(a => (
                   <option key={a.id} value={a.id}>{a.name} — {a.role}</option>
                 ))}
@@ -573,7 +727,7 @@ export default function OrientacionPanel() {
             <button
               type="button"
               onClick={handleBook}
-              disabled={!canBook || submitting}
+              disabled={submitting}
               style={{
                 width: '100%',
                 padding: '13px 16px',
@@ -583,7 +737,7 @@ export default function OrientacionPanel() {
                 color: canBook && !submitting ? '#fff' : T.t3,
                 fontSize: 14,
                 fontWeight: 600,
-                cursor: canBook && !submitting ? 'pointer' : 'not-allowed',
+                cursor: submitting ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -626,6 +780,7 @@ export default function OrientacionPanel() {
                 outline: 'none',
               }}
             >
+              <option value="">Selecciona un orientador</option>
               {advisors.map(a => (
                 <option key={a.id} value={a.id}>{a.name}</option>
               ))}
@@ -659,14 +814,28 @@ export default function OrientacionPanel() {
             </h2>
             <button
               type="button"
+              onClick={() => setShowFullHistory(true)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: T.orange, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, fontFamily: T.font }}
             >
               Ver historial completo
               <ChevronRightIcon size={14} />
             </button>
           </div>
-          <HistoryTable appointments={appointments} />
+          <HistoryTable
+            appointments={recentAppointments}
+            onCancel={handleCancelAppointment}
+            cancellingId={cancellingId}
+          />
         </div>
+      )}
+
+      {showFullHistory && (
+        <FullHistoryModal
+          appointments={appointments}
+          onClose={() => setShowFullHistory(false)}
+          onCancel={handleCancelAppointment}
+          cancellingId={cancellingId}
+        />
       )}
     </>
   );
