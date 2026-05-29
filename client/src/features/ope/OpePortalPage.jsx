@@ -1164,6 +1164,90 @@ function parseCommaText(value) {
     .filter(Boolean);
 }
 
+function optionLabelMap(options = []) {
+  return options.reduce((acc, option) => {
+    if (typeof option === 'string') {
+      acc[option] = option;
+    } else {
+      acc[option.value] = option.label;
+    }
+    return acc;
+  }, {});
+}
+
+function formatOptionValues(values = [], options = []) {
+  const labels = optionLabelMap(options);
+  return (Array.isArray(values) ? values : [])
+    .filter(Boolean)
+    .map(value => labels[value] || value);
+}
+
+function formatLanguages(values = []) {
+  return normalizeLanguagePreferences(Array.isArray(values) ? values : [])
+    .map(language => language.level ? `${language.name} (${language.level})` : language.name);
+}
+
+function PreferenceSummary({ preferences }) {
+  const summaryItems = [
+    { label: 'Ubicacion deseada', values: preferences.locations || [] },
+    { label: 'Modalidad', values: formatOptionValues(preferences.modalities || [], MODALIDADES) },
+    { label: 'Jornada', values: formatOptionValues(preferences.workdays || [], JORNADAS) },
+    { label: 'Sector de interes', values: preferences.sectors || [] },
+    { label: 'Duracion', values: preferences.durations || [] },
+    { label: 'Disponibilidad para inicio', values: preferences.startDate ? [preferences.startDate] : [] },
+    { label: 'Horario', values: formatOptionValues(preferences.schedules || [], HORARIOS) },
+    { label: 'Idiomas', values: formatLanguages(preferences.languages || []) },
+    { label: 'Tecnologias', values: preferences.technologies || [] },
+    { label: 'Areas y keywords', values: preferences.keywords || [] },
+  ];
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14, marginTop: 18 }}>
+      {summaryItems.map(item => {
+        const values = item.values.filter(Boolean);
+        return (
+          <div
+            key={item.label}
+            style={{
+              borderBottom: `1px solid ${T.border}`,
+              paddingBottom: 12,
+              minWidth: 0,
+            }}
+          >
+            <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: T.t1, fontFamily: T.font }}>
+              {item.label}
+            </p>
+            {values.length ? (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                {values.map(value => (
+                  <span
+                    key={value}
+                    style={{
+                      borderRadius: T.radiusPill,
+                      backgroundColor: T.hoverBg,
+                      color: T.t2,
+                      padding: '5px 9px',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      fontFamily: T.font,
+                    }}
+                  >
+                    {value}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p style={{ margin: '8px 0 0', fontSize: 12, color: T.t3, fontWeight: 600, fontFamily: T.font }}>
+                Sin completar
+              </p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function normalizeLanguagePreferences(languages = []) {
   return languages
     .map(language => (
@@ -1584,7 +1668,7 @@ function ProfileOverview({ cv, preferences, dispatch }) {
 function TabPerfil({ offers = [] }) {
   const { cv, dispatch } = useCv();
   const preferences = cv.preferences || {};
-  const [prefsOpen, setPrefsOpen] = useState(true);
+  const [prefsOpen, setPrefsOpen] = useState(false);
   const [editingPrefs, setEditingPrefs] = useState(false);
   const locationOptions = [
     ...new Set([
@@ -1595,6 +1679,16 @@ function TabPerfil({ offers = [] }) {
 
   function updatePreference(key, value) {
     dispatch({ type: 'UPDATE_PREFERENCES', payload: { [key]: value } });
+  }
+
+  function openProfileEditor() {
+    setPrefsOpen(true);
+    setEditingPrefs(true);
+  }
+
+  function saveProfilePreferences() {
+    setEditingPrefs(false);
+    setPrefsOpen(false);
   }
 
   const completionItems = [
@@ -1636,24 +1730,7 @@ function TabPerfil({ offers = [] }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <button
                 type="button"
-                onClick={() => setPrefsOpen(open => !open)}
-                style={{
-                  padding: '8px 14px',
-                  borderRadius: T.radiusPill,
-                  border: `1px solid ${T.border}`,
-                  backgroundColor: T.white,
-                  color: T.t1,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontFamily: T.font,
-                }}
-              >
-                {prefsOpen ? 'Plegar preferencias' : 'Desplegar preferencias'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditingPrefs(editing => !editing)}
+                onClick={editingPrefs ? saveProfilePreferences : openProfileEditor}
                 style={{
                   padding: '8px 14px',
                   borderRadius: T.radiusPill,
@@ -1666,7 +1743,7 @@ function TabPerfil({ offers = [] }) {
                   fontFamily: T.font,
                 }}
               >
-                {editingPrefs ? 'Guardar' : 'Editar'}
+                {editingPrefs ? 'Guardar' : 'Editar perfil'}
               </button>
             </div>
           </div>
@@ -1680,7 +1757,11 @@ function TabPerfil({ offers = [] }) {
             </span>
           </div>
 
-          {prefsOpen && (
+          {!prefsOpen && !editingPrefs && (
+            <PreferenceSummary preferences={preferences} />
+          )}
+
+          {prefsOpen && editingPrefs && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 22, alignItems: 'start', marginTop: 18 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 <PreferenceField label="Ubicación deseada">
