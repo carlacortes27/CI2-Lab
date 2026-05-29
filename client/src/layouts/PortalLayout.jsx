@@ -13,12 +13,13 @@
  *  rightPanel      → JSX del panel derecho (opcional; si null, grid 2 columnas)
  *  children        → contenido del área central (main)
  */
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { T } from '../styles/theme.js';
 import icaiLogo from '../assets/imagen comillas.jpg';
 import { useAuth } from '../context/useAuth.js';
 import { useCv } from '../context/CvContext.jsx';
 import { calcProfileCompletion } from '../lib/profileCompletion.js';
+import { getNotifications, markAllNotificationsRead, markNotificationRead } from '../lib/api.js';
 import {
   HomeIcon, BriefcaseIcon, ClipboardIcon,
   CalendarIcon, BookIcon, CompassIcon, UserIcon,
@@ -176,7 +177,238 @@ function Sidebar({ active, onSection, onNavigate }) {
 }
 
 // ── Header (88px, ancho completo) ─────────────────────────────────────────────
-function PortalHeader({ userName, userDegree, searchQuery = '', onSearchChange, onSection, onNavigate }) {
+function notificationAccent(style) {
+  const accents = {
+    warning: '#F59E0B',
+    info: '#2563EB',
+    success: '#16A34A',
+    danger: '#DC2626',
+    neutral: T.t2,
+  };
+  return accents[style] || accents.neutral;
+}
+
+function NotificationsMenu({ onOpenNotification }) {
+  const { token } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const menuRef = useRef(null);
+  const buttonRef = useRef(null);
+
+  const loadNotifications = useCallback(async (active = true) => {
+    if (!token) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
+    try {
+      const data = await getNotifications(token);
+      if (!active) return;
+      setNotifications(data.notifications || []);
+      setUnreadCount(data.unreadCount || 0);
+    } catch {
+      if (!active) return;
+      setNotifications([]);
+      setUnreadCount(0);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    let active = true;
+    Promise.resolve().then(() => loadNotifications(active));
+    const interval = window.setInterval(() => loadNotifications(active), 60000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [loadNotifications]);
+
+  useEffect(() => {
+    const timers = notifications
+      .filter(notification => !notification.isRead && notification.autoDismissMs)
+      .map(notification => window.setTimeout(async () => {
+        if (!token) return;
+        await markNotificationRead(notification.id, token).catch(() => null);
+        loadNotifications(true);
+      }, notification.autoDismissMs));
+    return () => timers.forEach(timer => window.clearTimeout(timer));
+  }, [loadNotifications, notifications, token]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    function handlePointerDown(event) {
+      if (!menuRef.current?.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open]);
+
+  async function handleOpenNotification(notification) {
+    if (token && !notification.isRead) {
+      await markNotificationRead(notification.id, token).catch(() => null);
+    }
+    setOpen(false);
+    setNotifications(current => current.map(item => item.id === notification.id ? { ...item, isRead: true } : item));
+    setUnreadCount(count => Math.max(0, count - (notification.isRead ? 0 : 1)));
+    if (notification.actionUrl) {
+      window.open(notification.actionUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    onOpenNotification?.(notification);
+  }
+
+  async function handleMarkAll() {
+    if (!token) return;
+    await markAllNotificationsRead(token).catch(() => null);
+    setNotifications(current => current.map(item => ({ ...item, isRead: true })));
+    setUnreadCount(0);
+  }
+
+  return (
+    <div ref={menuRef} style={{ position: 'relative' }}>
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Notificaciones"
+        onClick={() => setOpen(value => !value)}
+        style={{
+          width:           40,
+          height:          40,
+          borderRadius:    T.radiusPill,
+          display:         'flex',
+          alignItems:      'center',
+          justifyContent:  'center',
+          color:           T.t2,
+          background:      open ? T.hoverBg : 'none',
+          border:          'none',
+          cursor:          'pointer',
+        }}
+        onMouseEnter={e => e.currentTarget.style.backgroundColor = T.hoverBg}
+        onMouseLeave={e => {
+          if (!open) e.currentTarget.style.backgroundColor = 'transparent';
+        }}
+      >
+        <BellIcon size={20} />
+      </button>
+      {unreadCount > 0 && (
+        <span style={{
+          position:       'absolute',
+          top:            4,
+          right:          4,
+          minWidth:       16,
+          height:         16,
+          padding:        '0 4px',
+          borderRadius:   T.radiusPill,
+          backgroundColor:'#F97316',
+          color:          T.white,
+          fontSize:       9,
+          fontWeight:     700,
+          display:        'flex',
+          alignItems:     'center',
+          justifyContent: 'center',
+          pointerEvents:  'none',
+          fontFamily:     T.font,
+        }}>
+          {unreadCount > 9 ? '9+' : unreadCount}
+        </span>
+      )}
+
+      {open && (
+        <div
+          role="menu"
+          aria-label="Notificaciones"
+          style={{
+            position:        'absolute',
+            top:             'calc(100% + 10px)',
+            right:           -8,
+            zIndex:          12,
+            width:           380,
+            maxWidth:        'calc(100vw - 32px)',
+            borderRadius:    T.radiusCard,
+            border:          `1px solid ${T.border}`,
+            backgroundColor: T.white,
+            boxShadow:       T.shadowElevated,
+            overflow:        'hidden',
+          }}
+        >
+          <div style={{ padding: '14px 16px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <span style={{ fontSize: 14, fontWeight: 800, color: T.t1, fontFamily: T.font }}>Notificaciones</span>
+            <button
+              type="button"
+              onClick={handleMarkAll}
+              disabled={unreadCount === 0}
+              style={{ border: 'none', background: 'none', color: unreadCount ? T.orange : T.t3, fontSize: 12, fontWeight: 700, cursor: unreadCount ? 'pointer' : 'default', fontFamily: T.font }}
+            >
+              Marcar todas como leidas
+            </button>
+          </div>
+          <div style={{ maxHeight: 420, overflowY: 'auto', padding: 6 }}>
+            {notifications.length === 0 ? (
+              <p style={{ padding: '22px 16px', textAlign: 'center', color: T.t3, fontSize: 13, fontFamily: T.font }}>
+                No tienes notificaciones pendientes.
+              </p>
+            ) : notifications.map(notification => (
+              <div key={notification.id} style={{ display: 'grid', gridTemplateColumns: '4px 1fr', gap: 10, padding: '10px 8px', borderRadius: T.radiusInput, backgroundColor: notification.isRead ? T.white : '#F9FAFB' }}>
+                <span style={{ width: 4, borderRadius: T.radiusPill, backgroundColor: notificationAccent(notification.style) }} />
+                <div>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => handleOpenNotification(notification)}
+                    style={{ width: '100%', border: 'none', background: 'none', padding: 0, textAlign: 'left', cursor: 'pointer' }}
+                  >
+                    <p style={{ fontSize: 13, lineHeight: 1.45, color: T.t1, fontWeight: notification.isRead ? 500 : 700, fontFamily: T.font }}>
+                      {notification.message}
+                    </p>
+                  </button>
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenNotification(notification)}
+                      style={{ border: 'none', background: 'none', color: notificationAccent(notification.style), padding: 0, fontSize: 12, fontWeight: 800, cursor: 'pointer', fontFamily: T.font }}
+                    >
+                      {notification.actionLabel}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (token) await markNotificationRead(notification.id, token).catch(() => null);
+                        loadNotifications(true);
+                      }}
+                      style={{ border: 'none', background: 'none', color: T.t3, padding: 0, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: T.font }}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PortalHeader({ userName, userDegree, searchQuery = '', onSearchChange, onSection, onNavigate, onOpenNotification }) {
   const { logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -371,47 +603,7 @@ function PortalHeader({ userName, userDegree, searchQuery = '', onSearchChange, 
 
       {/* Iconos + perfil */}
       <div className="portal-user-actions" style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-        {/* Campana */}
-        <div style={{ position: 'relative' }}>
-          <button
-            type="button"
-            style={{
-              width:           40,
-              height:          40,
-              borderRadius:    T.radiusPill,
-              display:         'flex',
-              alignItems:      'center',
-              justifyContent:  'center',
-              color:           T.t2,
-              background:      'none',
-              border:          'none',
-              cursor:          'pointer',
-            }}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = T.hoverBg}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
-          >
-            <BellIcon size={20} />
-          </button>
-          <span style={{
-            position:       'absolute',
-            top:            4,
-            right:          4,
-            width:          16,
-            height:         16,
-            borderRadius:   T.radiusPill,
-            backgroundColor:'#F97316',
-            color:          T.white,
-            fontSize:       9,
-            fontWeight:     700,
-            display:        'flex',
-            alignItems:     'center',
-            justifyContent: 'center',
-            pointerEvents:  'none',
-            fontFamily:     T.font,
-          }}>
-            2
-          </span>
-        </div>
+        <NotificationsMenu onOpenNotification={onOpenNotification} />
 
         {/* Correo */}
         <button
@@ -596,6 +788,7 @@ export default function PortalLayout({
   rightPanelVisible = !!rightPanel,
   searchQuery       = '',
   onSearchChange,
+  onOpenNotification,
   children,
 }) {
   return (
@@ -621,6 +814,7 @@ export default function PortalLayout({
         onSearchChange={onSearchChange}
         onSection={onSection}
         onNavigate={onNavigate}
+        onOpenNotification={onOpenNotification}
       />
 
       {/* CONTENIDO: sidebar | main | panel derecho */}

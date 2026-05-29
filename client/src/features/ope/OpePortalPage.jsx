@@ -6,10 +6,11 @@
  */
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { flushSync } from 'react-dom';
-import { advanceApplication, applyToOffer, getApplications, getOffers, getEvents, rejectApplication, saveOffer } from '../../lib/api.js';
+import { advanceApplication, applyToOffer, getApplications, getOffers, getEvents, rejectApplication, saveOffer, unsaveOffer } from '../../lib/api.js';
 import { calcProfileCompletion } from '../../lib/profileCompletion.js';
 import { improveUploadedCV } from '../../services/cvService.js';
 import { useAuth } from '../../context/useAuth.js';
+import { useRedirect } from '../../context/RedirectContext.jsx';
 import { useCv } from '../../context/CvContext.jsx';
 import OfferDetail        from './OfferDetail.jsx';
 import EventDetail        from './EventDetail.jsx';
@@ -150,13 +151,15 @@ function buildCalendarWeeks(monthDate, events) {
 
 // ── Panel Mis Candidaturas ────────────────────────────────────────────────────
 function CandidaturasPanel({ applications = [], onSection, onApplicationClick, vtActive = false }) {
-  const visibleApplications = applications.filter(application => application.status !== 'guardada');
-  const cards = visibleApplications.map(applicationToCard).slice(0, 4);
+  const activeApplications = applications.filter(application => application.status !== 'guardada');
+  const savedApplications = applications.filter(application => application.status === 'guardada');
+  const cards = activeApplications.map(applicationToCard).slice(0, 4);
   const counts = {
-    enviadas:   visibleApplications.filter(c => c.status === 'enviada').length,
-    revision:   visibleApplications.filter(c => c.status === 'revision').length,
-    entrevista: visibleApplications.filter(c => c.status === 'entrevista').length,
-    aceptada:   visibleApplications.filter(c => c.status === 'aceptada' || c.status === 'finalizada').length,
+    guardadas:  savedApplications.length,
+    enviadas:   activeApplications.filter(c => c.status === 'enviada').length,
+    revision:   activeApplications.filter(c => c.status === 'revision').length,
+    entrevista: activeApplications.filter(c => c.status === 'entrevista').length,
+    aceptada:   activeApplications.filter(c => c.status === 'aceptada' || c.status === 'finalizada').length,
   };
 
   return (
@@ -172,8 +175,9 @@ function CandidaturasPanel({ applications = [], onSection, onApplicationClick, v
         </button>
       </div>
 
-      {/* Stats 4 cajas */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', borderBottom: `1px solid ${T.border}` }}>
+      {/* Stats 5 cajas */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', borderBottom: `1px solid ${T.border}` }}>
+        <StatBox value={counts.guardadas}  label="Guardadas"   color="#6B7280"   bordered />
         <StatBox value={counts.enviadas}   label="Enviadas"    color={T.t2}      bordered />
         <StatBox value={counts.revision}   label="En revisión" color="#F5A623"   bordered />
         <StatBox value={counts.entrevista} label="Entrevista"  color="#2563EB"   bordered />
@@ -422,6 +426,7 @@ function TabOfertas({ offers, loading, error, showAll, setShowAll, filters, setF
 // ── Pestaña: Mis Candidaturas (vista ampliada) ────────────────────────────────
 const CAND_FILTERS = [
   { key: 'todas',      label: 'Todas'       },
+  { key: 'guardada',   label: 'Guardadas'   },
   { key: 'enviada',    label: 'Solicitadas' },
   { key: 'revision',   label: 'En revisión' },
   { key: 'entrevista', label: 'Entrevistas' },
@@ -432,11 +437,10 @@ const CAND_FILTERS = [
 
 function TabCandidaturas({ applications, loading, error, onApplicationClick }) {
   const [activeFilter, setActiveFilter] = useState('todas');
-  const cards = applications
-    .filter(application => application.status !== 'guardada')
-    .map(applicationToCard);
+  const cards = applications.map(applicationToCard);
 
   const counts = {
+    guardada:   cards.filter(c => c.status === 'guardada').length,
     enviadas:   cards.filter(c => c.status === 'enviada').length,
     revision:   cards.filter(c => c.status === 'revision').length,
     entrevista: cards.filter(c => c.status === 'entrevista').length,
@@ -446,6 +450,7 @@ function TabCandidaturas({ applications, loading, error, onApplicationClick }) {
   };
 
   const STAT_BOXES = [
+    { value: counts.guardada,   label: 'Guardadas',   color: '#6B7280'  },
     { value: counts.enviadas,   label: 'Enviadas',    color: T.t2       },
     { value: counts.revision,   label: 'En revisión', color: '#F5A623'  },
     { value: counts.entrevista, label: 'Entrevista',  color: '#2563EB'  },
@@ -468,8 +473,8 @@ function TabCandidaturas({ applications, loading, error, onApplicationClick }) {
         </p>
       </div>
 
-      {/* 6 stat boxes */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 12 }}>
+      {/* 7 stat boxes */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 12 }}>
         {STAT_BOXES.map(s => (
           <div key={s.label} style={{ backgroundColor: T.white, borderRadius: T.radiusCard, boxShadow: T.shadowCard }}>
             <StatBox value={s.value} label={s.label} color={s.color} />
@@ -1800,6 +1805,7 @@ export default function OpePortalPage({
   userDegree,
 }) {
   const { token, user } = useAuth();
+  const { saveIntendedPage } = useRedirect();
   const displayName = user?.name?.trim() || userName?.trim() || 'Usuario';
   const displayDetail = user?.email || userDegree || '';
 
@@ -1950,20 +1956,101 @@ export default function OpePortalPage({
     return applications.find(application => application?.offerId === offerId);
   }
 
+  function handleNotificationOpen(notification) {
+    if (!notification) return;
+
+    if (notification.entityType === 'offer') {
+      const offer = offers.find(item => item.id === notification.entityId);
+      if (offer) {
+        setSelectedApplication(null);
+        setSelectedEvent(null);
+        setSelectedOffer(offer);
+      } else {
+        setActiveSection('ofertas');
+      }
+      return;
+    }
+
+    if (notification.entityType === 'application') {
+      const application = applications.find(item => String(item.id) === String(notification.entityId));
+      if (application) {
+        setSelectedOffer(null);
+        setSelectedEvent(null);
+        setSelectedApplication(application);
+      } else {
+        setActiveSection('candidaturas');
+      }
+      return;
+    }
+
+    if (notification.entityType === 'event') {
+      const event = events.find(item => item.id === notification.entityId);
+      if (event) {
+        setSelectedOffer(null);
+        setSelectedApplication(null);
+        setSelectedEvent(event);
+      } else {
+        setActiveSection('eventos');
+      }
+      return;
+    }
+
+    if (notification.entityType?.startsWith('guidance_session')) {
+      setSelectedOffer(null);
+      setSelectedApplication(null);
+      setSelectedEvent(null);
+      setActiveSection('orientacion');
+      return;
+    }
+
+    if (notification.entityType === 'company') {
+      setSelectedOffer(null);
+      setSelectedApplication(null);
+      setSelectedEvent(null);
+      setSearchQuery(notification.entityId || '');
+      setActiveSection('ofertas');
+      return;
+    }
+
+    setActiveSection('inicio');
+  }
+
   async function handleApplyToOffer(offer) {
-    if (!token || !offer?.id || applyingOfferId) return;
+    if (!offer?.id || applyingOfferId) return;
+    if (!token) {
+      setApplyError('Inicia sesion para inscribirte en la oferta.');
+      saveIntendedPage('ope');
+      onNavigate?.('login');
+      return;
+    }
     setApplyingOfferId(offer.id);
     setApplyError(null);
+    const optimisticApplication = {
+      id: `pending-${offer.id}`,
+      userId: user?.id,
+      offerId: offer.id,
+      status: 'enviada',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      offer,
+    };
+    setApplications(current => [
+      optimisticApplication,
+      ...current.filter(item => item.offerId !== offer.id),
+    ]);
+    setSelectedApplication(optimisticApplication);
     try {
       const application = await applyToOffer(offer.id, token);
       setApplications(current => {
-        const exists = current.some(item => item.id === application.id);
+        const exists = current.some(item => item.id === application.id || item.offerId === application.offerId);
         return exists
-          ? current.map(item => item.id === application.id ? application : item)
+          ? current.map(item => (item.id === application.id || item.offerId === application.offerId) ? application : item)
           : [application, ...current];
       });
       setSelectedApplication(application);
     } catch (err) {
+      setApplications(current => current.filter(item => item.id !== optimisticApplication.id));
+      setSelectedApplication(null);
       setApplyError(err.message || 'No se pudo crear la candidatura.');
     } finally {
       setApplyingOfferId(null);
@@ -1983,19 +2070,59 @@ export default function OpePortalPage({
   }
 
   async function handleSaveOffer(offer) {
-    if (!token || !offer?.id || savingOfferId) return;
+    if (!offer?.id || savingOfferId) return;
+    if (!token) {
+      setApplyError('Inicia sesion para guardar la oferta.');
+      saveIntendedPage('ope');
+      onNavigate?.('login');
+      return;
+    }
+    const existingApplication = findApplicationForOffer(offer.id);
+    const wasSaved = existingApplication?.status === 'guardada';
     setSavingOfferId(offer.id);
     setApplyError(null);
+
+    if (wasSaved) {
+      setApplications(current => current.filter(item => item.offerId !== offer.id));
+      setSelectedApplication(current => current?.offerId === offer.id ? null : current);
+      try {
+        await unsaveOffer(offer.id, token);
+      } catch (err) {
+        setApplications(current => [existingApplication, ...current.filter(item => item.offerId !== offer.id)]);
+        setSelectedApplication(existingApplication);
+        setApplyError(err.message || 'No se pudo quitar la oferta de guardadas.');
+      } finally {
+        setSavingOfferId(null);
+      }
+      return;
+    }
+
+    const optimisticApplication = {
+      id: `pending-saved-${offer.id}`,
+      userId: user?.id,
+      offerId: offer.id,
+      status: 'guardada',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      offer,
+    };
+    setApplications(current => [
+      optimisticApplication,
+      ...current.filter(item => item.offerId !== offer.id),
+    ]);
+    setSelectedApplication(optimisticApplication);
     try {
       const application = await saveOffer(offer.id, token);
       setApplications(current => {
-        const exists = current.some(item => item.id === application.id);
+        const exists = current.some(item => item.id === application.id || item.offerId === application.offerId);
         return exists
-          ? current.map(item => item.id === application.id ? application : item)
+          ? current.map(item => (item.id === application.id || item.offerId === application.offerId) ? application : item)
           : [application, ...current];
       });
       setSelectedApplication(application);
     } catch (err) {
+      setApplications(current => current.filter(item => item.id !== optimisticApplication.id));
+      setSelectedApplication(null);
       setApplyError(err.message || 'No se pudo guardar la oferta.');
     } finally {
       setSavingOfferId(null);
@@ -2029,6 +2156,7 @@ export default function OpePortalPage({
         userDegree={displayDetail}
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
+        onOpenNotification={handleNotificationOpen}
       >
         <OfferDetail
           offer={selectedOffer}
@@ -2062,15 +2190,18 @@ export default function OpePortalPage({
         userDegree={displayDetail}
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
+        onOpenNotification={handleNotificationOpen}
       >
         <OfferDetail
           offer={selectedApplication.offer}
           application={selectedApplication}
           applying={applyingOfferId === selectedApplication.offerId}
+          saving={savingOfferId === selectedApplication.offerId}
           advancing={advancingApplicationId === selectedApplication.id}
           rejecting={rejectingApplicationId === selectedApplication.id}
           applyError={applyError}
           onApply={() => handleApplyToOffer(selectedApplication.offer)}
+          onSave={() => handleSaveOffer(selectedApplication.offer)}
           onAdvanceApplication={() => handleAdvanceApplication(selectedApplication)}
           onRejectApplication={() => handleRejectApplication(selectedApplication)}
           onBack={() => {
@@ -2093,6 +2224,7 @@ export default function OpePortalPage({
         userDegree={displayDetail}
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
+        onOpenNotification={handleNotificationOpen}
       >
         <EventDetail event={selectedEvent} onBack={() => setSelectedEvent(null)} />
       </PortalLayout>
@@ -2266,6 +2398,7 @@ export default function OpePortalPage({
       rightPanelVisible={activeSection === 'inicio'}
       searchQuery={searchQuery}
       onSearchChange={handleSearchChange}
+      onOpenNotification={handleNotificationOpen}
     >
       {renderContent()}
     </PortalLayout>

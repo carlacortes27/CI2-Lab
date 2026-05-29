@@ -27,9 +27,11 @@ async function readJsonDb() {
       nextId: db.nextId || 1,
       applications: db.applications || [],
       nextApplicationId: db.nextApplicationId || 1,
+      notifications: db.notifications || [],
+      nextNotificationId: db.nextNotificationId || 1,
     };
   } catch {
-    return { users: [], nextId: 1, applications: [], nextApplicationId: 1 };
+    return { users: [], nextId: 1, applications: [], nextApplicationId: 1, notifications: [], nextNotificationId: 1 };
   }
 }
 
@@ -42,6 +44,20 @@ async function writeJsonDb(db) {
 
 let readyPromise;
 let useJsonFallback = false;
+let bridgeQueue = Promise.resolve();
+const userByIdCache = new Map();
+const userByEmailCache = new Map();
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function cacheUser(user) {
+  if (!user) return user;
+  userByIdCache.set(Number(user.id), user);
+  if (user.email) userByEmailCache.set(user.email.toLowerCase(), user);
+  return user;
+}
 
 async function ensureBridge() {
   await fs.access(h2JarPath);
@@ -57,7 +73,12 @@ async function ensureBridge() {
   }
 }
 
-async function runBridge(command, args = []) {
+function isH2LockRace(error) {
+  const message = `${error?.message || ''}\n${error?.stderr || ''}`;
+  return message.includes('Lock file recently modified') || message.includes('[8000-232]');
+}
+
+async function runBridgeProcess(command, args = []) {
   await fs.mkdir(dbDir, { recursive: true });
   await ensureBridge();
   const { stdout, stderr } = await execFileAsync(
@@ -68,6 +89,26 @@ async function runBridge(command, args = []) {
   if (stderr.trim()) console.warn(stderr.trim());
   const output = stdout.trim();
   return output ? JSON.parse(output) : null;
+}
+
+async function runBridge(command, args = []) {
+  const operation = bridgeQueue.then(async () => {
+    const delays = [150, 300, 600, 1000, 1500];
+    for (let attempt = 0; attempt <= delays.length; attempt++) {
+      try {
+        return await runBridgeProcess(command, args);
+      } catch (err) {
+        if (!isH2LockRace(err) || attempt === delays.length) {
+          throw err;
+        }
+        await sleep(delays[attempt]);
+      }
+    }
+    return null;
+  });
+
+  bridgeQueue = operation.catch(() => null);
+  return operation;
 }
 
 // ── Migración JSON → H2 ───────────────────────────────────────────────────────
@@ -122,21 +163,29 @@ export function getDatabaseInfo() {
 }
 
 export async function findUserByEmail(email) {
+  const cacheKey = email?.toLowerCase();
+  if (cacheKey && userByEmailCache.has(cacheKey)) {
+    return userByEmailCache.get(cacheKey);
+  }
   await initDatabase();
   if (useJsonFallback) {
     const db = await readJsonDb();
-    return db.users.find(u => u.email === email) || null;
+    return cacheUser(db.users.find(u => u.email === email) || null);
   }
-  return runBridge('findByEmail', [email]);
+  return cacheUser(await runBridge('findByEmail', [email]));
 }
 
 export async function findUserById(id) {
+  const cacheKey = Number(id);
+  if (userByIdCache.has(cacheKey)) {
+    return userByIdCache.get(cacheKey);
+  }
   await initDatabase();
   if (useJsonFallback) {
     const db = await readJsonDb();
-    return db.users.find(u => u.id === Number(id)) || null;
+    return cacheUser(db.users.find(u => u.id === Number(id)) || null);
   }
-  return runBridge('findById', [String(id)]);
+  return cacheUser(await runBridge('findById', [String(id)]));
 }
 
 export async function createUser({ name, email, passwordHash }) {
@@ -149,18 +198,18 @@ export async function createUser({ name, email, passwordHash }) {
     const user = { id: db.nextId++, name, email, passwordHash };
     db.users.push(user);
     await writeJsonDb(db);
-    return user;
+    return cacheUser(user);
   }
-  return runBridge('createUser', [name, email, passwordHash]);
+  return cacheUser(await runBridge('createUser', [name, email, passwordHash]));
 }
 
 export async function listUsers() {
   await initDatabase();
   if (useJsonFallback) {
     const db = await readJsonDb();
-    return db.users;
+    return db.users.map(cacheUser);
   }
-  return runBridge('listUsers');
+  return (await runBridge('listUsers')).map(cacheUser);
 }
 
 const APPLICATION_PHASES = ['enviada', 'revision', 'entrevista', 'aceptada', 'finalizada'];
@@ -231,6 +280,24 @@ export async function saveApplication({ userId, offerId }) {
   return result;
 }
 
+export async function unsaveApplication({ userId, offerId }) {
+  await initDatabase();
+  if (useJsonFallback) {
+    const db = await readJsonDb();
+    const before = db.applications.length;
+    db.applications = db.applications.filter(app => (
+      app.userId !== Number(userId) ||
+      app.offerId !== offerId ||
+      app.status !== 'guardada'
+    ));
+    if (db.applications.length !== before) {
+      await writeJsonDb(db);
+    }
+    return { ok: true };
+  }
+  return runBridge('unsaveApplication', [String(userId), offerId]);
+}
+
 export async function advanceApplication({ userId, applicationId }) {
   await initDatabase();
   if (useJsonFallback) {
@@ -258,4 +325,122 @@ export async function rejectApplication({ userId, applicationId }) {
     return application;
   }
   return runBridge('rejectApplication', [String(applicationId), String(userId)]);
+}
+
+export async function upsertNotification({
+  userId,
+  type,
+  entityType,
+  entityId,
+  message,
+  expiresAt = null,
+  sourceKey,
+}) {
+  await initDatabase();
+  const key = sourceKey || `${userId}:${type}:${entityType}:${entityId}`;
+
+  if (useJsonFallback) {
+    const db = await readJsonDb();
+    const existing = db.notifications.find(item => item.sourceKey === key);
+    const now = new Date().toISOString();
+    if (existing) {
+      existing.message = message;
+      existing.expiresAt = expiresAt;
+      existing.deletedAt = null;
+      await writeJsonDb(db);
+      return existing;
+    }
+
+    const notification = {
+      id: db.nextNotificationId++,
+      userId: Number(userId),
+      type,
+      entityType,
+      entityId,
+      message,
+      isRead: false,
+      createdAt: now,
+      expiresAt,
+      deletedAt: null,
+      sourceKey: key,
+    };
+    db.notifications.push(notification);
+    await writeJsonDb(db);
+    return notification;
+  }
+
+  return runBridge('upsertNotification', [
+    String(userId),
+    type,
+    entityType,
+    String(entityId),
+    message,
+    expiresAt || '',
+    key,
+  ]);
+}
+
+export async function listNotificationsByUser(userId, limit = 10) {
+  await initDatabase();
+  await softDeleteOldNotifications(userId);
+
+  if (useJsonFallback) {
+    const db = await readJsonDb();
+    const now = Date.now();
+    return db.notifications
+      .filter(item => item.userId === Number(userId))
+      .filter(item => !item.deletedAt)
+      .filter(item => !item.expiresAt || new Date(item.expiresAt).getTime() > now)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, limit);
+  }
+
+  return runBridge('listNotifications', [String(userId), String(limit)]);
+}
+
+export async function markNotificationRead({ userId, notificationId }) {
+  await initDatabase();
+  if (useJsonFallback) {
+    const db = await readJsonDb();
+    const notification = db.notifications.find(item => item.userId === Number(userId) && item.id === Number(notificationId));
+    if (!notification) return null;
+    notification.isRead = true;
+    await writeJsonDb(db);
+    return notification;
+  }
+  return runBridge('markNotificationRead', [String(notificationId), String(userId)]);
+}
+
+export async function markAllNotificationsRead(userId) {
+  await initDatabase();
+  if (useJsonFallback) {
+    const db = await readJsonDb();
+    db.notifications
+      .filter(item => item.userId === Number(userId) && !item.deletedAt)
+      .forEach(item => {
+        item.isRead = true;
+      });
+    await writeJsonDb(db);
+    return { ok: true };
+  }
+  return runBridge('markAllNotificationsRead', [String(userId)]);
+}
+
+export async function softDeleteOldNotifications(userId) {
+  await initDatabase();
+  if (useJsonFallback) {
+    const db = await readJsonDb();
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const now = new Date().toISOString();
+    db.notifications
+      .filter(item => item.userId === Number(userId))
+      .filter(item => !item.deletedAt)
+      .filter(item => new Date(item.createdAt).getTime() < cutoff)
+      .forEach(item => {
+        item.deletedAt = now;
+      });
+    await writeJsonDb(db);
+    return { ok: true };
+  }
+  return runBridge('softDeleteOldNotifications', [String(userId)]);
 }

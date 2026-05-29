@@ -26,6 +26,21 @@ public class H2AuthBridge {
         CONSTRAINT UQ_APPLICATIONS_USER_OFFER UNIQUE (USER_ID, OFFER_ID)
       )
       """;
+  private static final String NOTIFICATIONS_SCHEMA_SQL = """
+      CREATE TABLE IF NOT EXISTS NOTIFICATIONS (
+        ID BIGINT AUTO_INCREMENT PRIMARY KEY,
+        USER_ID BIGINT NOT NULL,
+        TYPE VARCHAR(80) NOT NULL,
+        ENTITY_TYPE VARCHAR(80) NOT NULL,
+        ENTITY_ID VARCHAR(120) NOT NULL,
+        MESSAGE VARCHAR(500) NOT NULL,
+        IS_READ BOOLEAN NOT NULL DEFAULT FALSE,
+        CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        EXPIRES_AT TIMESTAMP NULL,
+        DELETED_AT TIMESTAMP NULL,
+        SOURCE_KEY VARCHAR(220) NOT NULL UNIQUE
+      )
+      """;
 
   private static final String[] APPLICATION_PHASES = {
       "enviada", "revision", "entrevista", "aceptada", "finalizada"
@@ -50,9 +65,15 @@ public class H2AuthBridge {
         case "listApplications" -> listApplications(conn, Long.parseLong(args[2]));
         case "createApplication" -> createApplication(conn, Long.parseLong(args[2]), args[3]);
         case "saveApplication" -> saveApplication(conn, Long.parseLong(args[2]), args[3]);
+        case "unsaveApplication" -> unsaveApplication(conn, Long.parseLong(args[2]), args[3]);
         case "advanceApplication" -> advanceApplication(conn, Long.parseLong(args[2]), Long.parseLong(args[3]));
         case "rejectApplication" -> rejectApplication(conn, Long.parseLong(args[2]), Long.parseLong(args[3]));
         case "migrateApplication" -> migrateApplication(conn, Long.parseLong(args[2]), args[3], args[4], args[5], args[6]);
+        case "upsertNotification" -> upsertNotification(conn, Long.parseLong(args[2]), args[3], args[4], args[5], args[6], args[7], args[8]);
+        case "listNotifications" -> listNotifications(conn, Long.parseLong(args[2]), Integer.parseInt(args[3]));
+        case "markNotificationRead" -> markNotificationRead(conn, Long.parseLong(args[2]), Long.parseLong(args[3]));
+        case "markAllNotificationsRead" -> markAllNotificationsRead(conn, Long.parseLong(args[2]));
+        case "softDeleteOldNotifications" -> softDeleteOldNotifications(conn, Long.parseLong(args[2]));
         default -> throw new IllegalArgumentException("Unknown command: " + command);
       }
     }
@@ -62,6 +83,7 @@ public class H2AuthBridge {
     try (Statement stmt = conn.createStatement()) {
       stmt.execute(USERS_SCHEMA_SQL);
       stmt.execute(APPLICATIONS_SCHEMA_SQL);
+      stmt.execute(NOTIFICATIONS_SCHEMA_SQL);
     }
     dropFkConstraintIfPresent(conn);
     migrateLowercaseUsersIfPresent(conn);
@@ -151,6 +173,16 @@ public class H2AuthBridge {
     }
   }
 
+  private static void unsaveApplication(Connection conn, long userId, String offerId) throws Exception {
+    try (PreparedStatement stmt = conn.prepareStatement(
+        "DELETE FROM APPLICATIONS WHERE USER_ID = ? AND OFFER_ID = ? AND STATUS = 'guardada'")) {
+      stmt.setLong(1, userId);
+      stmt.setString(2, offerId);
+      stmt.executeUpdate();
+    }
+    System.out.println("{\"ok\":true}");
+  }
+
   private static void advanceApplication(Connection conn, long applicationId, long userId) throws Exception {
     String currentStatus = null;
     try (PreparedStatement stmt = conn.prepareStatement(
@@ -205,6 +237,140 @@ public class H2AuthBridge {
       // Duplicate or parse error — skip silently
     }
     System.out.println("{\"ok\":true}");
+  }
+
+  private static void upsertNotification(Connection conn, long userId, String type, String entityType, String entityId, String message, String expiresAt, String sourceKey) throws Exception {
+    try (PreparedStatement stmt = conn.prepareStatement(
+        "UPDATE NOTIFICATIONS SET MESSAGE = ?, EXPIRES_AT = ?, DELETED_AT = NULL WHERE SOURCE_KEY = ?")) {
+      stmt.setString(1, message);
+      setNullableTimestamp(stmt, 2, expiresAt);
+      stmt.setString(3, sourceKey);
+      int updated = stmt.executeUpdate();
+      if (updated > 0) {
+        findNotificationBySource(conn, sourceKey, userId);
+        return;
+      }
+    }
+
+    try (PreparedStatement stmt = conn.prepareStatement(
+        "INSERT INTO NOTIFICATIONS (USER_ID, TYPE, ENTITY_TYPE, ENTITY_ID, MESSAGE, EXPIRES_AT, SOURCE_KEY) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        Statement.RETURN_GENERATED_KEYS)) {
+      stmt.setLong(1, userId);
+      stmt.setString(2, type);
+      stmt.setString(3, entityType);
+      stmt.setString(4, entityId);
+      stmt.setString(5, message);
+      setNullableTimestamp(stmt, 6, expiresAt);
+      stmt.setString(7, sourceKey);
+      stmt.executeUpdate();
+      try (ResultSet keys = stmt.getGeneratedKeys()) {
+        if (!keys.next()) throw new IllegalStateException("No generated id returned");
+        findNotificationById(conn, keys.getLong(1), userId);
+      }
+    } catch (org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException duplicate) {
+      findNotificationBySource(conn, sourceKey, userId);
+    }
+  }
+
+  private static void listNotifications(Connection conn, long userId, int limit) throws Exception {
+    softDeleteOldNotifications(conn, userId, false);
+    try (PreparedStatement stmt = conn.prepareStatement(
+        "SELECT ID, USER_ID, TYPE, ENTITY_TYPE, ENTITY_ID, MESSAGE, IS_READ, CREATED_AT, EXPIRES_AT FROM NOTIFICATIONS WHERE USER_ID = ? AND DELETED_AT IS NULL AND (EXPIRES_AT IS NULL OR EXPIRES_AT > CURRENT_TIMESTAMP) ORDER BY CREATED_AT DESC, ID DESC LIMIT ?")) {
+      stmt.setLong(1, userId);
+      stmt.setInt(2, limit);
+      try (ResultSet rs = stmt.executeQuery()) {
+        StringBuilder json = new StringBuilder("[");
+        boolean first = true;
+        while (rs.next()) {
+          if (!first) json.append(",");
+          first = false;
+          json.append(notificationJson(rs));
+        }
+        json.append("]");
+        System.out.println(json);
+      }
+    }
+  }
+
+  private static void markNotificationRead(Connection conn, long notificationId, long userId) throws Exception {
+    try (PreparedStatement stmt = conn.prepareStatement(
+        "UPDATE NOTIFICATIONS SET IS_READ = TRUE WHERE ID = ? AND USER_ID = ?")) {
+      stmt.setLong(1, notificationId);
+      stmt.setLong(2, userId);
+      int updated = stmt.executeUpdate();
+      if (updated == 0) {
+        System.out.println("null");
+        return;
+      }
+    }
+    findNotificationById(conn, notificationId, userId);
+  }
+
+  private static void markAllNotificationsRead(Connection conn, long userId) throws Exception {
+    try (PreparedStatement stmt = conn.prepareStatement(
+        "UPDATE NOTIFICATIONS SET IS_READ = TRUE WHERE USER_ID = ? AND DELETED_AT IS NULL")) {
+      stmt.setLong(1, userId);
+      stmt.executeUpdate();
+    }
+    System.out.println("{\"ok\":true}");
+  }
+
+  private static void softDeleteOldNotifications(Connection conn, long userId) throws Exception {
+    softDeleteOldNotifications(conn, userId, true);
+  }
+
+  private static void softDeleteOldNotifications(Connection conn, long userId, boolean print) throws Exception {
+    try (PreparedStatement stmt = conn.prepareStatement(
+        "UPDATE NOTIFICATIONS SET DELETED_AT = CURRENT_TIMESTAMP WHERE USER_ID = ? AND DELETED_AT IS NULL AND CREATED_AT < DATEADD('DAY', -30, CURRENT_TIMESTAMP)")) {
+      stmt.setLong(1, userId);
+      stmt.executeUpdate();
+    }
+    if (print) System.out.println("{\"ok\":true}");
+  }
+
+  private static void findNotificationBySource(Connection conn, String sourceKey, long userId) throws Exception {
+    try (PreparedStatement stmt = conn.prepareStatement(
+        "SELECT ID, USER_ID, TYPE, ENTITY_TYPE, ENTITY_ID, MESSAGE, IS_READ, CREATED_AT, EXPIRES_AT FROM NOTIFICATIONS WHERE SOURCE_KEY = ? AND USER_ID = ?")) {
+      stmt.setString(1, sourceKey);
+      stmt.setLong(2, userId);
+      try (ResultSet rs = stmt.executeQuery()) {
+        printNotificationOrNull(rs);
+      }
+    }
+  }
+
+  private static void findNotificationById(Connection conn, long notificationId, long userId) throws Exception {
+    try (PreparedStatement stmt = conn.prepareStatement(
+        "SELECT ID, USER_ID, TYPE, ENTITY_TYPE, ENTITY_ID, MESSAGE, IS_READ, CREATED_AT, EXPIRES_AT FROM NOTIFICATIONS WHERE ID = ? AND USER_ID = ?")) {
+      stmt.setLong(1, notificationId);
+      stmt.setLong(2, userId);
+      try (ResultSet rs = stmt.executeQuery()) {
+        printNotificationOrNull(rs);
+      }
+    }
+  }
+
+  private static void printNotificationOrNull(ResultSet rs) throws Exception {
+    if (!rs.next()) {
+      System.out.println("null");
+      return;
+    }
+    System.out.println(notificationJson(rs));
+  }
+
+  private static String notificationJson(ResultSet rs) throws Exception {
+    Timestamp expiresAt = rs.getTimestamp("EXPIRES_AT");
+    return "{"
+        + "\"id\":" + rs.getLong("ID") + ","
+        + "\"userId\":" + rs.getLong("USER_ID") + ","
+        + "\"type\":\"" + escape(rs.getString("TYPE")) + "\","
+        + "\"entityType\":\"" + escape(rs.getString("ENTITY_TYPE")) + "\","
+        + "\"entityId\":\"" + escape(rs.getString("ENTITY_ID")) + "\","
+        + "\"message\":\"" + escape(rs.getString("MESSAGE")) + "\","
+        + "\"isRead\":" + rs.getBoolean("IS_READ") + ","
+        + "\"createdAt\":\"" + formatTimestamp(rs.getTimestamp("CREATED_AT")) + "\","
+        + "\"expiresAt\":" + (expiresAt == null ? "null" : "\"" + formatTimestamp(expiresAt) + "\"")
+        + "}";
   }
 
   private static String nextPhase(String status) {
@@ -335,6 +501,14 @@ public class H2AuthBridge {
 
   private static String formatTimestamp(Timestamp timestamp) {
     return timestamp == null ? "" : timestamp.toInstant().toString();
+  }
+
+  private static void setNullableTimestamp(PreparedStatement stmt, int index, String iso) throws Exception {
+    if (iso == null || iso.isBlank()) {
+      stmt.setTimestamp(index, null);
+      return;
+    }
+    stmt.setTimestamp(index, Timestamp.from(java.time.Instant.parse(iso)));
   }
 
   private static String escape(String value) {

@@ -50,7 +50,7 @@ router.get('/appointments', requireAuth, (req, res) => {
 
 // POST /api/appointments
 router.post('/appointments', requireAuth, (req, res, next) => {
-  const { advisorId, date, time, reason, modality, comments } = req.body;
+  const { advisorId, date, time, reason, modality, comments, meetingLink } = req.body;
   if (!advisorId || !date || !time || !reason || !modality) {
     const err = new Error('Faltan campos obligatorios');
     err.status = 400;
@@ -90,6 +90,7 @@ router.post('/appointments', requireAuth, (req, res, next) => {
     time,
     reason,
     modality,
+    meetingLink: modality === 'Online' ? (meetingLink || `https://meet.comillas.edu/ope/${Date.now()}`) : null,
     status: 'Confirmada',
     notes: comments || '',
   };

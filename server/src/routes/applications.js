@@ -2,8 +2,9 @@ import { Router } from 'express';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { advanceApplication, createApplication, listApplicationsByUser, rejectApplication, saveApplication } from '../db/h2Client.js';
+import { advanceApplication, createApplication, listApplicationsByUser, rejectApplication, saveApplication, unsaveApplication } from '../db/h2Client.js';
 import { requireAuth } from './auth.js';
+import { createApplicationStatusNotification } from '../services/notificationService.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const offers = JSON.parse(
@@ -18,6 +19,11 @@ function enrichApplication(application) {
     ...application,
     offer: offer || null,
   };
+}
+
+function queueApplicationNotification({ userId, application, offer }) {
+  createApplicationStatusNotification({ userId, application, offer })
+    .catch(err => console.warn('No se pudo crear la notificacion de candidatura:', err.message));
 }
 
 router.use(requireAuth);
@@ -48,6 +54,7 @@ router.post('/', async (req, res, next) => {
       return res.status(500).json({ error: 'No se pudo crear la candidatura. Inténtalo de nuevo.' });
     }
     res.status(201).json(enrichApplication(application));
+    queueApplicationNotification({ userId: req.user.id, application, offer });
   } catch (err) {
     next(err);
   }
@@ -75,6 +82,20 @@ router.post('/saved', async (req, res, next) => {
   }
 });
 
+router.delete('/saved/:offerId', async (req, res, next) => {
+  try {
+    const offer = offers.find(item => item.id === req.params.offerId);
+    if (!offer) {
+      return res.status(404).json({ error: 'Oferta no encontrada' });
+    }
+
+    await unsaveApplication({ userId: req.user.id, offerId: req.params.offerId });
+    res.json({ ok: true, offerId: req.params.offerId });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/:id/advance', async (req, res, next) => {
   try {
     const application = await advanceApplication({
@@ -86,7 +107,9 @@ router.post('/:id/advance', async (req, res, next) => {
       return res.status(404).json({ error: 'Candidatura no encontrada' });
     }
 
+    const offer = offers.find(item => item.id === application.offerId);
     res.json(enrichApplication(application));
+    queueApplicationNotification({ userId: req.user.id, application, offer });
   } catch (err) {
     next(err);
   }
@@ -103,7 +126,9 @@ router.post('/:id/reject', async (req, res, next) => {
       return res.status(404).json({ error: 'Candidatura no encontrada' });
     }
 
+    const offer = offers.find(item => item.id === application.offerId);
     res.json(enrichApplication(application));
+    queueApplicationNotification({ userId: req.user.id, application, offer });
   } catch (err) {
     next(err);
   }

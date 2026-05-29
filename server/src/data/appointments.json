@@ -9,6 +9,7 @@
     "time": "10:30",
     "reason": "Revisión de CV",
     "modality": "Online",
+    "meetingLink": "https://meet.comillas.edu/ope/apt_001",
     "status": "Confirmada",
     "notes": ""
   },
@@ -35,6 +36,7 @@
     "time": "11:00",
     "reason": "Búsqueda de prácticas",
     "modality": "Online",
+    "meetingLink": "https://meet.comillas.edu/ope/apt_003",
     "status": "Pendiente",
     "notes": ""
   }
