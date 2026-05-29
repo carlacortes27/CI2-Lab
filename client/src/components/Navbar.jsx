@@ -12,7 +12,7 @@ export default function Navbar({ currentPage, onNavigate }) {
       <button className="brand" type="button" onClick={() => onNavigate('home')}>
         <img className="brand-logo" src={icaiLogo} alt="ICAI Universidad Pontificia Comillas" />
         <span>
-          <strong>CV Comillas</strong>
+          <strong>OPE Comillas</strong>
           <small>Comillas Career</small>
         </span>
       </button>
