@@ -1736,24 +1736,7 @@ function TabPerfil({ offers = [] }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <button
                 type="button"
-                onClick={() => setPrefsOpen(open => !open)}
-                title={prefsOpen ? 'Plegar' : 'Desplegar'}
-                style={{
-                  width: 32, height: 32,
-                  borderRadius: T.radiusPill,
-                  border: `1px solid ${T.border}`,
-                  backgroundColor: T.white,
-                  color: T.t1,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                }}
-              >
-                <ChevronDownIcon size={16} style={{ transform: prefsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditingPrefs(editing => !editing)}
+                onClick={editingPrefs ? saveProfilePreferences : openProfileEditor}
                 style={{
                   padding: '8px 14px',
                   borderRadius: T.radiusPill,
