@@ -57,6 +57,7 @@ const CalIco     = ({ size = 14 }) => <Ico size={size} color={T.t3}><rect x="3" 
 const UserIco    = ({ size = 14 }) => <Ico size={size} color={T.t3}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Ico>;
 const TagIco     = ({ size = 14 }) => <Ico size={size} color={T.orange}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></Ico>;
 const InfoIco    = ({ size = 14 }) => <Ico size={size} color={T.orange}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></Ico>;
+const CheckIco   = ({ size = 14 }) => <Ico size={size} color="currentColor"><polyline points="20 6 9 17 4 12"/></Ico>;
 
 const card = {
   backgroundColor: T.white,
@@ -100,19 +101,21 @@ function SectionHeader({ icon, title }) {
 
 // ── Mapa de estados de inscripción ────────────────────────────────────────────
 const STATUS_CONFIG = {
-  'Abierta':       { label: 'Inscribirme',    disabled: false, bg: T.orange,    color: T.white   },
-  'Confirmada':    { label: 'Cita confirmada', disabled: true, bg: '#DCFCE7',   color: '#15803D' },
-  'Próximamente':  { label: 'Próximamente',   disabled: true,  bg: T.hoverBg,   color: T.t3      },
-  'Completo':      { label: 'Completo',        disabled: true,  bg: '#FEE2E2',   color: '#B91C1C' },
-  'Cerrada':       { label: 'Inscripción cerrada', disabled: true, bg: T.hoverBg, color: T.t3    },
+  'Abierta':       { label: 'Inscribirme',     disabled: false, bg: T.orange,  color: T.white,    hoverBg: '#D4880A' },
+  'Inscrito':      { label: 'Desinscribirme',  disabled: false, bg: '#F0FDF4', color: '#15803D',  border: '#BBF7D0', hoverBg: '#DCFCE7' },
+  'Confirmada':    { label: 'Cita confirmada', disabled: true,  bg: '#DCFCE7', color: '#15803D'   },
+  'Próximamente':  { label: 'Próximamente',    disabled: true,  bg: T.hoverBg, color: T.t3        },
+  'Completo':      { label: 'Completo',        disabled: true,  bg: '#FEE2E2', color: '#B91C1C'   },
+  'Cerrada':       { label: 'Inscripción cerrada', disabled: true, bg: T.hoverBg, color: T.t3     },
 };
 
 // ── Componente principal ──────────────────────────────────────────────────────
-export default function EventDetail({ event, onBack }) {
+export default function EventDetail({ event, onBack, onRegister }) {
   const date     = formatEventDate(event);
   const category = getEventCategory(event);
   const catStyle = eventCategoryStyle(category);
-  const status   = STATUS_CONFIG[event.registrationStatus] ?? STATUS_CONFIG['Cerrada'];
+  const isRegistered = event?.isRegistered === true;
+  const status   = isRegistered ? STATUS_CONFIG['Inscrito'] : STATUS_CONFIG[event.registrationStatus] ?? STATUS_CONFIG['Cerrada'];
 
   return (
     <div style={{ padding: '28px 40px', backgroundColor: T.bg, minHeight: '100%' }}>
@@ -185,13 +188,14 @@ export default function EventDetail({ event, onBack }) {
               }}>
                 {category}
               </span>
-              {event.registrationStatus && (
+              {(isRegistered || event.registrationStatus) && (
                 <span style={{
                   padding: '4px 12px', borderRadius: T.radiusPill,
                   backgroundColor: status.bg, color: status.color,
                   fontSize: 12, fontWeight: 600, fontFamily: T.font,
+                  border: status.border ? `1px solid ${status.border}` : 'none',
                 }}>
-                  {event.registrationStatus}
+                  {isRegistered ? 'Inscrito' : event.registrationStatus}
                 </span>
               )}
             </div>
@@ -264,21 +268,27 @@ export default function EventDetail({ event, onBack }) {
         <button
           type="button"
           disabled={status.disabled}
+          onClick={() => {
+            if (!status.disabled) onRegister?.(event);
+          }}
           style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
             padding: '14px 36px',
             borderRadius: T.radiusPill,
             backgroundColor: status.bg,
             color: status.color,
             fontSize: 15, fontWeight: 700,
-            border: 'none',
+            border: status.border ? `1px solid ${status.border}` : 'none',
             cursor: status.disabled ? 'not-allowed' : 'pointer',
             opacity: status.disabled ? 0.75 : 1,
             transition: 'background-color 0.15s, transform 0.1s',
             boxShadow: status.disabled ? 'none' : `0 2px 8px rgba(245,166,35,0.35)`,
             fontFamily: T.font,
           }}
-          onMouseEnter={e => { if (!status.disabled) e.currentTarget.style.backgroundColor = '#D4880A'; }}
-          onMouseLeave={e => { if (!status.disabled) e.currentTarget.style.backgroundColor = T.orange; }}
+          onMouseEnter={e => { if (!status.disabled) e.currentTarget.style.backgroundColor = status.hoverBg ?? '#D4880A'; }}
+          onMouseLeave={e => { if (!status.disabled) e.currentTarget.style.backgroundColor = status.bg; }}
           onMouseDown={e =>  { if (!status.disabled) e.currentTarget.style.transform = 'scale(0.98)'; }}
           onMouseUp={e =>    { if (!status.disabled) e.currentTarget.style.transform = 'scale(1)'; }}
         >

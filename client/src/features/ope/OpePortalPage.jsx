@@ -30,6 +30,7 @@ import {
   FilterIcon,
   PinIcon,
   ClockIcon,
+  CheckIcon,
   ChevronRightIcon,
   ChevronDownIcon,
 } from '../../components/ui/index.js';
@@ -57,6 +58,7 @@ const TECNOLOGIAS = ['Excel', 'PowerPoint', 'Python', 'SQL', 'Power BI', 'AutoCA
 const AREAS_INTERES = ['datos', 'consultoría', 'energía', 'renovables', 'finanzas', 'sostenibilidad', 'cloud', 'operaciones', 'estrategia', 'ingeniería'];
 const ACCEPTED_PHOTO_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 const MAX_PHOTO_SIZE_MB = 2;
+const EVENTS_TODAY = new Date(2026, 4, 1);
 
 function applicationToCard(application) {
   const offer = application.offer || {};
@@ -126,6 +128,10 @@ function eventCategoryStyle(category) {
     'Fecha importante': { bg: T.orangeBg, color: '#B45309', dot: T.orange },
   };
   return styles[category] || styles['Fecha importante'];
+}
+
+function isEventRegistered(event) {
+  return event?.isRegistered === true;
 }
 
 function buildCalendarWeeks(monthDate, events) {
@@ -219,7 +225,7 @@ function CandidaturasPanel({ applications = [], onSection, onApplicationClick, v
             Ir a mi perfil →
           </button>
         </div>
-      </div>
+    </div>
     </div>
   );
 }
@@ -558,10 +564,12 @@ function TabCandidaturas({ applications, loading, error, onApplicationClick }) {
 }
 
 // ── Pestaña: Eventos ──────────────────────────────────────────────────────────
-function EventCard({ event, compact = false, onClick, onRegister, registered = false }) {
+function EventCard({ event, compact = false, onClick, onRegister }) {
   const date = formatEventDate(event);
   const isOpen = event.registrationStatus === 'Abierta';
-  const actionLabel = registered ? 'Inscrito ✓' : isOpen ? 'Inscribirme' : event.registrationStatus;
+  const registered = isEventRegistered(event);
+  const canRegister = isOpen && !registered;
+  const actionLabel = isOpen ? 'Apuntarme' : event.registrationStatus;
   const category = getEventCategory(event);
   const categoryStyle = eventCategoryStyle(category);
 
@@ -655,20 +663,52 @@ function EventCard({ event, compact = false, onClick, onRegister, registered = f
         </div>}
       </div>
 
-      <Button
-        variant={registered ? 'secondary' : compact ? 'secondary' : isOpen ? 'primary' : 'secondary'}
-        disabled={!isOpen || registered}
-        onClick={e => { e.stopPropagation(); if (isOpen && !registered) onRegister?.(event); }}
-        style={{
-          alignSelf: 'center',
-          padding: compact ? '8px 16px' : undefined,
-          fontSize: compact ? 12 : undefined,
-          color: compact && isOpen && !registered ? T.orange : undefined,
-          borderColor: compact && isOpen && !registered ? T.orange : undefined,
-        }}
-      >
-        {compact && isOpen && !registered ? 'Apuntarme' : actionLabel}
-      </Button>
+      {registered ? (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onRegister?.(event); }}
+          style={{
+            alignSelf: 'center',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            padding: compact ? '8px 14px' : '10px 18px',
+            borderRadius: T.radiusPill,
+            border: '1px solid #BBF7D0',
+            backgroundColor: '#F0FDF4',
+            color: '#15803D',
+            fontSize: compact ? 12 : 13,
+            fontWeight: 700,
+            fontFamily: T.font,
+            whiteSpace: 'nowrap',
+            cursor: 'pointer',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#DCFCE7'; }}
+          onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#F0FDF4'; }}
+        >
+          <CheckIcon size={compact ? 13 : 14} />
+          Inscrito
+        </button>
+      ) : (
+        <Button
+          variant={compact ? 'secondary' : isOpen ? 'primary' : 'secondary'}
+          disabled={!canRegister}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (canRegister) onRegister?.(event);
+          }}
+          style={{
+            alignSelf: 'center',
+            padding: compact ? '8px 16px' : undefined,
+            fontSize: compact ? 12 : undefined,
+            color: compact && isOpen ? T.orange : undefined,
+            borderColor: compact && isOpen ? T.orange : undefined,
+          }}
+        >
+          {actionLabel}
+        </Button>
+      )}
     </div>
   );
 }
@@ -725,8 +765,7 @@ function EventsCalendar({
           {cells.map(cell => {
             const isSelected = selectedIso === cell.iso;
             const hasEvents = cell.events.length > 0;
-            const firstCategory = hasEvents ? getEventCategory(cell.events[0]) : null;
-            const dotColor = firstCategory ? eventCategoryStyle(firstCategory).dot : 'transparent';
+            const hasRegisteredEvents = cell.events.some(isEventRegistered);
 
             return (
               <button
@@ -750,51 +789,43 @@ function EventsCalendar({
                 }}
               >
                 {cell.day}
-                {hasEvents && (
+                {hasRegisteredEvents && (
                   <span style={{
                     position: 'absolute',
-                    left: '50%',
-                    bottom: 5,
-                    transform: 'translateX(-50%)',
-                    width: 5,
-                    height: 5,
+                    top: 4,
+                    right: 6,
+                    width: 14,
+                    height: 14,
                     borderRadius: T.radiusPill,
-                    backgroundColor: isSelected ? T.white : dotColor,
-                  }} />
+                    backgroundColor: '#16A34A',
+                    color: T.white,
+                    border: `1px solid ${isSelected ? T.white : '#DCFCE7'}`,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxSizing: 'border-box',
+                  }}>
+                    <CheckIcon size={8} />
+                  </span>
                 )}
               </button>
             );
           })}
         </div>
       </div>
-
-      <div style={{ borderTop: `1px solid ${T.border}`, padding: '14px 24px 18px', display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-        {['Fecha importante', 'Orientación', 'Networking', 'Empresa'].map(category => {
-          const cfg = eventCategoryStyle(category);
-          return (
-            <span key={category} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12, color: T.t2, fontFamily: T.font }}>
-              <span style={{ width: 7, height: 7, borderRadius: T.radiusPill, backgroundColor: cfg.dot }} />
-              {category}
-            </span>
-          );
-        })}
-      </div>
     </div>
   );
 }
 
-function TabEventos({ events, loading, error, scope, setScope, onEventClick }) {
-  const [registeredIds, setRegisteredIds] = useState(() => new Set());
-  function handleRegister(event) {
-    setRegisteredIds(prev => new Set([...prev, event.id]));
-  }
-  const today = new Date();
+function TabEventos({ events, loading, error, scope, setScope, onEventClick, onRegisterEvent }) {
+  const today = new Date(EVENTS_TODAY);
   today.setHours(0, 0, 0, 0);
 
   const upcoming = events.filter(event => eventDateTime(event) >= today);
   const past = events.filter(event => eventDateTime(event) < today).reverse();
-  const effectiveScope = scope === 'proximos' && upcoming.length === 0 ? 'pasados' : scope;
-  const baseEvents = effectiveScope === 'proximos' ? upcoming : past;
+  const registered = events.filter(isEventRegistered);
+  const effectiveScope = scope || 'todos';
+  const baseEvents = effectiveScope === 'proximos' ? upcoming : effectiveScope === 'pasados' ? past : effectiveScope === 'mis' ? registered : events;
   const [selectedDate, setSelectedDate] = useState(null);
   const [eventType, setEventType] = useState('');
   const [company, setCompany] = useState('');
@@ -803,13 +834,11 @@ function TabEventos({ events, loading, error, scope, setScope, onEventClick }) {
   const [calendarMonth, setCalendarMonth] = useState(null);
   const [showAllEvents, setShowAllEvents] = useState(false);
 
-  const calendarEvents = baseEvents.length ? baseEvents : events;
-  const sortedEvents = [...calendarEvents].sort((a, b) => eventDateTime(a) - eventDateTime(b));
-  const homeMonth = sortedEvents[0] ? startOfMonth(eventDateTime(sortedEvents[0])) : startOfMonth(today);
-  const minMonth = sortedEvents[0] ? startOfMonth(eventDateTime(sortedEvents[0])) : homeMonth;
-  const maxMonth = addMonths(homeMonth, 2);
+  const homeMonth = startOfMonth(today);
+  const sortedCalendarEvents = [...events].sort((a, b) => eventDateTime(a) - eventDateTime(b));
+  const minMonth = sortedCalendarEvents[0] ? startOfMonth(eventDateTime(sortedCalendarEvents[0])) : addMonths(homeMonth, -1);
+  const maxMonth = sortedCalendarEvents.at(-1) ? startOfMonth(eventDateTime(sortedCalendarEvents.at(-1))) : addMonths(homeMonth, 2);
   const monthDate = calendarMonth || homeMonth;
-  const currentMonthKey = monthKey(monthDate);
   const categories = [...new Set(events.map(getEventCategory))];
   const companies = [...new Set(events.map(event => event.company || event.organizer).filter(Boolean))];
   const modalities = [...new Set(events.map(event => event.modality).filter(Boolean))];
@@ -817,19 +846,33 @@ function TabEventos({ events, loading, error, scope, setScope, onEventClick }) {
   const filteredEvents = baseEvents.filter(event => {
     const selectedIso = selectedDate ? formatLocalISO(selectedDate) : null;
     return (!selectedIso || event.date === selectedIso)
-      && (showAllEvents || selectedIso || event.date.startsWith(currentMonthKey))
       && (!eventType || getEventCategory(event) === eventType)
       && (!company || event.company === company || event.organizer === company)
       && (!modality || event.modality === modality)
       && (!area || event.tags?.includes(area));
   });
   const visibleEvents = showAllEvents ? filteredEvents : filteredEvents.slice(0, 9);
+  const monthForScope = (nextScope) => {
+    if (nextScope === 'pasados') return past[0] ? startOfMonth(eventDateTime(past[0])) : homeMonth;
+    if (nextScope === 'proximos') return upcoming[0] ? startOfMonth(eventDateTime(upcoming[0])) : homeMonth;
+    if (nextScope === 'mis') return registered[0] ? startOfMonth(eventDateTime(registered[0])) : homeMonth;
+    return homeMonth;
+  };
+  const changeEventScope = (nextScope) => {
+    setScope(nextScope);
+    setSelectedDate(null);
+    setShowAllEvents(false);
+    setCalendarMonth(monthForScope(nextScope));
+  };
   const clearEventFilters = () => {
     setSelectedDate(null);
     setEventType('');
     setCompany('');
     setModality('');
     setArea('');
+    setScope('todos');
+    setShowAllEvents(false);
+    setCalendarMonth(homeMonth);
   };
   const openAllEvents = () => {
     setSelectedDate(null);
@@ -863,7 +906,11 @@ function TabEventos({ events, loading, error, scope, setScope, onEventClick }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 16 }}>
         <div>
           <h2 style={{ fontSize: 18, fontWeight: 600, color: T.t1, margin: 0, fontFamily: T.font }}>
-            {showAllEvents ? 'Todos los eventos' : 'Eventos destacados'}
+            {showAllEvents ? 'Todos los eventos'
+              : effectiveScope === 'pasados' ? 'Eventos pasados'
+              : effectiveScope === 'proximos' ? 'Próximos eventos'
+              : effectiveScope === 'mis' ? 'Mis eventos inscritos'
+              : 'Eventos destacados'}
           </h2>
           {showAllEvents && (
             <p style={{ fontSize: 12, color: T.t3, marginTop: 5, fontFamily: T.font }}>
@@ -899,7 +946,7 @@ function TabEventos({ events, loading, error, scope, setScope, onEventClick }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {visibleEvents.map(event => (
-            <EventCard key={event.id} event={event} compact onClick={onEventClick} onRegister={handleRegister} registered={registeredIds.has(event.id)} />
+            <EventCard key={event.id} event={event} compact onClick={onEventClick} onRegister={onRegisterEvent} />
           ))}
         </div>
       )}
@@ -921,7 +968,7 @@ function TabEventos({ events, loading, error, scope, setScope, onEventClick }) {
         }}
         onToday={() => {
           setCalendarMonth(homeMonth);
-          setSelectedDate(null);
+          setSelectedDate(new Date(today));
         }}
       />
     </div>
@@ -937,8 +984,10 @@ function TabEventos({ events, loading, error, scope, setScope, onEventClick }) {
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-        <Pill label={`Próximos (${upcoming.length})`} active={effectiveScope === 'proximos'} onClick={() => setScope('proximos')} />
-        <Pill label={`Pasados (${past.length})`} active={effectiveScope === 'pasados'} onClick={() => setScope('pasados')} />
+        <Pill label={`Todos (${events.length})`} active={effectiveScope === 'todos'} onClick={() => changeEventScope('todos')} />
+        <Pill label={`Próximos (${upcoming.length})`} active={effectiveScope === 'proximos'} onClick={() => changeEventScope('proximos')} />
+        <Pill label={`Pasados (${past.length})`} active={effectiveScope === 'pasados'} onClick={() => changeEventScope('pasados')} />
+        <Pill label={`Mis eventos (${registered.length})`} active={effectiveScope === 'mis'} onClick={() => changeEventScope('mis')} />
         <FilterDropdown label="Tipo de evento" options={categories} value={eventType} onChange={setEventType} />
         <FilterDropdown label="Empresa" options={companies} value={company} onChange={setCompany} />
         <FilterDropdown label="Modalidad" options={modalities} value={modality} onChange={setModality} />
@@ -2173,7 +2222,7 @@ export default function OpePortalPage({
   const [events,        setEvents]        = useState([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsError,   setEventsError]   = useState(null);
-  const [eventScope,    setEventScope]    = useState('proximos');
+  const [eventScope,    setEventScope]    = useState('todos');
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -2308,6 +2357,18 @@ export default function OpePortalPage({
 
   function handleSearchChange(q) {
     setSearchQuery(q);
+  }
+
+  function handleRegisterEvent(event) {
+    if (!event?.id) return;
+    const registered = isEventRegistered(event);
+    if (!registered && event.registrationStatus !== 'Abierta') return;
+    setEvents(current => current.map(item => (
+      item.id === event.id ? { ...item, isRegistered: !registered } : item
+    )));
+    setSelectedEvent(current => (
+      current?.id === event.id ? { ...current, isRegistered: !registered } : current
+    ));
   }
 
   function findApplicationForOffer(offerId) {
@@ -2586,7 +2647,7 @@ export default function OpePortalPage({
         onSearchChange={handleSearchChange}
         onOpenNotification={handleNotificationOpen}
       >
-        <EventDetail event={selectedEvent} onBack={() => setSelectedEvent(null)} />
+        <EventDetail event={selectedEvent} onRegister={handleRegisterEvent} onBack={() => setSelectedEvent(null)} />
       </PortalLayout>
     );
   }
@@ -2648,7 +2709,7 @@ export default function OpePortalPage({
             </p>
           )}
           {!eventsLoading && filteredEvents.slice(0, 5).map(event => (
-            <EventCard key={event.id} event={event} compact onClick={setSelectedEvent} />
+            <EventCard key={event.id} event={event} compact onClick={setSelectedEvent} onRegister={handleRegisterEvent} />
           ))}
           {!eventsLoading && filteredEvents.length > 5 && (
             <button
@@ -2711,6 +2772,7 @@ export default function OpePortalPage({
             scope={eventScope}
             setScope={setEventScope}
             onEventClick={setSelectedEvent}
+            onRegisterEvent={handleRegisterEvent}
           />
         );
       case 'recursos':
