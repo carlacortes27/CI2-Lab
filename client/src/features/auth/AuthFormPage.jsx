@@ -60,7 +60,7 @@ export default function AuthFormPage({ mode = 'login', onNavigate }) {
   return (
     <main className="auth-page">
       <section className="auth-panel">
-        <p className="eyebrow">CV Comillas</p>
+        <p className="eyebrow">OPE Comillas</p>
         <h1>{isRegister ? 'Crear cuenta' : 'Iniciar sesion'}</h1>
         <p>
           {isRegister

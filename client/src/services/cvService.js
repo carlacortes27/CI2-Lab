@@ -1,7 +1,7 @@
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+import { apiUrl } from '../lib/apiBase.js';
 
 async function request(path, options = {}) {
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(apiUrl(`/api${path}`), {
     headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
     ...options,
   });
@@ -31,7 +31,7 @@ export async function translateCV(cvData, targetLanguage) {
 export async function analyzeUploadedCV(file) {
   const formData = new FormData();
   formData.append('file', file);
-  const response = await fetch(`${API_URL}/cv/analyze`, { method: 'POST', body: formData });
+  const response = await fetch(apiUrl('/api/cv/analyze'), { method: 'POST', body: formData });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     throw new Error(body.error || `Error analizando PDF (${response.status})`);
@@ -42,7 +42,7 @@ export async function analyzeUploadedCV(file) {
 export async function improveUploadedCV(file) {
   const formData = new FormData();
   formData.append('file', file);
-  const response = await fetch(`${API_URL}/cv/improve`, { method: 'POST', body: formData });
+  const response = await fetch(apiUrl('/api/cv/improve'), { method: 'POST', body: formData });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     throw new Error(body.error || `Error procesando PDF (${response.status})`);

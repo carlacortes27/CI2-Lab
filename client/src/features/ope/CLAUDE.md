@@ -37,4 +37,5 @@ No toques `App.jsx` ni `Navbar.jsx`.
 ## Contratos relevantes
 Lee `docs/data-model.md`, especialmente el objeto `Offer`.
 Los datos de las ofertas son sintéticos (no hay scraping real). La API corre en
-`http://localhost:3001` durante desarrollo. En producción usa el proxy de Vite (`/api`).
+local durante desarrollo. En producción el frontend debe usar `VITE_API_BASE_URL`
+con la URL pública del backend.

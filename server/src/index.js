@@ -18,9 +18,22 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const clientDistPath = path.resolve(__dirname, '..', '..', '..', 'client', 'dist');
+const corsOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
 
 // Middleware base
-app.use(cors({ origin: process.env.CORS_ORIGIN || true }));
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || corsOrigins.length === 0 || corsOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error(`Origen no permitido por CORS: ${origin}`));
+  },
+}));
 app.use(express.json({ limit: '5mb' }));
 
 // Rutas
@@ -54,7 +67,7 @@ initDatabase()
   .then(() => {
     startNotificationScheduler(5 * 60 * 1000);
     app.listen(PORT, () => {
-      console.log(`Servidor cvComillas en http://localhost:${PORT}`);
+      console.log(`Servidor cvComillas escuchando en el puerto ${PORT}`);
     });
   })
   .catch((err) => {

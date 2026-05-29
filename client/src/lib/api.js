@@ -1,5 +1,4 @@
-// En desarrollo, Vite proxea /api → http://localhost:3001
-const BASE_URL = '';
+import { apiUrl } from './apiBase.js';
 
 async function request(path, options = {}) {
   const headers = {
@@ -8,7 +7,7 @@ async function request(path, options = {}) {
     ...options.headers,
   };
 
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await fetch(apiUrl(path), {
     method: options.method ?? 'GET',
     headers,
     body: options.body ? JSON.stringify(options.body) : undefined,

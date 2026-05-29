@@ -26,7 +26,7 @@ export default function CVPreviewPage({ onNavigate }) {
     <main className="preview-page">
       <section className="preview-toolbar">
         <div>
-          <p className="eyebrow">CV Comillas</p>
+          <p className="eyebrow">OPE Comillas</p>
           <h1>Vista previa del CV</h1>
         </div>
         <div className="toolbar-actions">
