@@ -246,6 +246,13 @@ body:has([data-shell]) .back-button {
   overflow: hidden;
 }
 
+.laptop-screen-image {
+  display: block;
+  width: 100%;
+  min-height: 330px;
+  object-fit: cover;
+}
+
 .panel-top {
   display: flex;
   align-items: center;

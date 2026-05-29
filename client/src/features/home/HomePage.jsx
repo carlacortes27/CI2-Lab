@@ -1,5 +1,6 @@
 import { useAuth } from '../../context/useAuth.js';
 import { useRedirect } from '../../context/RedirectContext.jsx';
+import icaiScreenImage from '../../assets/Imagen pantalla icai.png';
 
 export default function HomePage({ onNavigate }) {
   const { user, logout } = useAuth();
@@ -74,24 +75,7 @@ export default function HomePage({ onNavigate }) {
 
         <div className="hero-device" aria-hidden="true">
           <div className="laptop-panel">
-            <div className="panel-top">
-              <span />
-              <span />
-            </div>
-            <div className="panel-grid">
-              <div className="panel-sidebar" />
-              <div className="panel-main">
-                <strong>{user ? `Hola, ${user.name}` : 'CV Comillas'}</strong>
-                <div className="panel-stats">
-                  <span>5</span>
-                  <span>12</span>
-                  <span>2</span>
-                </div>
-                <div className="panel-line wide" />
-                <div className="panel-line" />
-                <div className="panel-line short" />
-              </div>
-            </div>
+            <img src={icaiScreenImage} alt="" className="laptop-screen-image" />
           </div>
         </div>
       </section>
