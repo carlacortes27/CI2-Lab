@@ -1266,16 +1266,18 @@ function ProfileOverview({ cv, preferences, dispatch }) {
   const sections = cv.sections || {};
   const education = sections.education?.items?.find(item => item.current) || sections.education?.items?.[0];
   const fullName = personal.fullName || 'Nombre del usuario';
-  const degree = personal.headline || education?.degree || 'Estudios pendientes de completar';
+  const degree = education?.degree || personal.headline || 'Estudios pendientes de completar';
   const university = education?.institution || 'Universidad pendiente de completar';
   const course = education?.course || education?.year || (education?.current ? 'En curso' : '');
   const email = personal.email || 'Correo pendiente';
   const location = personal.location || 'Residencia pendiente';
   const summary = sections.summary?.text || 'Completa tu resumen profesional en el CV para mejorar el match con las ofertas.';
   const completion = calcProfileCompletion(cv);
+  const hasUploadedCv = Boolean(cv.meta?.uploadedFromPdfAt);
+  const hasLanguages = Boolean(sections.languages?.items?.length || preferences.languages?.length);
   const recommendations = [
-    { done: Boolean(sections.projects?.items?.length), label: 'Añade tus proyectos académicos' },
-    { done: Boolean(sections.languages?.items?.length), label: 'Completa tus idiomas' },
+    { done: Boolean(personal.photoUrl), label: 'Sube tu foto de perfil' },
+    { done: hasLanguages, label: 'Completa tus idiomas' },
     { done: Boolean(preferences.startDate), label: 'Especifica tu disponibilidad' },
   ];
 
@@ -1303,6 +1305,12 @@ function ProfileOverview({ cv, preferences, dispatch }) {
         type: 'SET_CV',
         payload: {
           ...importedCv,
+          meta: {
+            ...(cv.meta || {}),
+            ...(importedCv.meta || {}),
+            uploadedFromPdfAt: new Date().toISOString(),
+            uploadedFileName: file.name,
+          },
           personal: {
             ...(importedCv.personal || {}),
             photoUrl: importedCv.personal?.photoUrl || cv.personal?.photoUrl || '',
@@ -1440,8 +1448,10 @@ function ProfileOverview({ cv, preferences, dispatch }) {
             <p style={{ fontSize: 13, color: T.t1, fontWeight: 700, marginTop: 10, marginBottom: 0, fontFamily: T.font }}>
               {university}
             </p>
+            <p style={{ fontSize: 13, color: T.t2, fontWeight: 600, marginTop: 5, marginBottom: 0, fontFamily: T.font }}>
+              {degree}
+            </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginTop: 8 }}>
-              <span style={{ fontSize: 13, color: T.t2, fontFamily: T.font }}>{degree}</span>
               {course && (
                 <span style={{ padding: '3px 8px', borderRadius: T.radiusPill, backgroundColor: T.hoverBg, color: T.t2, fontSize: 11, fontWeight: 700, fontFamily: T.font }}>
                   {course}
@@ -1464,16 +1474,16 @@ function ProfileOverview({ cv, preferences, dispatch }) {
                 style={{
                   padding: '8px 14px',
                   borderRadius: T.radiusPill,
-                  border: 'none',
-                  backgroundColor: uploadingCv ? T.hoverBg : '#2563EB',
-                  color: uploadingCv ? T.t3 : '#fff',
+                  border: hasUploadedCv ? '1px solid #86EFAC' : 'none',
+                  backgroundColor: uploadingCv ? T.hoverBg : hasUploadedCv ? '#DCFCE7' : '#2563EB',
+                  color: uploadingCv ? T.t3 : hasUploadedCv ? '#15803D' : '#fff',
                   fontSize: 13,
                   fontWeight: 700,
                   cursor: uploadingCv ? 'not-allowed' : 'pointer',
                   fontFamily: T.font,
                 }}
               >
-                {uploadingCv ? 'Extrayendo CV...' : 'Subir CV'}
+                {uploadingCv ? 'Extrayendo CV...' : hasUploadedCv ? 'CV subido' : 'Subir CV'}
               </button>
               <input
                 ref={cvUploadRef}
