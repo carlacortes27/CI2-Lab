@@ -35,6 +35,7 @@ export default function StatBox({ value, label, color = T.t2, bordered = false, 
         marginTop:  5,
         textAlign:  'center',
         lineHeight: 1.3,
+        whiteSpace: 'nowrap',
       }}>
         {label}
       </span>
