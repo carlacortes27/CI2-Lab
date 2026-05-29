@@ -784,7 +784,8 @@ function TabEventos({ events, loading, error, scope, setScope, onEventClick }) {
   const [calendarMonth, setCalendarMonth] = useState(null);
   const [showAllEvents, setShowAllEvents] = useState(false);
 
-  const sortedEvents = [...events].sort((a, b) => eventDateTime(a) - eventDateTime(b));
+  const calendarEvents = baseEvents.length ? baseEvents : events;
+  const sortedEvents = [...calendarEvents].sort((a, b) => eventDateTime(a) - eventDateTime(b));
   const homeMonth = sortedEvents[0] ? startOfMonth(eventDateTime(sortedEvents[0])) : startOfMonth(today);
   const minMonth = sortedEvents[0] ? startOfMonth(eventDateTime(sortedEvents[0])) : homeMonth;
   const maxMonth = addMonths(homeMonth, 2);
@@ -1471,7 +1472,6 @@ export default function OpePortalPage({
   const { token, user } = useAuth();
   const displayName = user?.name?.trim() || userName?.trim() || 'Usuario';
   const displayDetail = user?.email || userDegree || '';
-  const firstName = displayName.split(' ')[0];
 
   const [activeSection, setActiveSection] = useState('inicio');
   const [offers,        setOffers]        = useState([]);
@@ -1894,7 +1894,21 @@ export default function OpePortalPage({
       case 'recursos':
         return <TabPlaceholder title="Recursos" />;
       case 'orientacion':
-        return <OrientacionPanel />;
+        return (
+          <OrientacionPanel
+            onAppointmentCreated={event => {
+              if (!event) return;
+              setEvents(current => {
+                const exists = current.some(item => item.id === event.id);
+                return exists ? current : [...current, event];
+              });
+            }}
+            onAppointmentUpdated={event => {
+              if (!event) return;
+              setEvents(current => current.map(item => item.id === event.id ? { ...item, ...event } : item));
+            }}
+          />
+        );
       case 'perfil':
         return <TabPerfil offers={filteredOffers} />;
       case 'ajustes':

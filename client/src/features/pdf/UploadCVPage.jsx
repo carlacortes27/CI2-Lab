@@ -8,7 +8,9 @@ import { useCv } from '../../context/CvContext.jsx';
 export default function UploadCVPage({ onNavigate }) {
   const { cv, dispatch } = useCv();
   const fileInputRef = useRef(null);
+  const photoInputRef = useRef(null);
   const [file, setFile] = useState(null);
+  const [photoName, setPhotoName] = useState('');
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
   const [converted, setConverted] = useState(false);
@@ -30,6 +32,37 @@ export default function UploadCVPage({ onNavigate }) {
     setStatus(`PDF seleccionado: ${next.name}. Ahora puedes elegir plantilla y extraer la informacion.`);
   }
 
+  function pickPhoto(selected) {
+    const next = selected?.[0];
+    if (!next) return;
+
+    if (!['image/jpeg', 'image/jpg'].includes(next.type)) {
+      setStatus('La imagen debe estar en formato JPG.');
+      if (photoInputRef.current) photoInputRef.current.value = '';
+      return;
+    }
+
+    if (next.size > 2 * 1024 * 1024) {
+      setStatus('La imagen JPG no puede superar 2 MB.');
+      if (photoInputRef.current) photoInputRef.current.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      dispatch({ type: 'UPDATE_PERSONAL', payload: { photoUrl: reader.result } });
+      setPhotoName(next.name);
+      setStatus(`Imagen seleccionada: ${next.name}. Aparecera en el CV final.`);
+    };
+    reader.readAsDataURL(next);
+  }
+
+  function removePhoto() {
+    dispatch({ type: 'UPDATE_PERSONAL', payload: { photoUrl: '' } });
+    setPhotoName('');
+    if (photoInputRef.current) photoInputRef.current.value = '';
+  }
+
   function resetUpload() {
     setFile(null);
     setConverted(false);
@@ -47,6 +80,10 @@ export default function UploadCVPage({ onNavigate }) {
       if (result?.cvData) {
         const cvWithStyle = {
           ...result.cvData,
+          personal: {
+            ...(result.cvData.personal || {}),
+            photoUrl: result.cvData.personal?.photoUrl || cv.personal?.photoUrl || '',
+          },
           style: { ...result.cvData.style, ...cv.style },
           preferences: { ...(result.cvData.preferences || {}), ...(cv.preferences || {}) },
         };
@@ -115,6 +152,33 @@ export default function UploadCVPage({ onNavigate }) {
               : 'o pulsa para seleccionar archivo'}
           </small>
         </label>
+
+        <div className="upload-photo-panel">
+          <div className="photo-upload-preview">
+            {cv.personal?.photoUrl ? (
+              <img src={cv.personal.photoUrl} alt="Vista previa de la imagen de perfil" />
+            ) : (
+              <span>JPG</span>
+            )}
+          </div>
+          <div className="upload-photo-copy">
+            <strong>Imagen para el CV final</strong>
+            <small>{photoName || 'Sube una imagen JPG opcional. Maximo 2 MB.'}</small>
+            <div className="photo-upload-controls">
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/jpeg,.jpg,.jpeg"
+                onChange={event => pickPhoto(event.target.files)}
+              />
+              {cv.personal?.photoUrl && (
+                <button type="button" className="outline-button" disabled={loading} onClick={removePhoto}>
+                  Quitar imagen
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
 
         {loading && <p className="status-message">Procesando el PDF...</p>}
         {status && <p className="status-message">{status}</p>}
