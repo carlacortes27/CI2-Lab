@@ -1170,6 +1170,90 @@ function parseCommaText(value) {
     .filter(Boolean);
 }
 
+function optionLabelMap(options = []) {
+  return options.reduce((acc, option) => {
+    if (typeof option === 'string') {
+      acc[option] = option;
+    } else {
+      acc[option.value] = option.label;
+    }
+    return acc;
+  }, {});
+}
+
+function formatOptionValues(values = [], options = []) {
+  const labels = optionLabelMap(options);
+  return (Array.isArray(values) ? values : [])
+    .filter(Boolean)
+    .map(value => labels[value] || value);
+}
+
+function formatLanguages(values = []) {
+  return normalizeLanguagePreferences(Array.isArray(values) ? values : [])
+    .map(language => language.level ? `${language.name} (${language.level})` : language.name);
+}
+
+function PreferenceSummary({ preferences }) {
+  const summaryItems = [
+    { label: 'Ubicacion deseada', values: preferences.locations || [] },
+    { label: 'Modalidad', values: formatOptionValues(preferences.modalities || [], MODALIDADES) },
+    { label: 'Jornada', values: formatOptionValues(preferences.workdays || [], JORNADAS) },
+    { label: 'Sector de interes', values: preferences.sectors || [] },
+    { label: 'Duracion', values: preferences.durations || [] },
+    { label: 'Disponibilidad para inicio', values: preferences.startDate ? [preferences.startDate] : [] },
+    { label: 'Horario', values: formatOptionValues(preferences.schedules || [], HORARIOS) },
+    { label: 'Idiomas', values: formatLanguages(preferences.languages || []) },
+    { label: 'Tecnologias', values: preferences.technologies || [] },
+    { label: 'Areas y keywords', values: preferences.keywords || [] },
+  ];
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14, marginTop: 18 }}>
+      {summaryItems.map(item => {
+        const values = item.values.filter(Boolean);
+        return (
+          <div
+            key={item.label}
+            style={{
+              borderBottom: `1px solid ${T.border}`,
+              paddingBottom: 12,
+              minWidth: 0,
+            }}
+          >
+            <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: T.t1, fontFamily: T.font }}>
+              {item.label}
+            </p>
+            {values.length ? (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                {values.map(value => (
+                  <span
+                    key={value}
+                    style={{
+                      borderRadius: T.radiusPill,
+                      backgroundColor: T.hoverBg,
+                      color: T.t2,
+                      padding: '5px 9px',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      fontFamily: T.font,
+                    }}
+                  >
+                    {value}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p style={{ margin: '8px 0 0', fontSize: 12, color: T.t3, fontWeight: 600, fontFamily: T.font }}>
+                Sin completar
+              </p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function normalizeLanguagePreferences(languages = []) {
   return languages
     .map(language => (
@@ -1272,16 +1356,18 @@ function ProfileOverview({ cv, preferences, dispatch }) {
   const sections = cv.sections || {};
   const education = sections.education?.items?.find(item => item.current) || sections.education?.items?.[0];
   const fullName = personal.fullName || 'Nombre del usuario';
-  const degree = personal.headline || education?.degree || 'Estudios pendientes de completar';
+  const degree = education?.degree || personal.headline || 'Estudios pendientes de completar';
   const university = education?.institution || 'Universidad pendiente de completar';
   const course = education?.course || education?.year || (education?.current ? 'En curso' : '');
   const email = personal.email || 'Correo pendiente';
   const location = personal.location || 'Residencia pendiente';
   const summary = sections.summary?.text || 'Completa tu resumen profesional en el CV para mejorar el match con las ofertas.';
   const completion = calcProfileCompletion(cv);
+  const hasUploadedCv = Boolean(cv.meta?.uploadedFromPdfAt);
+  const hasLanguages = Boolean(sections.languages?.items?.length || preferences.languages?.length);
   const recommendations = [
-    { done: Boolean(sections.projects?.items?.length), label: 'Añade tus proyectos académicos' },
-    { done: Boolean(sections.languages?.items?.length), label: 'Completa tus idiomas' },
+    { done: Boolean(personal.photoUrl), label: 'Sube tu foto de perfil' },
+    { done: hasLanguages, label: 'Completa tus idiomas' },
     { done: Boolean(preferences.startDate), label: 'Especifica tu disponibilidad' },
   ];
 
@@ -1309,6 +1395,12 @@ function ProfileOverview({ cv, preferences, dispatch }) {
         type: 'SET_CV',
         payload: {
           ...importedCv,
+          meta: {
+            ...(cv.meta || {}),
+            ...(importedCv.meta || {}),
+            uploadedFromPdfAt: new Date().toISOString(),
+            uploadedFileName: file.name,
+          },
           personal: {
             ...(importedCv.personal || {}),
             photoUrl: importedCv.personal?.photoUrl || cv.personal?.photoUrl || '',
@@ -1446,8 +1538,10 @@ function ProfileOverview({ cv, preferences, dispatch }) {
             <p style={{ fontSize: 13, color: T.t1, fontWeight: 700, marginTop: 10, marginBottom: 0, fontFamily: T.font }}>
               {university}
             </p>
+            <p style={{ fontSize: 13, color: T.t2, fontWeight: 600, marginTop: 5, marginBottom: 0, fontFamily: T.font }}>
+              {degree}
+            </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginTop: 8 }}>
-              <span style={{ fontSize: 13, color: T.t2, fontFamily: T.font }}>{degree}</span>
               {course && (
                 <span style={{ padding: '3px 8px', borderRadius: T.radiusPill, backgroundColor: T.hoverBg, color: T.t2, fontSize: 11, fontWeight: 700, fontFamily: T.font }}>
                   {course}
@@ -1470,16 +1564,16 @@ function ProfileOverview({ cv, preferences, dispatch }) {
                 style={{
                   padding: '8px 14px',
                   borderRadius: T.radiusPill,
-                  border: 'none',
-                  backgroundColor: uploadingCv ? T.hoverBg : '#2563EB',
-                  color: uploadingCv ? T.t3 : '#fff',
+                  border: hasUploadedCv ? '1px solid #86EFAC' : 'none',
+                  backgroundColor: uploadingCv ? T.hoverBg : hasUploadedCv ? '#DCFCE7' : '#2563EB',
+                  color: uploadingCv ? T.t3 : hasUploadedCv ? '#15803D' : '#fff',
                   fontSize: 13,
                   fontWeight: 700,
                   cursor: uploadingCv ? 'not-allowed' : 'pointer',
                   fontFamily: T.font,
                 }}
               >
-                {uploadingCv ? 'Extrayendo CV...' : 'Subir CV'}
+                {uploadingCv ? 'Extrayendo CV...' : hasUploadedCv ? 'CV subido' : 'Subir CV'}
               </button>
               <input
                 ref={cvUploadRef}
@@ -1580,7 +1674,7 @@ function ProfileOverview({ cv, preferences, dispatch }) {
 function TabPerfil({ offers = [] }) {
   const { cv, dispatch } = useCv();
   const preferences = cv.preferences || {};
-  const [prefsOpen, setPrefsOpen] = useState(true);
+  const [prefsOpen, setPrefsOpen] = useState(false);
   const [editingPrefs, setEditingPrefs] = useState(false);
   const locationOptions = [
     ...new Set([
@@ -1591,6 +1685,16 @@ function TabPerfil({ offers = [] }) {
 
   function updatePreference(key, value) {
     dispatch({ type: 'UPDATE_PREFERENCES', payload: { [key]: value } });
+  }
+
+  function openProfileEditor() {
+    setPrefsOpen(true);
+    setEditingPrefs(true);
+  }
+
+  function saveProfilePreferences() {
+    setEditingPrefs(false);
+    setPrefsOpen(false);
   }
 
   const completionItems = [
@@ -1662,7 +1766,7 @@ function TabPerfil({ offers = [] }) {
                   fontFamily: T.font,
                 }}
               >
-                {editingPrefs ? 'Guardar' : 'Editar'}
+                {editingPrefs ? 'Guardar' : 'Editar perfil'}
               </button>
             </div>
           </div>
@@ -1676,7 +1780,11 @@ function TabPerfil({ offers = [] }) {
             </span>
           </div>
 
-          {prefsOpen && (
+          {!prefsOpen && !editingPrefs && (
+            <PreferenceSummary preferences={preferences} />
+          )}
+
+          {prefsOpen && editingPrefs && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 22, alignItems: 'start', marginTop: 18 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 <PreferenceField label="Ubicación deseada">
