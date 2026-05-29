@@ -246,6 +246,13 @@ body:has([data-shell]) .back-button {
   overflow: hidden;
 }
 
+.laptop-screen-image {
+  display: block;
+  width: 100%;
+  min-height: 330px;
+  object-fit: cover;
+}
+
 .panel-top {
   display: flex;
   align-items: center;
@@ -363,6 +370,15 @@ body:has([data-shell]) .back-button {
   background: var(--gold-soft);
   color: #b77905;
   font-weight: 900;
+}
+
+.card-icon svg {
+  width: 30px;
+  height: 30px;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .action-card h2,

@@ -16,6 +16,18 @@ export function createBlankCv() {
       accentColor: '#f5b21b',
       blockStyles: {},
     },
+    preferences: {
+      locations: [],
+      modalities: [],
+      workdays: [],
+      sectors: [],
+      durations: [],
+      startDate: '',
+      schedules: [],
+      languages: [],
+      technologies: [],
+      keywords: [],
+    },
     personal: {
       fullName: '',
       headline: '',
