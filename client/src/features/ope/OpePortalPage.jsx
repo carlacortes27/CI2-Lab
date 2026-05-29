@@ -301,19 +301,15 @@ function LoadingSkeleton() {
 }
 
 // ── Pestaña: Inicio ───────────────────────────────────────────────────────────
-function TabInicio({ firstName, offers, loading, error, filters, setFilters, onOfferClick, onSection }) {
+function TabInicio({ offers, loading, error, filters, setFilters, onOfferClick, onSection }) {
   const visibleOffers = offers.slice(0, 3);
 
   return (
     <>
-      {/* Saludo */}
-      <div>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: T.t1, lineHeight: 1.2, margin: 0, fontFamily: T.font }}>
-          ¡Hola, {firstName}! 👋
-        </h1>
-        <p style={{ fontSize: 14, color: T.t2, marginTop: 8, lineHeight: 1.5, fontFamily: T.font }}>
-          Descubre prácticas recomendadas para ti y sigue el estado de tus candidaturas.
-        </p>
+      {/* Próximos eventos y recursos */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+        <ProximosEventos onSection={onSection} />
+        <RecursosParaTi />
       </div>
 
       {/* Ofertas */}
@@ -377,13 +373,6 @@ function TabInicio({ firstName, offers, loading, error, filters, setFilters, onO
         </div>
       )}
 
-      {/* Secciones inferiores */}
-      {!loading && !error && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-          <ProximosEventos onSection={onSection} />
-          <RecursosParaTi />
-        </div>
-      )}
     </>
   );
 }
@@ -1126,7 +1115,7 @@ export default function OpePortalPage({
   }
 
   function findApplicationForOffer(offerId) {
-    return applications.find(application => application.offerId === offerId);
+    return applications.find(application => application?.offerId === offerId);
   }
 
   async function handleApplyToOffer(offer) {
@@ -1358,7 +1347,6 @@ export default function OpePortalPage({
         if (searchQuery.trim()) return renderSearchResults();
         return (
           <TabInicio
-            firstName={firstName}
             offers={filteredOffers}
             loading={loading}
             error={error}
@@ -1390,8 +1378,6 @@ export default function OpePortalPage({
             onApplicationClick={setSelectedApplication}
           />
         );
-      case 'empresas':
-        return <TabPlaceholder title="Empresas" />;
       case 'eventos':
         return (
           <TabEventos

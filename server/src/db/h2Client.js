@@ -70,6 +70,31 @@ async function runBridge(command, args = []) {
   return output ? JSON.parse(output) : null;
 }
 
+// ── Migración JSON → H2 ───────────────────────────────────────────────────────
+
+async function migrateJsonApplicationsToH2() {
+  try {
+    const db = await readJsonDb();
+    const apps = db.applications || [];
+    for (const app of apps) {
+      if (!app || !app.offerId || !app.userId) continue;
+      try {
+        await runBridge('migrateApplication', [
+          String(app.userId),
+          app.offerId,
+          app.status || 'enviada',
+          app.createdAt || new Date().toISOString(),
+          app.updatedAt || new Date().toISOString(),
+        ]);
+      } catch (_) {
+        // duplicate or parse error — already migrated or invalid row
+      }
+    }
+  } catch (_) {
+    // users.json missing or unreadable — nothing to migrate
+  }
+}
+
 // ── API pública ───────────────────────────────────────────────────────────────
 
 export function initDatabase() {
@@ -77,11 +102,13 @@ export function initDatabase() {
     console.log(`JDBC URL usada por backend: ${jdbcUrl}`);
     jdbcUrlLogged = true;
   }
-  readyPromise ??= runBridge('init').catch(err => {
-    useJsonFallback = true;
-    console.warn('Java no disponible, usando almacén JSON en data/users.json:', err.message);
-    return null;
-  });
+  readyPromise ??= runBridge('init')
+    .then(() => migrateJsonApplicationsToH2())
+    .catch(err => {
+      useJsonFallback = true;
+      console.warn('Java no disponible, usando almacén JSON en data/users.json:', err.message);
+      return null;
+    });
   return readyPromise;
 }
 
@@ -168,7 +195,9 @@ export async function createApplication({ userId, offerId }) {
     await writeJsonDb(db);
     return application;
   }
-  return runBridge('createApplication', [String(userId), offerId]);
+  const result = await runBridge('createApplication', [String(userId), offerId]);
+  if (!result) throw new Error('La base de datos no devolvió la candidatura creada');
+  return result;
 }
 
 export async function saveApplication({ userId, offerId }) {
@@ -190,7 +219,9 @@ export async function saveApplication({ userId, offerId }) {
     await writeJsonDb(db);
     return application;
   }
-  return runBridge('saveApplication', [String(userId), offerId]);
+  const result = await runBridge('saveApplication', [String(userId), offerId]);
+  if (!result) throw new Error('La base de datos no devolvió la candidatura guardada');
+  return result;
 }
 
 export async function advanceApplication({ userId, applicationId }) {

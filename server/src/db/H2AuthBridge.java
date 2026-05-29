@@ -23,7 +23,6 @@ public class H2AuthBridge {
         STATUS VARCHAR(30) NOT NULL DEFAULT 'enviada',
         CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UPDATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT FK_APPLICATIONS_USER FOREIGN KEY (USER_ID) REFERENCES USERS(ID),
         CONSTRAINT UQ_APPLICATIONS_USER_OFFER UNIQUE (USER_ID, OFFER_ID)
       )
       """;
@@ -53,6 +52,7 @@ public class H2AuthBridge {
         case "saveApplication" -> saveApplication(conn, Long.parseLong(args[2]), args[3]);
         case "advanceApplication" -> advanceApplication(conn, Long.parseLong(args[2]), Long.parseLong(args[3]));
         case "rejectApplication" -> rejectApplication(conn, Long.parseLong(args[2]), Long.parseLong(args[3]));
+        case "migrateApplication" -> migrateApplication(conn, Long.parseLong(args[2]), args[3], args[4], args[5], args[6]);
         default -> throw new IllegalArgumentException("Unknown command: " + command);
       }
     }
@@ -63,8 +63,17 @@ public class H2AuthBridge {
       stmt.execute(USERS_SCHEMA_SQL);
       stmt.execute(APPLICATIONS_SCHEMA_SQL);
     }
+    dropFkConstraintIfPresent(conn);
     migrateLowercaseUsersIfPresent(conn);
     System.out.println("{\"ok\":true}");
+  }
+
+  private static void dropFkConstraintIfPresent(Connection conn) {
+    try (Statement stmt = conn.createStatement()) {
+      stmt.execute("ALTER TABLE APPLICATIONS DROP CONSTRAINT IF EXISTS FK_APPLICATIONS_USER");
+    } catch (Exception ignored) {
+      // Table may not exist yet or constraint already absent
+    }
   }
 
   private static void migrateLowercaseUsersIfPresent(Connection conn) {
@@ -181,6 +190,21 @@ public class H2AuthBridge {
       }
     }
     findApplicationById(conn, applicationId, userId);
+  }
+
+  private static void migrateApplication(Connection conn, long userId, String offerId, String status, String createdAt, String updatedAt) throws Exception {
+    try (PreparedStatement stmt = conn.prepareStatement(
+        "INSERT INTO APPLICATIONS (USER_ID, OFFER_ID, STATUS, CREATED_AT, UPDATED_AT) VALUES (?, ?, ?, PARSEDATETIME(?, 'yyyy-MM-dd''T''HH:mm:ss.SSS''Z'''), PARSEDATETIME(?, 'yyyy-MM-dd''T''HH:mm:ss.SSS''Z'''))")) {
+      stmt.setLong(1, userId);
+      stmt.setString(2, offerId);
+      stmt.setString(3, status);
+      stmt.setString(4, createdAt);
+      stmt.setString(5, updatedAt);
+      stmt.executeUpdate();
+    } catch (Exception ignored) {
+      // Duplicate or parse error — skip silently
+    }
+    System.out.println("{\"ok\":true}");
   }
 
   private static String nextPhase(String status) {

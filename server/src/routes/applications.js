@@ -44,6 +44,9 @@ router.post('/', async (req, res, next) => {
     }
 
     const application = await createApplication({ userId: req.user.id, offerId });
+    if (!application) {
+      return res.status(500).json({ error: 'No se pudo crear la candidatura. Inténtalo de nuevo.' });
+    }
     res.status(201).json(enrichApplication(application));
   } catch (err) {
     next(err);
@@ -63,6 +66,9 @@ router.post('/saved', async (req, res, next) => {
     }
 
     const application = await saveApplication({ userId: req.user.id, offerId });
+    if (!application) {
+      return res.status(500).json({ error: 'No se pudo guardar la oferta. Inténtalo de nuevo.' });
+    }
     res.status(201).json(enrichApplication(application));
   } catch (err) {
     next(err);

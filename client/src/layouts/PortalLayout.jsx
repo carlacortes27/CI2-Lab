@@ -18,7 +18,7 @@ import { T } from '../styles/theme.js';
 import icaiLogo from '../assets/imagen comillas.jpg';
 import { useAuth } from '../context/useAuth.js';
 import {
-  HomeIcon, BriefcaseIcon, ClipboardIcon, BuildingIcon,
+  HomeIcon, BriefcaseIcon, ClipboardIcon,
   CalendarIcon, BookIcon, CompassIcon, UserIcon,
   SearchIcon, BellIcon, MailIcon, ChevronDownIcon,
   ArrowLeftIcon,
@@ -30,7 +30,6 @@ const NAV_ITEMS = [
   { key: 'inicio',       label: 'Inicio',          Icon: HomeIcon      },
   { key: 'ofertas',      label: 'Ofertas',          Icon: BriefcaseIcon },
   { key: 'candidaturas', label: 'Mis candidaturas', Icon: ClipboardIcon },
-  { key: 'empresas',     label: 'Empresas',         Icon: BuildingIcon  },
   { key: 'eventos',      label: 'Eventos',          Icon: CalendarIcon  },
   { key: 'recursos',     label: 'Recursos',         Icon: BookIcon      },
   { key: 'orientacion',  label: 'Orientación',      Icon: CompassIcon   },
