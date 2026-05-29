@@ -5,6 +5,16 @@ import CVPartEditor from './CVPartEditor.jsx';
 import { downloadAsPDF, improveUploadedCV } from '../../services/cvService.js';
 import { useCv } from '../../context/CvContext.jsx';
 
+const accentColors = [
+  '#f5b21b',
+  '#111827',
+  '#0f2f4f',
+  '#2563eb',
+  '#0f766e',
+  '#7c3aed',
+  '#b45309',
+];
+
 export default function UploadCVPage({ onNavigate }) {
   const { cv, dispatch } = useCv();
   const fileInputRef = useRef(null);
@@ -29,7 +39,7 @@ export default function UploadCVPage({ onNavigate }) {
     setFile(next);
     setConverted(false);
     setSelectedBlockId('summary');
-    setStatus(`PDF seleccionado: ${next.name}. Ahora puedes elegir plantilla y extraer la informacion.`);
+    setStatus(`PDF seleccionado: ${next.name}. Puedes extraer sus datos o seguir editando manualmente.`);
   }
 
   function pickPhoto(selected) {
@@ -90,7 +100,7 @@ export default function UploadCVPage({ onNavigate }) {
         dispatch({ type: 'SET_CV', payload: cvWithStyle });
         setConverted(true);
         setSelectedBlockId('summary');
-        setStatus('Informacion extraida. Elige una plantilla para reorganizar el CV.');
+        setStatus('Informacion extraida. Ya puedes editar secciones, diseno y texto en la vista previa.');
       }
     } catch (error) {
       setConverted(false);
@@ -115,138 +125,215 @@ export default function UploadCVPage({ onNavigate }) {
 
   return (
     <main className="upload-page">
-      <section className="upload-card">
-        <p className="eyebrow">CV Comillas</p>
-        <h1>Subir o mejorar CV</h1>
-        <p>
-          Sube un PDF con tu CV. La aplicacion extrae sus datos y genera un CV nuevo
-          con la plantilla que elijas.
-        </p>
+      <section className="upload-workspace">
+        <button type="button" className="upload-back" onClick={() => onNavigate?.('home')}>
+          Volver
+        </button>
 
-        <ol className="upload-steps" aria-label="Flujo de conversion">
-          <li className={file ? 'done' : 'active'}>Subir PDF</li>
-          <li className={file ? 'active' : ''}>Elegir plantilla</li>
-          <li className={converted ? 'active' : ''}>Editar partes</li>
-          <li className={converted ? 'active' : ''}>Descargar PDF</li>
-        </ol>
+        <div className="upload-hero">
+          <span className="section-mark" aria-hidden="true" />
+          <h1>Mejorar CV</h1>
+          <p>
+            Importa un PDF si lo tienes, edita el contenido por secciones y ajusta el diseno con
+            una vista previa A4 siempre visible.
+          </p>
+        </div>
 
-        <label
-          className="dropzone"
-          onDragOver={event => event.preventDefault()}
-          onDrop={event => {
-            event.preventDefault();
-            pickFile(event.dataTransfer.files);
-          }}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/pdf"
-            onChange={event => pickFile(event.target.files)}
-          />
-          <span className="drop-icon">PDF</span>
-          <strong>{file ? file.name : 'Arrastra aqui tu CV en PDF'}</strong>
-          <small>
-            {file
-              ? `${Math.round(file.size / 1024)} KB. Pulsa aqui para elegir otro PDF.`
-              : 'o pulsa para seleccionar archivo'}
-          </small>
-        </label>
-
-        <div className="upload-photo-panel">
-          <div className="photo-upload-preview">
-            {cv.personal?.photoUrl ? (
-              <img src={cv.personal.photoUrl} alt="Vista previa de la imagen de perfil" />
-            ) : (
-              <span>JPG</span>
-            )}
+        <section className="upload-card upload-import-card">
+          <div className="upload-card-header">
+            <div>
+              <p className="eyebrow">Importacion opcional</p>
+              <h2>Subir PDF</h2>
+            </div>
+            {converted && <span className="upload-state-pill">Datos extraidos</span>}
           </div>
-          <div className="upload-photo-copy">
-            <strong>Imagen para el CV final</strong>
-            <small>{photoName || 'Sube una imagen JPG opcional. Maximo 2 MB.'}</small>
-            <div className="photo-upload-controls">
+
+          <label
+            className="dropzone"
+            onDragOver={event => event.preventDefault()}
+            onDrop={event => {
+              event.preventDefault();
+              pickFile(event.dataTransfer.files);
+            }}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/pdf"
+              onChange={event => pickFile(event.target.files)}
+            />
+            <span className="drop-icon">PDF</span>
+            <strong>{file ? file.name : 'Arrastra aqui tu CV en PDF'}</strong>
+            <small>
+              {file
+                ? `${formatFileSize(file.size)}. Pulsa para cambiar el archivo.`
+                : 'o haz clic para seleccionar archivo. Tambien puedes editar sin subir PDF.'}
+            </small>
+          </label>
+
+          {file && (
+            <div className="upload-file-row">
+              <span className="file-icon">PDF</span>
+              <div>
+                <strong>{file.name}</strong>
+                <small>{formatFileSize(file.size)}</small>
+              </div>
+              <button type="button" aria-label="Quitar PDF" disabled={loading} onClick={resetUpload}>
+                x
+              </button>
+            </div>
+          )}
+
+          {(loading || status) && (
+            <p className={`status-message ${loading ? 'working' : ''}`}>
+              {loading ? 'Procesando el PDF...' : status}
+            </p>
+          )}
+
+          {file && (
+            <div className="upload-actions">
+              <button
+                type="button"
+                className={converted ? undefined : 'primary-button'}
+                disabled={loading}
+                onClick={() => extractPdfData(file)}
+              >
+                {loading ? 'Extrayendo...' : converted ? 'Volver a extraer informacion' : 'Extraer informacion del PDF'}
+              </button>
+              {converted && (
+                <button type="button" className="primary-button" disabled={loading} onClick={handleDownload}>
+                  {loading ? 'Generando PDF...' : 'Descargar PDF'}
+                </button>
+              )}
+              <button type="button" disabled={loading} onClick={() => fileInputRef.current?.click()}>
+                Subir otro PDF
+              </button>
+            </div>
+          )}
+        </section>
+
+        <section className="upload-card editor-shell-card">
+          <CVPartEditor selectedBlockId={selectedBlockId} onSelectBlock={setSelectedBlockId} />
+        </section>
+
+        <section className="upload-card design-panel">
+          <DesignPanel
+            cv={cv}
+            dispatch={dispatch}
+            photoInputRef={photoInputRef}
+            photoName={photoName}
+            loading={loading}
+            pickPhoto={pickPhoto}
+            removePhoto={removePhoto}
+          />
+        </section>
+      </section>
+
+      <section className="upload-side">
+        <div className="upload-preview-copy">
+          <span className="section-mark" aria-hidden="true" />
+          <h2>Vista previa A4</h2>
+          <p>
+            Edita secciones, plantilla, color y foto; el documento se actualiza al instante.
+          </p>
+        </div>
+
+        <div className="preview-mini" aria-live="polite">
+          <div className="preview-scale">
+            <CVPreview
+              editable
+              selectedBlockId={selectedBlockId}
+              onSelectBlock={setSelectedBlockId}
+            />
+          </div>
+        </div>
+
+        <div className="preview-privacy">
+          Tu informacion se guarda en este navegador y solo tu puedes acceder a tu CV.
+        </div>
+
+        <button type="button" className="primary-button full preview-download" disabled={loading} onClick={handleDownload}>
+          {loading ? 'Generando PDF...' : 'Descargar PDF'}
+        </button>
+      </section>
+    </main>
+  );
+}
+
+function formatFileSize(size) {
+  if (!size) return '0 KB';
+  if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024))} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function DesignPanel({ cv, dispatch, photoInputRef, photoName, loading, pickPhoto, removePhoto }) {
+  return (
+    <div className="design-panel-inner">
+      <div className="upload-card-header">
+        <div>
+          <p className="eyebrow">Diseno</p>
+          <h2>Plantilla, color y foto</h2>
+        </div>
+      </div>
+
+      <TemplateSelector />
+
+      <div className="accent-panel">
+        <div>
+          <h3>Color de acento</h3>
+          <p>Aplica el color principal a cabeceras, lineas y destacados del CV.</p>
+        </div>
+        <div className="accent-swatches" aria-label="Colores de acento">
+          {accentColors.map(color => (
+            <button
+              key={color}
+              type="button"
+              className={cv.style?.accentColor === color ? 'selected' : ''}
+              style={{ '--swatch': color }}
+              aria-label={`Usar color ${color}`}
+              onClick={() => dispatch({ type: 'UPDATE_STYLE', payload: { accentColor: color } })}
+            />
+          ))}
+          <label className="accent-custom">
+            <span>Personalizado</span>
+            <input
+              type="color"
+              value={cv.style?.accentColor || '#f5b21b'}
+              onChange={event => dispatch({ type: 'UPDATE_STYLE', payload: { accentColor: event.target.value } })}
+            />
+          </label>
+        </div>
+      </div>
+
+      <div className="upload-photo-panel">
+        <div className="photo-upload-preview">
+          {cv.personal?.photoUrl ? (
+            <img src={cv.personal.photoUrl} alt="Vista previa de la imagen de perfil" />
+          ) : (
+            <span>JPG</span>
+          )}
+        </div>
+        <div className="upload-photo-copy">
+          <strong>Foto JPG</strong>
+          <small>{photoName || 'Opcional. Maximo 2 MB y preferiblemente fondo claro.'}</small>
+          <div className="photo-upload-controls">
+            <label className="dark-button photo-button">
+              Subir imagen JPG
               <input
                 ref={photoInputRef}
                 type="file"
                 accept="image/jpeg,.jpg,.jpeg"
                 onChange={event => pickPhoto(event.target.files)}
               />
-              {cv.personal?.photoUrl && (
-                <button type="button" className="outline-button" disabled={loading} onClick={removePhoto}>
-                  Quitar imagen
-                </button>
-              )}
-            </div>
+            </label>
+            {cv.personal?.photoUrl && (
+              <button type="button" className="outline-button" disabled={loading} onClick={removePhoto}>
+                Eliminar foto
+              </button>
+            )}
           </div>
         </div>
-
-        {loading && <p className="status-message">Procesando el PDF...</p>}
-        {status && <p className="status-message">{status}</p>}
-
-        {file && (
-          <div className="upload-actions">
-            <button
-              type="button"
-              className={converted ? undefined : 'primary-button'}
-              disabled={loading}
-              onClick={() => extractPdfData(file)}
-            >
-              {loading ? 'Extrayendo...' : converted ? 'Volver a extraer informacion' : 'Extraer informacion del PDF'}
-            </button>
-            {converted && (
-              <button type="button" className="primary-button" disabled={loading} onClick={handleDownload}>
-                {loading ? 'Generando PDF...' : 'Descargar PDF'}
-              </button>
-            )}
-            <button type="button" disabled={loading} onClick={() => fileInputRef.current?.click()}>
-              Subir otro PDF
-            </button>
-            <button type="button" disabled={loading} onClick={resetUpload}>
-              Empezar de nuevo
-            </button>
-            {converted && (
-              <button type="button" onClick={() => onNavigate('create')}>
-                Editar datos extraidos
-              </button>
-            )}
-          </div>
-        )}
-
-        {converted && <CVPartEditor selectedBlockId={selectedBlockId} />}
-      </section>
-
-      <section className="upload-side">
-        {file ? (
-          <>
-            <h2>Elige una plantilla</h2>
-            <TemplateSelector />
-            {converted ? (
-              <>
-                <h2 className="preview-title">Preview del nuevo CV</h2>
-                <div className="preview-mini">
-                  <CVPreview
-                    editable
-                    selectedBlockId={selectedBlockId}
-                    onSelectBlock={setSelectedBlockId}
-                  />
-                </div>
-              </>
-            ) : (
-              <div className="upload-empty-preview compact">
-                <span className="drop-icon">PDF</span>
-                <h2>Extrae los datos</h2>
-                <p>Despues de elegir plantilla, pulsa "Extraer informacion del PDF" para generar la preview.</p>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="upload-empty-preview">
-            <span className="drop-icon">CV</span>
-            <h2>Preview pendiente</h2>
-            <p>Cuando subas el PDF, aqui veras el nuevo CV generado con la informacion extraida.</p>
-          </div>
-        )}
-      </section>
-    </main>
+      </div>
+    </div>
   );
 }
